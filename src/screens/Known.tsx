@@ -38,7 +38,7 @@ export default function Known() {
       <BackHeader title="People you know" />
       <div className="px-4 pt-4">
         <p className="text-sm leading-relaxed text-ink/65">
-          Add classmates, teammates and colleagues from {school.name} you already know. They join your network straight away, so you can keep in touch without matching first.
+          Add classmates, teammates and colleagues from {school.name} you already know. They join your network straight away, so you can keep in touch from day one.
         </p>
         <div className="relative mt-4">
           <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/40" />

@@ -50,6 +50,8 @@ interface Data {
   openToHelp: boolean
   /** Set once the user has seen the hint that a coffee chat can be proposed from a chat. */
   coffeeHintSeen: boolean
+  /** Set once the choice between a walkthrough and exploring alone has been offered. */
+  tourOffered: boolean
   /** Mocked: whether the user has linked a calendar, so free times can be suggested. */
   calendarConnected: boolean
   settings: { notifications: boolean; privateMode: boolean }
@@ -64,10 +66,13 @@ interface Data {
   push: { id: string; from: string; title: string; body: string } | null
   /** Set to open the announcements as soon as the Network screen shows. */
   openNews: boolean
+  /** The walkthrough in progress, if any, and which stop it is on. */
+  tour: { id: 'quick' | 'full'; step: number } | null
 }
 
 interface Actions {
   reset: () => void
+  startTour: (id: 'quick' | 'full') => void
   finishOnboarding: (me: User, prefs: Prefs) => void
   skipOnboarding: (experience?: 'full' | 'simple', openToHelp?: boolean) => void
   signOut: () => void
@@ -142,6 +147,7 @@ const fresh = (): Data => {
     experience: 'full',
     openToHelp: true,
     coffeeHintSeen: false,
+    tourOffered: false,
     calendarConnected: false,
     settings: { notifications: true, privateMode: false },
     checkin: null,
@@ -151,6 +157,7 @@ const fresh = (): Data => {
     eventOpen: null,
     push: null,
     openNews: false,
+    tour: null,
   }
 }
 
@@ -187,13 +194,16 @@ export const useKudzu = create<KudzuState>()(
       ...fresh(),
 
       reset: () => set({ ...fresh() }),
+      // A walkthrough always starts from the same fresh data, as the student in the full app,
+      // so every step finds what it expects.
+      startTour: (id) => set({ ...fresh(), onboarded: true, experience: 'full', tourOffered: true, tour: { id, step: 0 } }),
       // the default school comes first in `schoolIds`
       finishOnboarding: (me, prefs) => set({ me, prefs, schoolId: me.schoolIds[0], homeSchoolId: me.schoolIds[0], persona: 'custom', onboarded: true }),
       // The demo shortcut. Each app loads the person it suits: the student for growing
       // a network, the alum fifteen years out for keeping one.
       skipOnboarding: (experience = 'full', openToHelp = true) =>
         set(experience === 'simple'
-          ? { onboarded: true, experience, openToHelp, me: ALUM_PERSONA, persona: 'alum' }
+          ? { onboarded: true, experience, openToHelp, me: ALUM_PERSONA, persona: 'alum', tourOffered: true }
           : { onboarded: true, experience, openToHelp, me: STUDENT_PERSONA, persona: 'student' }),
       signOut: () => set({ onboarded: false }),
       updateMe: (patch) =>
@@ -438,8 +448,8 @@ export const useKudzu = create<KudzuState>()(
       // bump this when the saved shape changes, so old browsers start from fresh seed data
       name: 'kudzu-demo-v9',
       partialize: (s) => {
-        const { checkin, toast, demoOpen, typing, eventOpen, push, openNews, ...rest } = s
-        void checkin, toast, demoOpen, typing, eventOpen, push, openNews
+        const { checkin, toast, demoOpen, typing, eventOpen, push, openNews, tour, ...rest } = s
+        void checkin, toast, demoOpen, typing, eventOpen, push, openNews, tour
         return rest as KudzuState
       },
     },

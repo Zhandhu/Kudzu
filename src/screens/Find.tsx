@@ -46,6 +46,7 @@ function PersonLeaf({ f, index, requested, degree, onPick }: { f: Found; index: 
         borderRadius: index % 2 ? '12px 40px 12px 40px' : '40px 12px 40px 12px',
       }}
       data-leaf
+      data-tour="leaf"
       aria-label={`${u.name}, ${roleLine(u)}`}
     >
       {/* The headshot carries the distance as a tag on its lower edge: in your network,
@@ -249,7 +250,7 @@ export default function Find() {
         {/* a stem runs down from the need, and the leaves fall off it one by one */}
         <motion.span className="absolute bottom-2 left-0 top-0 w-0.5 origin-top rounded-full bg-vine-300" initial={{ scaleY: 0 }} animate={{ scaleY: 1 }} exit={{ scaleY: 0, transition: { duration: 0.25, delay: 0.1 } }} transition={{ duration: 0.35, ease: 'easeOut' }} aria-hidden />
         {ask === OTHER && suggested.length > 0 && (
-          <p className="pb-1 pt-2 text-xs text-ink/55">Matched on {[...new Set(suggested.flatMap((f) => f.matched ?? []))].join(', ')}</p>
+          <p className="pb-1 pt-2 text-xs text-ink/55">Found by {[...new Set(suggested.flatMap((f) => f.matched ?? []))].join(', ')}</p>
         )}
         {suggested.length === 0 ? (
           <p className="mt-2 rounded-2xl border border-dashed border-sage-300 p-4 text-center text-sm text-ink/55">
@@ -327,7 +328,7 @@ export default function Find() {
             <div className="mt-3 space-y-2" role="group" aria-label="What you’re looking for">
               {needs.map((t) => (
                 <div key={t}>
-                  <Chip active={ask === t} onClick={() => setAsk(ask === t ? null : t)}>{topicLabel(t)}</Chip>
+                  <span data-tour="need"><Chip active={ask === t} onClick={() => setAsk(ask === t ? null : t)}>{topicLabel(t)}</Chip></span>
                   <AnimatePresence initial={false}>{ask === t && dropOut()}</AnimatePresence>
                 </div>
               ))}

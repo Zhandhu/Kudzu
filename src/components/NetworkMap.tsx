@@ -196,7 +196,7 @@ const clusterIcon = (levels: Strength[], count: number, selected: boolean, offse
     className: 'leaflet-div-icon-clear',
     iconSize: [56, 46],
     iconAnchor: offset ? [4, 50] : [28, 36],
-    html: `<div class="leaf-pin" style="position:relative;width:56px;height:46px;${selected ? 'transform:scale(1.15)' : ''}">
+    html: `<div class="leaf-pin" data-tour="bundle" style="position:relative;width:56px;height:46px;${selected ? 'transform:scale(1.15)' : ''}">
       ${levels.slice(0, 3).map((l, i) => `<div style="position:absolute;left:${[4, 22, 13][i]}px;top:${[10, 10, 0][i]}px;transform:rotate(${[-28, 28, 0][i]}deg)">${renderToStaticMarkup(<LeafIcon level={l} size={30} />)}</div>`).join('')}
       <div style="position:absolute;right:0;bottom:0;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#1f2a1f;color:#faf6ee;font:700 11px Inter,sans-serif;display:flex;align-items:center;justify-content:center;border:2px solid #faf6ee">${count}</div>
     </div>`,
@@ -384,7 +384,7 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
   }, [cities, origin, me.city, radPerPx])
 
   return (
-    <div className="relative z-0 h-full w-full overflow-hidden">
+    <div data-tour="map" className="relative z-0 h-full w-full overflow-hidden">
       <MapContainer center={origin} zoom={4} zoomControl={false} attributionControl={false} className="h-full w-full" minZoom={3} maxZoom={14}>
         <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
         {/* bottom-left, so the leaves in the bottom-right corner never cover the map credit */}
@@ -443,6 +443,7 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
 
         {selPeople.length > 0 && (
           <div
+            data-tour="map-card"
             className="absolute inset-x-3 bottom-3 z-[1000] max-h-[55%] overflow-y-auto rounded-2xl bg-cream p-3 shadow-xl ring-1 ring-sage-200"
             onClick={(e) => e.stopPropagation()}
             onWheel={(e) => e.stopPropagation()}
@@ -453,7 +454,7 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
                 {selCity ? `${selCity} · ${selPeople.length} connections` : selPeople[0].user.city}
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={() => setSel(null)} className="rounded-full p-1 text-ink/50 hover:bg-sage-100" aria-label="Close"><X size={16} /></button>
+                <button data-tour="map-close" onClick={() => setSel(null)} className="rounded-full p-1 text-ink/50 hover:bg-sage-100" aria-label="Close"><X size={16} /></button>
               </div>
             </div>
             <div className="divide-y divide-sage-200">{selPeople.map((p) => <PersonRow key={p.user.id} p={p} />)}</div>

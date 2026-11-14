@@ -45,7 +45,7 @@ export function CatchUpSheet({ user, open, onClose, onLogged }: { user: User; op
         ))}
       </div>
       <input className={`${inputCls} mt-5`} value={note} onChange={(e) => setNote(e.target.value)} placeholder="A note for yourself (optional)" aria-label="Note about the catch-up" maxLength={120} />
-      <Button className="mt-5 w-full" onClick={() => { logCatchUp(user.id, how, days, note); setNote(''); onClose(); onLogged?.() }}>Log it</Button>
+      <Button tour="log-it" className="mt-5 w-full" onClick={() => { logCatchUp(user.id, how, days, note); setNote(''); onClose(); onLogged?.() }}>Log it</Button>
       <p className="mt-2 text-center text-xs text-ink/50">Only you see this. It keeps {name} from showing as someone you’ve lost touch with.</p>
     </Sheet>
   )

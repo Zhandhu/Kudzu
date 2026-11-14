@@ -57,7 +57,7 @@ export default function EventChat() {
       </header>
 
       <div className="app-scroll min-h-0 flex-1 space-y-3 overflow-y-auto px-3 py-4">
-        <p className="mx-auto max-w-[88%] rounded-2xl bg-sage-100 px-3.5 py-2.5 text-center text-[12.5px] leading-snug text-ink/65">
+        <p data-tour="event-chat-note" className="mx-auto max-w-[88%] rounded-2xl bg-sage-100 px-3.5 py-2.5 text-center text-[12.5px] leading-snug text-ink/65">
           Only people going to this event are here. {open ? `The chat closes ${closesIn <= 1 ? 'tomorrow' : `in ${closesIn} days`}, a week after the event.` : 'The chat has closed.'} To keep talking with someone, tap their picture.
         </p>
         {messages.map((m) => {

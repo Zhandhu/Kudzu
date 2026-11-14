@@ -28,7 +28,7 @@ export function AnnouncementList({ onLeave }: { onLeave?: () => void }) {
         const keen = s.interestedIn.includes(a.id)
         const hasEvent = !!a.eventId && s.events.some((e) => e.id === a.eventId)
         return (
-          <article key={a.id} className={`rounded-2xl p-3.5 ring-1 ${fresh ? 'bg-vine-50 ring-vine-300' : 'bg-white ring-sage-200'}`}>
+          <article key={a.id} data-tour="announcement" className={`rounded-2xl p-3.5 ring-1 ${fresh ? 'bg-vine-50 ring-vine-300' : 'bg-white ring-sage-200'}`}>
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-vine-700">
               <Megaphone size={13} /> {announcementAudience(a)}
               {fresh && <span className="rounded-full bg-vine-700 px-1.5 py-0.5 text-[9.5px] font-bold text-cream">New</span>}
@@ -71,6 +71,8 @@ export function PushBanner() {
   const nav = useNavigate()
   useEffect(() => {
     if (!push) return
+    // during a walkthrough it stays until tapped, so nobody misses the step
+    if (useKudzu.getState().tour) return
     const t = setTimeout(() => set({ push: null }), 7000)
     return () => clearTimeout(t)
   }, [push, set])
@@ -80,7 +82,8 @@ export function PushBanner() {
         {push && (
           <motion.button
             key={push.id}
-            onClick={() => { set({ push: null, openNews: true }); nav('/network') }}
+            data-tour="push"
+            onClick={() => { set({ push: null, openNews: true }); nav("/network") }}
             initial={{ y: -120, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -120, opacity: 0 }}
             transition={{ type: 'spring', damping: 24, stiffness: 300 }}
             className="pointer-events-auto absolute inset-x-2.5 top-2.5 z-50 rounded-[22px] bg-white/95 p-3 text-left shadow-2xl ring-1 ring-black/5 backdrop-blur"

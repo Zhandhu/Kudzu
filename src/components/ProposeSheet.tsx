@@ -73,7 +73,7 @@ export function ProposeSheet({ open, onClose, other, replaces }: { open: boolean
       </div>
       <input className={`${inputCls} mt-3`} value={place} onChange={(e) => setPlace(e.target.value)} placeholder="Or type a place" aria-label="Place" />
       <Button
-        variant="coffee" className="mt-5 w-full" disabled={slots.length < 2 || !place.trim()}
+        tour="send-proposal" variant="coffee" className="mt-5 w-full" disabled={slots.length < 2 || !place.trim()}
         onClick={() => { sendProposal(other.id, { slots, place: place.trim(), mode: place === 'Video call' ? 'virtual' : 'in-person' }, replaces); onClose() }}
       >
         <Coffee size={17} /> {replaces ? 'Send these times' : 'Send proposal'}

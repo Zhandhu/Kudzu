@@ -59,8 +59,8 @@ export function Chip({
 }
 
 export function Button({
-  children, onClick, variant = 'primary', className = '', disabled = false, type = 'button',
-}: { children: ReactNode; onClick?: () => void; variant?: 'primary' | 'secondary' | 'ghost' | 'coffee' | 'danger'; className?: string; disabled?: boolean; type?: 'button' | 'submit' }) {
+  children, onClick, variant = 'primary', className = '', disabled = false, type = 'button', tour,
+}: { children: ReactNode; onClick?: () => void; variant?: 'primary' | 'secondary' | 'ghost' | 'coffee' | 'danger'; className?: string; disabled?: boolean; type?: 'button' | 'submit'; /** Name the walkthrough uses to point at this button. */ tour?: string }) {
   const v = {
     primary: 'bg-vine-700 text-cream hover:bg-vine-800',
     coffee: 'bg-coffee-500 text-cream hover:bg-coffee-600',
@@ -73,6 +73,7 @@ export function Button({
       type={type}
       onClick={onClick}
       disabled={disabled}
+      data-tour={tour}
       className={`inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition-colors disabled:opacity-40 ${v} ${className}`}
     >
       {children}

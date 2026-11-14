@@ -62,9 +62,10 @@ export function RequestSheet({ user, open, onClose, promptId }: { user: User; op
         value={note}
         onChange={(e) => setNote(e.target.value)}
         aria-label="Your note"
+        data-tour="note"
       />
 
-      <Button className="mt-4 w-full" disabled={!note.trim()} onClick={() => { sendRequest(user.id, topic, note, prompt?.promptId); onClose() }}>
+      <Button tour="send-request" className="mt-4 w-full" disabled={!note.trim()} onClick={() => { sendRequest(user.id, topic, note, prompt?.promptId); onClose() }}>
         <TendrilIcon size={18} color="#faf6ee" /> Send request
       </Button>
       <p className="mt-3 text-center text-[11px] leading-relaxed text-ink/50">

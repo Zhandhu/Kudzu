@@ -2,7 +2,7 @@ import type { Mode, Strength } from '../types'
 
 /** Change the product name here and it changes everywhere. */
 export const APP_NAME = 'Kudzu'
-export const TAGLINE = 'Coffee chats, matched.'
+export const TAGLINE = 'Keep your alumni network close.'
 
 /**
  * One shared menu of help topics. People pick from it twice: what they are

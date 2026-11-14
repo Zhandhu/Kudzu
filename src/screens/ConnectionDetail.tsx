@@ -62,10 +62,10 @@ export default function ConnectionDetail() {
       {!inWeb ? (
         <div className="mx-4 mt-5 rounded-2xl border border-dashed border-sage-300 bg-white/60 p-4 text-center">
           <div className="text-sm font-semibold">Not in your web yet</div>
-          <p className="mt-1 text-[13px] leading-relaxed text-ink/60">You and {name} have matched. A match isn’t a relationship yet: {name} joins your web after your first coffee chat.</p>
+          <p className="mt-1 text-[13px] leading-relaxed text-ink/60">You and {name} are in touch. That isn’t a relationship yet: {name} joins your web after your first coffee chat.</p>
         </div>
       ) : (
-        <div className="mx-4 mt-5 rounded-2xl p-4" style={{ background: `${meta.color}14` }}>
+        <div data-tour="strength" className="mx-4 mt-5 rounded-2xl p-4" style={{ background: `${meta.color}14` }}>
           <div className="flex items-center gap-3">
             <LeafIcon level={st.level} size={40} />
             <div className="min-w-0 flex-1">
@@ -117,7 +117,7 @@ export default function ConnectionDetail() {
         <Link to={`/u/${user.id}`} className="flex flex-col items-center gap-1 rounded-2xl border border-sage-200 bg-white py-3 text-xs font-semibold"><UserRound size={18} /> Profile</Link>
       </div>
       {/* most catching up happens off the app: a call, a lunch. This records it. */}
-      <button onClick={() => setLogging(true)} className="mx-4 mt-2 flex w-[calc(100%-2rem)] items-center justify-center gap-2 rounded-2xl border border-vine-200 bg-vine-50 py-3 text-[13px] font-semibold text-vine-800">
+      <button data-tour="catch-up" onClick={() => setLogging(true)} className="mx-4 mt-2 flex w-[calc(100%-2rem)] items-center justify-center gap-2 rounded-2xl border border-vine-200 bg-vine-50 py-3 text-[13px] font-semibold text-vine-800">
         <CheckCheck size={17} /> We caught up outside Kudzu
       </button>
       <CatchUpSheet user={user} open={logging} onClose={() => setLogging(false)} />

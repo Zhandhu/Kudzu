@@ -1,8 +1,10 @@
 # Kudzu
 
-**Coffee chats, matched.**
+**Keep your alumni network close.**
 
-Kudzu is a mobile-first app that helps current students and alumni of the same college find each other, meet for coffee chats, and stay connected. You search your school's network by field, city, career level, name, or the kind of help you need, ask someone for a chat with a line of your own, and keep the relationships that follow alive on a living map of your network.
+Kudzu is a mobile-first app for alumni of the same college to stay in touch with one another, and for students to reach them. Your network is a living map: the app shows who you are close to and who has gone quiet, reminds you before a friendship lapses, and counts the catch-ups that happen off the app. When you do want to meet someone new, you search your school by what you need and ask one person, with a reason.
+
+**Every member is verified** as a student or graduate of the school, by school email or by the alumni office. That is what lets people answer a message from someone they have not met. It is not a place to browse people, and there is no swiping and no matching.
 
 This repository is a **clickable demo** of the full product vision. Every screen is interactive, but there is no backend: all data is mocked and saved in your browser's localStorage.
 
@@ -28,8 +30,9 @@ Open the URL Vite prints (usually http://localhost:5173). On a laptop the app re
 ## Presenting the demo
 
 - On the welcome screen, tap **Skip onboarding (demo)**, pick one of the two apps, then **Skip the rest**. "Grow my network" loads a prefilled Georgia Tech student. "Keep in touch" loads an alum.
+- **The app can show itself.** The full app opens on a choice: a **Quick guide** (about a minute, seven stops), a **Full walkthrough** (about four minutes, 22 stops), or exploring alone. Both run over the real app: one element is lit, a caption explains it, and it moves on when you tap the real thing. Leave at any point with the X or Escape. Either can be started again from the demo controls.
 - Open the **demo controls** by tapping the Kudzu logo three times, or with the wrench button.
-- [`DEMO_SCRIPT.md`](DEMO_SCRIPT.md) is a five-minute walkthrough that shows every feature in order.
+- [`DEMO_SCRIPT.md`](DEMO_SCRIPT.md) is a five-minute script for presenting it yourself, feature by feature.
 
 Demo controls:
 
@@ -43,6 +46,7 @@ Demo controls:
 | Receive a thank-you note | Someone you helped thanks you. It appears on your profile and in the chat |
 | Receive a class announcement | Alumni services send a notice to your class. It arrives as a phone-style notification at the top of the screen; tapping it opens the announcement |
 | Show account-warning notice | Shows the notice a user gets after missed chats |
+| Start the walkthrough | Quick or Full. Resets the demo data and runs the guided tour over the real app |
 | Reset all demo data | Clears everything and returns to onboarding |
 
 ## What's in the app
@@ -83,7 +87,7 @@ src/
   services/           The only data-access layer. Search, requests, closeness, nudges, events, chat replies
   store/useKudzu.ts   Zustand store: all app state and actions
   lib/util.ts         Time, geo and avatar helpers
-  components/         Shared UI, brand marks, profile view, map, sheets, demo panel
+  components/         Shared UI, brand marks, profile view, map, sheets, the walkthrough (`Tour.tsx`), demo panel
   screens/            One file per screen
 ```
 

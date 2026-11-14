@@ -17,7 +17,7 @@ export default function Guidelines() {
       <div className="px-5 pt-5">
         <h1 className="font-display text-2xl font-semibold">Keeping your profile in good standing</h1>
         <p className="mt-2 text-sm leading-relaxed text-ink/65">
-          After each coffee chat we privately ask both people how it went. Those answers are never shown on a profile. They help us match people well and notice when something is going wrong.
+          After each coffee chat we privately ask both people how it went. Those answers are never shown on a profile. They help us suggest people well and notice when something is going wrong.
         </p>
         <div className="mt-5 space-y-3">
           {RULES.map((r) => (

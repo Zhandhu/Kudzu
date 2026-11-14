@@ -142,7 +142,7 @@ export default function Onboarding() {
       prefs,
     )
     for (const id of known) s.addKnown(id, 'unsure', true)
-    s.set({ invites, experience: view, openToHelp: help })
+    s.set({ invites, experience: view, openToHelp: help, tourOffered: view === 'simple' })
     s.say(`Welcome to ${homeSchool!.name} on Kudzu`)
     nav('/')
   }
@@ -154,7 +154,7 @@ export default function Onboarding() {
         <div className="mt-auto">
           <Tendril animate width={200} className="mb-6 opacity-80" />
           <h1 className="font-display text-[40px] font-semibold leading-[1.05]">{TAGLINE}</h1>
-          <p className="mt-3 text-[15px] leading-relaxed text-vine-100">Meet students and alumni from your school for a coffee, a piece of advice, or a connection that lasts.</p>
+          <p className="mt-3 text-[15px] leading-relaxed text-vine-100">Stay in touch with the people you studied with, and meet others from your school. Every account is a verified student or graduate.</p>
           <div className="mt-8 space-y-3">
             <button onClick={() => setStage('choose')} className="flex w-full items-center justify-center gap-2.5 rounded-full bg-cream py-3.5 text-sm font-semibold text-ink">
               <span className="flex h-5 w-5 items-center justify-center rounded bg-[#0a66c2] text-[11px] font-bold text-white">in</span> Continue with LinkedIn
@@ -431,7 +431,7 @@ export default function Onboarding() {
         <p className="text-sm text-ink/60">You don’t pick a role. Tell us what you want and what you can give, and we’ll work out who to learn from, who to help, and who to trade notes with.</p>
         <AsksOffersFields value={me} onChange={up} />
         <p className={`rounded-xl px-3.5 py-2.5 text-xs ${hereFull ? 'bg-vine-100 text-vine-800' : 'bg-sage-100 text-ink/65'}`}>
-          {hereFull ? 'That’s enough to match you well.' : `Pick at least two in each list. So far: ${me.asks.length} looking for, ${me.offers.length} to offer.`}
+          {hereFull ? 'That’s enough to suggest the right people.' : `Pick at least two in each list. So far: ${me.asks.length} looking for, ${me.offers.length} to offer.`}
         </p>
         <CapacityField value={me.capacity} onChange={(capacity) => up({ capacity })} />
         {!hereEmpty && !hereFull && <button onClick={() => up({ asks: [], offers: [] })} className="w-full text-center text-[13px] font-semibold text-vine-600 underline underline-offset-4">Clear and do this later</button>}

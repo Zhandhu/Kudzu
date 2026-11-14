@@ -8,27 +8,31 @@ A five-minute walkthrough that shows every feature in order.
 2. Open the demo controls (wrench button, or tap the Kudzu logo three times) and choose **Reset all demo data**.
 3. You should be on the welcome screen.
 
+If you would rather let the app present itself, skip onboarding into **Grow my network** and choose **Quick guide** or **Full walkthrough** on the screen that follows. The script below is for presenting it yourself; after skipping onboarding, choose **Explore on my own**.
+
+**What to emphasise:** this is for keeping in touch with people you know. Reaching someone new is the second use, not the first. Every member is verified. Avoid the words "match" and "swipe": there is neither.
+
 The demo controls are referred to below as **Demo**.
 
 ---
 
 ## 0:00 Onboarding (40 seconds)
 
-"Kudzu connects students and alumni of the same school, and helps them stay connected."
+"Kudzu is how alumni of the same school stay in touch with one another, and how students reach them. Every member is verified by the school."
 
 1. Tap **Verify with your .edu email**. The first page asks **what brings you to Kudzu**: **Grow my network**, or **Keep in touch**, a simpler app for people who only want to stay close to the people they know. Pick **Grow my network** and tap **Continue**. Sign-up is **one menu**, not a queue of screens. Three sections are needed. The rest are optional. Each row has a box that fills in when it is done.
 2. Open **You and your school**. Type a name, then `riley@gatech.edu`. Georgia Tech is detected and selected from the email domain. Tap a second school to show that someone with **two degrees** joins both networks and picks one as their **default**. Mention the alum verification path and **My school isn't here yet**. Tap **Done**: the box fills in.
 3. Open **Your current career** and type a role. That is the one part that is needed. Show **Add an earlier role** and the **I changed careers** flag.
 4. Open **People you already know**. Search by name or **@username**, tap someone, and add a **phone number** to invite a friend who isn't on Kudzu. Nobody starts with an empty network.
 5. Point to the optional rows: **what you're here for** (nobody picks "mentor" or "mentee": the app works that out), **fields you're interested in**, which decide who is shown first and never hide anyone, **hobbies, clubs and affiliations**, and **prompts**.
-6. Tap **Skip** (top right) to load the prefilled demo user, Riley, a third-year Industrial Engineering student. (Fastest route for a demo: on the first page, pick an app and tap **Skip the rest**.)
+6. Tap **Skip** (top right) to load the prefilled demo user, Riley, a third-year Industrial Engineering student. (Fastest route for a demo: on the first page, pick an app and tap **Skip the rest**.) On the screen that follows, choose **Explore on my own**.
 
 ## 0:40 Find (70 seconds)
 
 "This is where you find people. You say what you need, and the school's network answers."
 
 1. The tab opens on **What are you looking for?** with Riley’s own asks ready to tap. (Someone who named only one or two gets the list topped up with what people at their stage usually look for.) Tap **An inside look at an industry**. A few people who can help **drop out from right under it**, each a **leaf** with a face, a name, a class year and a company. Mention **Something else**: type a need in your own words, such as "someone in consulting in New York", and the app finds people for it.
-2. Tap **Maya O.** Her whole profile opens as a **card floating over the search**. Point to the green **Learn from** box, people in common, and her three prompts.
+2. Tap **Maya O.** Her whole profile opens as a **card floating over the search**. Point to the **Verified alum** badge under her name: every member is confirmed by the school. Then the green **Learn from** box, people in common, and her three prompts.
 3. Tap **Ask Maya for a chat**. Pick what it is about, type one line and tap **Send request**. "No swiping, and no waiting for a mutual match. You ask, with a reason."
 4. After a moment the bar changes to **Message** and **Propose coffee**: Maya has accepted. (Maya always accepts. Others accept about 60% of the time, and some never answer, so that case can be shown.) Tap outside the card to close it. The search is still there.
 5. Type **consult** in the search bar and tap the **Consulting** chip it offers. Results **grow on branches**, grouped by city. Tap **Level** to regroup them. (Search for one city and the app stops grouping by city on its own.) Leaves are tinted by relationship: learn from, trade notes, give back. Outlined leaves are people already in Riley's network. The corner of each leaf shows how far away they are: **1st**, **2nd** (someone Riley knows knows them) or **3rd**.

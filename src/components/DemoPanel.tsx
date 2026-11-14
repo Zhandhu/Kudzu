@@ -1,4 +1,4 @@
-import { AlertTriangle, ClipboardCheck, FastForward, GraduationCap, HeartHandshake, Megaphone, RotateCcw, UserRoundCog } from 'lucide-react'
+import { AlertTriangle, ClipboardCheck, FastForward, Footprints, GraduationCap, HeartHandshake, Megaphone, RotateCcw, UserRoundCog } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { nowOf, useKudzu } from '../store/useKudzu'
 import { findCheckinTarget, listSchools, notifyAnnouncement, receiveAnnouncement, receiveRequest, receiveThanks, unreadAnnouncements } from '../services'
@@ -80,6 +80,15 @@ export default function DemoPanel() {
           <Toggle on={s.showWarning} onChange={(showWarning) => s.set({ showWarning })} label="Show account warning" />
         </div>
 
+        {/* either walkthrough starts from fresh data, as the student in the full app */}
+        <div className={item}>
+          <Footprints size={19} className="text-vine-600" />
+          <span className="flex-1">Start the walkthrough<span className={sub}>Resets the demo data and shows you round.</span></span>
+          <span className="flex shrink-0 gap-1.5">
+            <button onClick={() => { close(); s.startTour('quick') }} className="rounded-full bg-vine-700 px-3 py-1.5 text-xs font-semibold text-cream">Quick</button>
+            <button onClick={() => { close(); s.startTour('full') }} className="rounded-full border border-vine-700 px-3 py-1.5 text-xs font-semibold text-vine-700">Full</button>
+          </span>
+        </div>
 
         <button className={`${item} !border-red-200 text-red-700`} onClick={() => { s.reset(); nav('/') }}>
           <RotateCcw size={19} />

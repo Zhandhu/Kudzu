@@ -15,6 +15,7 @@ import Events from './screens/Events'
 import EventDetail, { EventPopup } from './screens/EventDetail'
 import EventChat from './screens/EventChat'
 import { PushBanner } from './components/Announcements'
+import { Tour, TourOffer } from './components/Tour'
 import GroupDetail from './screens/GroupDetail'
 import Profile from './screens/Profile'
 import UserProfile from './screens/UserProfile'
@@ -78,7 +79,7 @@ export default function App() {
         <div className="font-display text-5xl font-semibold text-vine-700">{APP_NAME}</div>
         <p className="mt-2 font-display text-xl text-coffee-600">{TAGLINE}</p>
         <p className="mt-4 text-sm leading-relaxed text-ink/60">
-          A clickable demo. Students and alumni of the same school match for coffee chats, meet at events, and keep their network alive.
+          A clickable demo. Verified students and alumni of the same school stay in touch, meet for coffee and at events, and keep their network alive.
         </p>
         <button onClick={() => set({ demoOpen: true })} className="mt-6 inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2.5 text-sm font-semibold text-cream">
           <Wrench size={16} /> Open demo controls
@@ -119,6 +120,8 @@ export default function App() {
           <div ref={setOverlay} className="pointer-events-none absolute inset-0 z-[1500]" />
           {onboarded && <EventPopup />}
           {onboarded && <PushBanner />}
+          <TourOffer />
+          <Tour />
           <CheckInSheet />
           <DemoPanel />
           <Toast />

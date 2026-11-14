@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowLeftRight, Briefcase, Compass, Flag, GraduationCap, HandHeart, Heart, MapPin, MoreHorizontal, ShieldOff, Shuffle, Sparkles, Sprout, Users } from 'lucide-react'
+import { ArrowLeftRight, BadgeCheck, Briefcase, Clock, Compass, Flag, GraduationCap, HandHeart, MapPin, MessageCircle, MoreHorizontal, ShieldOff, Shuffle, Sparkles, Sprout, Users } from 'lucide-react'
 import type { Mode, User } from '../types'
 import { MODE_META, topicLabel } from '../config/brand'
 import { useKudzu } from '../store/useKudzu'
@@ -151,10 +151,13 @@ export function ProfileView({ user, onLikePrompt, showMenu = true, onBlocked }: 
           <div className="flex items-end justify-between gap-2">
             <div>
               <h2 className="font-display text-[26px] font-semibold leading-tight">{user.name}</h2>
-              <p className="text-sm text-white/90">
-                {user.role === 'student' ? 'Student' : 'Alum'} · Class of {user.gradYear}
-                {user.verified === 'pending' && ' · Pending verification'}
-              </p>
+              <p className="text-sm text-white/90">{user.role === 'student' ? 'Student' : 'Alum'} · Class of {user.gradYear}</p>
+              {/* Everyone here is confirmed by the school: a school email, or the alumni office.
+                  It is shown on every profile because it is what makes the network worth trusting. */}
+              <span data-tour="verified" className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${user.verified === 'pending' ? 'bg-amber-100 text-amber-900' : 'bg-white/90 text-vine-800'}`}>
+                {user.verified === 'pending' ? <Clock size={12} /> : <BadgeCheck size={13} />}
+                {user.verified === 'pending' ? 'Verification pending' : `Verified ${user.role === 'student' ? 'student' : 'alum'}`}
+              </span>
             </div>
             {showMenu && !isMe && <MoreMenu user={user} light onBlocked={onBlocked} />}
           </div>
@@ -223,9 +226,9 @@ export function ProfileView({ user, onLikePrompt, showMenu = true, onBlocked }: 
               <button
                 onClick={() => onLikePrompt(p.promptId)}
                 className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full border border-sage-200 bg-cream text-coffee-500 shadow-sm hover:bg-coffee-100"
-                aria-label="Like this answer"
+                aria-label="Reply to this answer"
               >
-                <Heart size={18} />
+                <MessageCircle size={18} />
               </button>
             )}
           </div>

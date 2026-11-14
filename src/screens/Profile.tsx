@@ -181,7 +181,7 @@ export default function Profile() {
           <div className="text-sm font-semibold">What you want from Kudzu</div>
           <div className="mt-2 grid grid-cols-2 gap-2" role="group" aria-label="App style">
             {([['full', 'Grow my network', 'Find, events and the map'], ['simple', 'Keep in touch', 'One simple home screen']] as const).map(([id, label, sub]) => (
-              <button key={id} onClick={() => { if (s.experience !== id) { s.set({ experience: id }); s.say(id === 'simple' ? 'Switched to the simple app' : 'Switched to the full app') } }} aria-pressed={s.experience === id} className={`rounded-xl border px-3 py-2.5 text-left ${s.experience === id ? 'border-vine-700 bg-vine-50' : 'border-sage-200'}`}>
+              <button key={id} onClick={() => { if (s.experience !== id) { s.set({ experience: id, tourOffered: true }); s.say(id === 'simple' ? 'Switched to the simple app' : 'Switched to the full app') } }} aria-pressed={s.experience === id} className={`rounded-xl border px-3 py-2.5 text-left ${s.experience === id ? 'border-vine-700 bg-vine-50' : 'border-sage-200'}`}>
                 <span className="block text-[13px] font-semibold">{label}</span>
                 <span className="block text-xs text-ink/55">{sub}</span>
               </button>
@@ -195,10 +195,10 @@ export default function Profile() {
           )}
         </div>
         <div className="divide-y divide-sage-200 rounded-2xl bg-white text-sm ring-1 ring-sage-200">
-          {!simple && <button onClick={() => setPrefsOpen(true)} className={`${row} w-full text-left`}><SlidersHorizontal size={18} className="text-vine-600" /><span className="flex-1 font-medium">Matching preferences</span><ChevronRight size={18} className="text-ink/30" /></button>}
+          {!simple && <button onClick={() => setPrefsOpen(true)} className={`${row} w-full text-left`}><SlidersHorizontal size={18} className="text-vine-600" /><span className="flex-1 font-medium">Who you want to find</span><ChevronRight size={18} className="text-ink/30" /></button>}
           <div className={row}><CalendarCheck size={18} className="text-vine-600" /><span className="flex-1"><span className="font-medium">Calendar</span><span className="block text-xs text-ink/50">{s.calendarConnected ? 'Linked. Coffee chats suggest times you’re free' : 'Link it to find times that work for both of you'}</span></span><Toggle on={s.calendarConnected} onChange={(calendarConnected) => s.set({ calendarConnected })} label="Calendar" /></div>
           <div className={row}><Bell size={18} className="text-vine-600" /><span className="flex-1 font-medium">Notifications</span><Toggle on={s.settings.notifications} onChange={(notifications) => s.set({ settings: { ...s.settings, notifications } })} label="Notifications" /></div>
-          <div className={row}><Eye size={18} className="text-vine-600" /><span className="flex-1"><span className="font-medium">Private mode</span><span className="block text-xs text-ink/50">Only people you like can see you</span></span><Toggle on={s.settings.privateMode} onChange={(privateMode) => s.set({ settings: { ...s.settings, privateMode } })} label="Private mode" /></div>
+          <div className={row}><Eye size={18} className="text-vine-600" /><span className="flex-1"><span className="font-medium">Private mode</span><span className="block text-xs text-ink/50">Only people you’ve asked can see you</span></span><Toggle on={s.settings.privateMode} onChange={(privateMode) => s.set({ settings: { ...s.settings, privateMode } })} label="Private mode" /></div>
           <div className={row}><PauseCircle size={18} className="text-vine-600" /><span className="flex-1"><span className="font-medium">Pause my profile</span><span className="block text-xs text-ink/50">Take a break without losing your network</span></span><Toggle on={s.paused} onChange={(paused) => s.set({ paused })} label="Pause my profile" /></div>
           <Link to="/guidelines" className={row}><BookOpen size={18} className="text-vine-600" /><span className="flex-1 font-medium">Community guidelines</span><ChevronRight size={18} className="text-ink/30" /></Link>
           <button onClick={s.signOut} className={`${row} w-full text-left text-coffee-600`}><LogOut size={18} /><span className="flex-1 font-medium">Sign out (replay onboarding)</span></button>
@@ -206,7 +206,7 @@ export default function Profile() {
       </section>
 
       <EditSheet open={editing} onClose={() => setEditing(false)} />
-      <Sheet open={prefsOpen} onClose={() => setPrefsOpen(false)} title="Matching preferences">
+      <Sheet open={prefsOpen} onClose={() => setPrefsOpen(false)} title="Who you want to find">
         <PrefsForm prefs={s.prefs} onChange={s.setPrefs} homeCity={me.city} />
         <Button className="mt-6 w-full" onClick={() => setPrefsOpen(false)}>Done</Button>
       </Sheet>

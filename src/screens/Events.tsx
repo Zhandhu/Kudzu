@@ -36,7 +36,7 @@ function EventCard({ e }: { e: KEvent }) {
   const guests = eventGuests(e, me)
   const host = getUser(e.hostId)
   return (
-    <Link to={`/events/${e.id}`} onClick={openEvent(e.id)} className="block overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-sage-200">
+    <Link to={`/events/${e.id}`} onClick={openEvent(e.id)} data-tour="event" className="block overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-sage-200">
       <EventCover e={e} />
       <div className="p-3.5">
         <div className="text-xs font-semibold text-coffee-500">{fmtDateTime(e.start)}</div>

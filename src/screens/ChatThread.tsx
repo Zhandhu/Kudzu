@@ -40,7 +40,7 @@ function ProposalCard({ m, other, now, onOtherTimes, onDiscuss }: { m: Message; 
   if (p.acceptedSlot) {
     const past = p.acceptedSlot < now
     return (
-      <div className="mx-auto w-[88%] overflow-hidden rounded-2xl border border-vine-200 bg-white shadow-sm">
+      <div data-tour="confirmed" className="mx-auto w-[88%] overflow-hidden rounded-2xl border border-vine-200 bg-white shadow-sm">
         <div className="flex items-center gap-2 bg-vine-700 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-cream">
           <CalendarCheck size={14} /> {p.checkedIn ? 'Coffee chat completed' : 'Coffee chat confirmed'}
         </div>
@@ -150,7 +150,7 @@ export default function ChatThread() {
         <MoreMenu user={other} onBlocked={() => nav('/messages')} />
       </header>
 
-      <div className="app-scroll min-h-0 flex-1 space-y-2.5 overflow-y-auto px-3 py-4">
+      <div data-tour="chat" className="app-scroll min-h-0 flex-1 space-y-2.5 overflow-y-auto px-3 py-4">
         {messages.length === 0 && (
           <div className="flex flex-col items-center px-6 pt-10 text-center">
             <Tendril animate />
@@ -226,7 +226,7 @@ export default function ChatThread() {
               </motion.div>
             )}
           </AnimatePresence>
-          <button type="button" onClick={() => { closeHint(); setProposing(true) }} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-coffee-500 text-cream shadow-lg" aria-label="Propose a coffee chat"><Coffee size={21} /></button>
+          <button type="button" data-tour="coffee" onClick={() => { closeHint(); setProposing(true) }} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-coffee-500 text-cream shadow-lg" aria-label="Propose a coffee chat"><Coffee size={21} /></button>
         </div>
       </div>
 

@@ -69,7 +69,7 @@ function EventBody({ e, onPerson }: { e: KEvent; onPerson?: (id: string) => void
 
         {/* the chat belongs to the event: for people going, from three days before to a week after */}
         {chat === 'open' || chat === 'closed' ? (
-          <Link to={`/event-chat/${e.id}`} className="mt-4 flex items-center gap-3 rounded-2xl bg-vine-700 p-3.5 text-cream">
+          <Link to={`/event-chat/${e.id}`} data-tour="event-chat" className="mt-4 flex items-center gap-3 rounded-2xl bg-vine-700 p-3.5 text-cream">
             <MessagesSquare size={20} className="shrink-0" />
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-semibold">{chat === 'open' ? 'Event chat' : 'Event chat (closed)'}</span>

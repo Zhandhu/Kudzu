@@ -131,7 +131,7 @@ export default function CheckInSheet() {
             {met === 'yes' && rating !== 'down' && thanks.trim() ? 'Submit and send thank-you' : 'Submit'}
           </Button>
           <p className="mt-3 text-center text-[11px] leading-relaxed text-ink/45">
-            Your answers above the thank-you are used to improve matching and keep the community healthy. They never appear on profiles.
+            Your answers above the thank-you are used to improve who we suggest and keep the community healthy. They never appear on profiles.
           </p>
         </>
       )}
