@@ -1,57 +1,38 @@
 # Kudzu research base
 
-This folder is the evidence behind Kudzu's design decisions. It exists so that when we argue about a feature, we argue from what is known, and so that we can tell which of our beliefs are tested and which are guesses.
-
-It covers five questions:
+This folder holds the evidence behind Kudzu. It answers three questions, in this order.
 
 | # | Question | File |
 | --- | --- | --- |
-| 1 | How should the app fit together for a mentor, a mentee and a peer? | [01-roles.md](01-roles.md) |
-| 2 | How should we match people to maximise satisfaction? | [02-matching.md](02-matching.md) |
-| 3 | Which features work, which should change, and how do we keep finding out? | [03-efficacy.md](03-efficacy.md) |
-| 4 | Are we meeting our goals, and what comes next? | [04-goals.md](04-goals.md) |
-| 5 | How should Meet change from swiping to finding? | [05-find.md](05-find.md) |
-| 6 | What does a simple app for keeping in touch look like? | [06-simple-app.md](06-simple-app.md) |
+| 1 | Why should this app exist? | [01-need.md](01-need.md) |
+| 2 | What evidence is there for each design choice? | [02-choices.md](02-choices.md) |
+| 3 | Where does the research disagree with us, and what should we do? | [03-divergences.md](03-divergences.md) |
+| | Every source, with its grade and how far it was read | [sources.md](sources.md) |
 
-All citations, with links and how far each was checked, are in [sources.md](sources.md).
+Records of two design decisions (the move from swiping to search, and the simpler "Keep in touch" app) are in [`../design/`](../design/). They describe what was built and why. They are not evidence.
 
 ## The short version
 
-Twelve findings carry most of the weight. Each links to the file that develops it.
+**The need is well supported. The solution is not yet tested by anyone.**
 
-1. **Mentoring helps, but the average effect is small.** What separates a useful relationship from a useless one is its quality, so the product should optimise for good conversations, not for the number of matches. ([01](01-roles.md#1-what-mentoring-does-and-does-not-do))
-2. **Shared values predict a good match far better than shared demographics.** Our prompts are the main tool for revealing values, which makes them more important than the profile header. ([01](01-roles.md#2-what-makes-a-pairing-work))
-3. **People who had a say in their match, set goals and met regularly report better relationships.** Swiping already gives the say. We have no goal-setting and no rhythm after the first chat. ([01](01-roles.md#2-what-makes-a-pairing-work))
-4. **Students badly underestimate how willing people are to help.** In one set of studies, by as much as half. The biggest barrier on the mentee side is the fear of asking, and the app can lower it. ([01](01-roles.md#4-the-mentee-side-the-fear-of-asking))
-5. **Mentors come back when they feel valued, and a thank-you is what makes them feel valued.** We currently give mentors nothing after a chat. This is the largest gap in the prototype. ([01](01-roles.md#3-the-mentor-side-why-people-give-time))
-6. **Peers are a real alternative to mentors, not a lesser version.** One randomised trial found that female peer mentors kept women in engineering when male mentors and no mentor did not. ([01](01-roles.md#5-the-peer-side))
-7. **A good match is one both people want.** Ranking by what one side likes sends everyone to the same few popular people. Scores must be reciprocal. ([02](02-matching.md#2-what-the-research-says))
-8. **Popular users get swamped unless the system limits exposure.** A field experiment that spread recommendations more evenly produced substantially more matches. Our capacity setting is the right idea but is not yet used in ranking. ([02](02-matching.md#2-what-the-research-says))
-9. **Fewer, better options beat an endless deck.** People choosing from 24 options were less satisfied a week later than people choosing from 6. ([02](02-matching.md#2-what-the-research-says))
-10. **Dormant ties keep their value.** Advice from people you have lost touch with was as useful as advice from current contacts. Our "dormant" leaf looks like a dying plant, which tells users the opposite. ([03](03-efficacy.md#network-and-connection-strength))
-11. **People underestimate how much a message out of the blue is appreciated.** Nudges should say so. ([03](03-efficacy.md#network-and-connection-strength))
-12. **Private feedback is the right call.** Public ratings inflate because people do not want to hurt each other. ([03](03-efficacy.md#feedback-and-trust))
+- **People lose touch, and it costs them.** Friendships lose closeness within months when contact drops. Stronger social ties go with better health, and old and weak ties are where much career help comes from. Most of this evidence is grade A or B.
+- **People want to reconnect and do not.** Across seven studies, most people (about nine in ten in one, three in four in another) had an old friend they still cared about and had lost touch with. Fewer than four in ten sent a message, even when given the time and the chance. The barrier is the belief that the message will not be welcome, and on average that belief is wrong.
+- **Existing channels do not fix it.** In one US survey, 9% of graduates said their alumni network had helped them in the job market. This evidence is grade C, and it measures job help, not staying in touch.
+- **No one has shown that an app like this works.** We found no independent evaluation of an alumni keep-in-touch app, and no trial showing that reminders to contact a friend keep a friendship alive. Our own data will be the first evidence.
 
-## What we recommend doing first
+**Of our 21 design choices, 2 are well supported, 13 are partly supported, and 6 are our own bets.**
 
-These are ordered by how much evidence supports them against how little they cost to build.
+- **Well supported:** the thank-you note after a chat, and keeping feedback private.
+- **Partly supported:** the idea has evidence but the details do not. The numbers we chose are our own: the 60-day fade, "about four people", five open requests, the ten-day expiry and the 50-person chat limit.
+- **Our bets:** the network map, dropping the mentor and mentee labels, the three ways to answer a coffee proposal, one-way announcements, the three required sign-up steps, and avoiding the words "match", "swipe" and "like".
 
-| Priority | Change | Why | Detail |
-| --- | --- | --- | --- |
-| 1 | Add a **thank-you step** to the post-chat check-in, delivered to the mentor. **Built** | Finding 5 | [03](03-efficacy.md#feedback-and-trust) |
-| 2 | Replace the single intentions list with **"I'm looking for" and "I can offer"**. **Built** | Findings 2, 6 | [01](01-roles.md#7-proposal-one-model-three-modes) |
-| 3 | Make match scores **reciprocal** and **capacity-aware** | Findings 7, 8 | [02](02-matching.md#4-proposed-algorithm) |
-| 4 | Replace the endless deck with a **small daily set** plus one weekly top match | Finding 9 | [02](02-matching.md#4-proposed-algorithm) |
-| 5 | Add a **goal and a suggested agenda** to every coffee proposal | Finding 3 | [03](03-efficacy.md#messages-and-coffee-chats) |
-| 6 | **Redraw the dormant leaf** and rewrite nudges around the value of reconnecting | Findings 10, 11 | [03](03-efficacy.md#network-and-connection-strength) |
+**In 15 places the research disagrees with us or offers a more defensible choice.** Three have a strong case for change:
 
-Items 1 and 2 are built in the prototype. The rest are proposals for discussion.
+1. Closeness fades too fast, and at one rate for everyone. A friend seen once a year shows as dormant for more than half the year.
+2. Dormant ties are drawn as dead. Research finds they are among the most valuable to revive.
+3. We sometimes promise outcomes the evidence does not show.
 
-What was built differs from the proposals in three ways:
-
-- **Need-to-offer fit is added to the existing ranking** as one more term. The reciprocal, capacity-aware algorithm in [02-matching.md](02-matching.md) is not built.
-- **The check-in does not yet change by mode.** Everyone who had a good chat is offered the thank-you, whichever way the help flowed.
-- **The private impact line for mentors is not built.** The profile shows the notes received and how many people have sent one.
+[03-divergences.md](03-divergences.md) sets out each of the 15 as a decision, with options, cost and a recommendation.
 
 ## How strong is the evidence?
 
@@ -61,40 +42,31 @@ Every claim in this folder carries a grade.
 | --- | --- |
 | **A** | Meta-analysis, randomised trial or large field experiment, published in a peer-reviewed venue |
 | **B** | A single peer-reviewed study, a small sample, or a theoretical model |
-| **C** | Company-reported figures, vendor case studies, press coverage of a study, or an unreviewed preprint |
-| **H** | Our own hypothesis. No evidence found yet |
+| **C** | Company or survey reports, vendor case studies, press coverage of a study, or an unreviewed preprint |
+| **H** | Our own hypothesis. No evidence found |
 
-Two limits apply to everything here:
+Three limits apply to everything here.
 
-- **Most sources were checked through abstracts and summaries, not full texts.** Where a specific number could not be confirmed against the paper, [sources.md](sources.md) says so.
-- **Almost none of this research was done on an app like Kudzu.** The mentoring studies are mostly workplace programmes. The matching studies are mostly dating apps. The findings are the best available starting point, and each one needs testing with our own users.
+- **Most sources were read as abstracts or summaries, not in full.** [sources.md](sources.md) says how far each one was read. Where a number could not be confirmed against the paper, the text says so. Some citation details are flagged as unconfirmed and need checking before anything is published.
+- **Almost none of this research was done on an app like Kudzu.** Much of it comes from dating platforms, public social media, workplaces and health reminders. The findings are the best available starting point. Each needs testing with our own users.
+- **A missing study is not a reason to change a choice.** Several choices were made for safety, for the identity of the product, or to keep the demo simple. Those reasons stand without a study behind them.
 
-## How the research loop works
+## How this folder was written
 
-This is meant to be added to, not finished.
+It was rewritten in one round, to match what the app has become: a way for alumni to stay in touch, with reaching someone new as the second use.
 
-1. **Ask.** A design question goes into the open-questions list below.
-2. **Search.** Look for meta-analyses and field experiments first, single studies second, industry claims last.
-3. **Record.** Add the source to [sources.md](sources.md) with a grade and a note on how it was checked.
-4. **Apply.** Write the implication into file 01, 02 or 03 next to the feature it affects.
-5. **Test.** Turn the implication into an experiment in the [backlog](03-efficacy.md#experiment-backlog). Our own data outranks any paper.
-6. **Log.** Add a line to the research log below.
+| Step | What happened |
+| --- | --- |
+| Cleared | Four earlier files were removed: on mentor and mentee roles, on a matching algorithm that was never built, on feature efficacy, and on goals. They described a version of the app built around a swipe deck. They remain in the git history |
+| Searched | New searches covered what the earlier files did not: why graduates lose touch, verification and trust, group size, notifications, older users, and what predicts closeness |
+| Written | The three documents were each drafted by a separate research pass, then checked against one another. Contradictions between them were reconciled, and the source lists were merged |
+| Kept | Sources from the earlier round that are still cited, with the closer reading they were given then |
 
-### Research log
+Earlier rounds also built and then shelved a set of safeguards against people using the app only to ask for job referrals. That work is on the branch `shelved/referral-safeguards`.
 
-| Round | Date | What was covered |
-| --- | --- | --- |
-| 1 | 2026-11-14 | Mentoring outcomes and matching criteria, weak and dormant ties, help-seeking, mentor motivation, reciprocal recommenders, congestion and choice restriction, signalling, fairness of exposure, marketplace experiments |
-| 2 | 2026-11-14 | Closed three gaps from round 1: how reciprocal scores are combined (RECON), planning prompts and follow-through, alumni platform outcome data |
+## What to do with it
 
-| 3 | 2026-11-14 | Using a person's existing connections in matching, how this differs from dating apps, and referral-seeking. Added to files 02 and 03. Connection-based ranking is built. Referral safeguards were built, then shelved |
-
-### Open questions for the next round
-
-- **Does anyone publish independent outcomes for alumni mentoring platforms?** Round 2 found only vendor case studies.
-- **One-off chats or ongoing relationships: which produces more value per hour of mentor time?** We found evidence on programme features but nothing comparing a single conversation with a series.
-- **Does "bring a friend" lower the barrier to asking?** No evidence found either way.
-- **What is the right experience gap?** One vendor analysis says most pairings are three to five years apart. We have no evidence on which gap works best.
-- **Identity-based matching.** The engineering trial supports offering it. How should it be offered so that it is a choice and never a filter imposed on someone?
-- **Cold start at a new school.** How many alumni does a school need before students get a good first week?
-- **Peer relationship types.** Kram and Isabella's three-way typology is cited from memory and should be checked against the paper.
+1. Decide the 15 items in [03-divergences.md](03-divergences.md). Nine of them are small changes to wording or numbers.
+2. Stop making the claims listed at the top of that file. Each has safer wording beside it.
+3. Before acting on the three strong items, read the papers behind them in full. They were read as summaries.
+4. Plan to measure. The last section of [03-divergences.md](03-divergences.md) lists what to record with the first real users.

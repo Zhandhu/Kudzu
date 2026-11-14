@@ -117,7 +117,7 @@ Screens read data through `src/services`, never straight from the seed files, so
 
 ## Research
 
-[`docs/research/`](docs/research/README.md) holds the evidence behind the design: how the app should work for mentors, mentees and peers, a proposed matching algorithm, and a feature-by-feature review with an experiment backlog. Every claim is graded and sourced.
+[`docs/research/`](docs/research/README.md) holds the evidence behind the app: why it should exist, the evidence for each design choice, and where the research disagrees with what we built. Every claim is graded and sourced, and the weak points are stated. [`docs/design/`](docs/design/) holds records of two design decisions.
 
 ## Out of scope
 

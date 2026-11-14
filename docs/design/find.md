@@ -1,4 +1,6 @@
-# 5. From swiping to finding: redesigning Meet
+# Design record: from swiping to finding
+
+> This is a record of a design decision, written when it was made. Some of what it describes has since changed. The current evidence is in [the research base](../research/README.md).
 
 The Meet tab was the part of Kudzu that still felt like a dating app. This file sets out why, four ways to replace it, a recommendation, and what else had to change with it.
 
@@ -6,7 +8,7 @@ The Meet tab was the part of Kudzu that still felt like a dating app. This file 
 
 ## Why change it
 
-The swipe deck was the right way to show the idea quickly. It is the wrong shape for the goals in [04-goals.md](04-goals.md).
+The swipe deck was the right way to show the idea quickly. It is the wrong shape for the goals in an earlier goals review (since replaced by [the research base](../research/README.md)).
 
 | The swipe deck | Why it works against us |
 | --- | --- |
@@ -16,7 +18,7 @@ The swipe deck was the right way to show the idea quickly. It is the wrong shape
 | Celebrates the match | The match is not the goal. The conversation is |
 | Feels like a game | A senior alum deciding whether to join may not take it seriously |
 
-The research already pointed this way: mentees should make a request and mentors should choose from a short inbox, and a small set with a stated reason beats an endless deck ([02-matching.md](02-matching.md#step-6-change-who-makes-the-first-move)).
+The research already pointed this way: mentees should make a request and mentors should choose from a short inbox, and a small set with a stated reason beats an endless deck (an earlier matching note, since replaced by [the research base](../research/README.md)).
 
 ## What stays
 
@@ -148,7 +150,7 @@ The person joins your web after the first coffee chat, as now. People you alread
 
 Two things this needs:
 
-- **A limit on requests,** such as five open at a time, so each one is considered. This also guards against the referral-seeking worry in [03-efficacy.md](03-efficacy.md#referral-seeking-and-transactional-use).
+- **A limit on requests,** such as five open at a time, so each one is considered. This also guards against the referral-seeking worry in an earlier efficacy review (since replaced by [the research base](../research/README.md)).
 - **An honest reply time** on each profile, so people know what to expect.
 
 ## Sign-up instead of filters
@@ -194,7 +196,7 @@ The answers stay editable in Profile.
 ## Risks
 
 - **A search box asks more of people than a deck.** Some arrive not knowing what they want. The Pathfinder is there for them, and its suggestions must be good.
-- **Search favours the well known.** Everyone can find the partner at the famous firm. Ranking by capacity and spreading exposure, as in [02-matching.md](02-matching.md), matters more here, not less.
+- **Search favours the well known.** Everyone can find the partner at the famous firm. Ranking by capacity and spreading exposure, as in an earlier matching note (since replaced by [the research base](../research/README.md)), matters more here, not less.
 - **Requests can go unanswered.** The swipe deck hid this by only showing a match once both had agreed. Limits, reply times and a gentle expiry are needed so silence does not sting.
 - **Leaves must not cost speed.** If the leaf layout is slower to read than rows, people will stay in the row view and the theme will have added nothing. Test it.
 
