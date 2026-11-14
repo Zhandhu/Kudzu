@@ -36,10 +36,12 @@ export function LeafIcon({ level, size = 18 }: { level: Strength; size?: number 
   const c = STRENGTH_META[level].color
   if (level === 'dormant') {
     return (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-label="Dormant">
-        <path d="M6 20c1-6 3-9 6-11 3-2 6-1 7 1 1 3-1 6-4 6-2 0-3-2-2-3" stroke={c} strokeWidth="2" strokeLinecap="round" fill="none" />
-        <path d="M6 20c2-1 4-1 6 0 2 1 4 0 5-2" stroke={c} strokeWidth="1.4" strokeLinecap="round" opacity=".6" />
-        <path d="M12 9c3-2 6-1 7 1 1 3-1 6-4 6-4 0-5-4-3-7z" fill={c} opacity=".35" />
+      // a closed bud on its stem: resting, and ready to open again
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-label={STRENGTH_META.dormant.label}>
+        <path d="M12 22v-8" stroke={c} strokeWidth="2" strokeLinecap="round" />
+        <path d="M12 3.500c-3.200 2.600-4.300 5.400-3.500 8 .500 1.700 1.900 2.700 3.500 2.700s3-1 3.500-2.700c.800-2.600-.300-5.400-3.500-8z" fill={c} />
+        <path d="M12 6v8" stroke="#fff" strokeOpacity=".55" strokeWidth="1" strokeLinecap="round" />
+        <path d="M12 18.500c-1.600-.200-2.800-1-3.500-2.300M12 17c1.500-.100 2.700-.800 3.400-1.900" stroke={c} strokeWidth="1.500" strokeLinecap="round" opacity=".7" />
       </svg>
     )
   }

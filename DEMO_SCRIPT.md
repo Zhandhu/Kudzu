@@ -55,14 +55,14 @@ The demo controls are referred to below as **Demo**.
 
 "This is the signature feature. Your network is a living thing."
 
-1. Open the **Network** tab. It opens on the **map**. A vine grows from your root marker to each city. Each vine is a tangle of strands, one per person there, coloured by how close you are: deep green for strong, pale and dashed for fading.
+1. Open the **Network** tab. It opens on the **map**. A vine grows from your root marker to each city. Each vine is a tangle of strands, one per person there, coloured by how close you are: deep green for strong, pale and dashed for fading. A grey bud marks someone you have not talked to in a long time: resting, not lost.
 2. Tap the **Seattle cluster**. The map flies in on its own: the vine arrives at the city and splits into a branch for each person, and a card lists them with message and coffee buttons. Tap the **X** and the map flies back out to the whole network. (If you drag the map or tap a person while zoomed in, it stays where you put it.)
 3. Point to the **two leaves** in the bottom-right corner. The purple blossom shows how many things are waiting, and it darkens as the number rises. The lighter green leaf is **Your class and city**: its blossom counts announcements Riley has not seen.
 4. Tap the first leaf, **Reach out**. Read out one or two nudges: Jordan is in town this week, Sam just started at Google. Tap **Message** on the Sam nudge. The chat opens with a congratulation already drafted. Go back.
 5. Tap the lighter green leaf, **Your class and city**. Two **announcements** are waiting, one to the Class of 2028 and one to alumni in Atlanta. "A class is thousands of people, so it gets announcements from alumni services a few times a year, not a group chat. Nobody can reply to everyone." Tap **See the event** on one, then close it. Then **Demo → Receive a class announcement**: a notification from Georgia Tech Alumni Services drops in at the top, as it would on a phone. Tap it to open the announcement. Below the announcements are the cohorts: open **Class of 2028** to show where the class has ended up, then tap **I know them** on a classmate and say when you last talked. They join the network with the right leaf. Go back.
 6. Switch to **List**. Connections are grouped by strength with leaf icons, and each carries a tag for the kind of relationship: **Learning from**, **Trading notes** or **Giving back**. Tap **Giving back** in the chip row to show Diego, a first-year Riley has helped.
 7. Open **Devon Brooks**. Tap **What this is based on**: closeness adds up every interaction, a good coffee chat counts most, and each one fades with time. Below it, **Keeping in touch** shows the monthly rhythm Riley chose. Tap **We caught up outside Kudzu** to show how a phone call or a lunch is logged in two taps, so the tie does not look as though it has faded.
-8. **Demo → Fast-forward one month.** Back on Network, the counts at the top shift toward Fading. Open **Reach out**: the first nudge is the monthly catch-up with Devon.
+8. **Demo → Fast-forward one month.** Open **Reach out**: the first reminder is the monthly catch-up with Devon, because a month has passed. The list also suggests one long-quiet person, with the line "Old friends are usually glad to hear from you". Closeness fades slowly, so one month changes little else.
 
 ## 4:00 Events and groups (40 seconds)
 
@@ -74,7 +74,7 @@ The demo controls are referred to below as **Demo**.
 ## 4:40 Feedback, thank-yous and profile (40 seconds)
 
 1. **Demo → Trigger a post-chat check-in.** Answer *Did you meet?*, give a thumbs up and pick a tag. Stress that these answers are **private and never shown on a profile**.
-2. Scroll to **Send a thank-you** and type one line. This is the one part the other person sees. "Research shows a thank-you is what brings a mentor back."
+2. Scroll to **Send a thank-you** and type one line. This is the one part the other person sees. "In experiments, people who were thanked were more likely to help again."
 3. Under **What next with Kwame?**, choose **Check in monthly** and submit. Open the Network tab: Kwame has moved out of "Not in your web yet" and into the web. Open his chat to show the thank-you card and his reply.
 4. **Demo → Receive a thank-you note.** The Profile tab opens on **Thank-you notes**, which only Riley can see.
 5. **Demo → Show account-warning notice.** Show the gentle notice on Profile and tap it to open the community guidelines.

@@ -54,7 +54,8 @@ interface Data {
   tourOffered: boolean
   /** Mocked: whether the user has linked a calendar, so free times can be suggested. */
   calendarConnected: boolean
-  settings: { notifications: boolean; privateMode: boolean }
+  /** nudgeTimely and nudgeQuiet turn off the two kinds of reminder the user does not time themselves. Unset means on. */
+  settings: { notifications: boolean; privateMode: boolean; nudgeTimely?: boolean; nudgeQuiet?: boolean }
   // transient UI state (not persisted)
   checkin: { otherId: string; msgId: string } | null
   toast: { id: string; text: string } | null

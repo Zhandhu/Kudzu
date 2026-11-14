@@ -72,7 +72,7 @@ export default function ConnectionDetail() {
               <StrengthBadge level={st.level} />
               <div className="mt-1 text-[13px] text-ink/70">
                 Last in touch {st.days === 0 ? 'today' : `${st.days} days ago`}.{' '}
-                {st.level === 'strong' ? 'This one is thriving.' : st.level === 'steady' ? 'A quick note keeps it growing.' : st.level === 'fading' ? 'A hello would go a long way.' : 'It’s been a while. Worth reviving?'}
+                {st.level === 'strong' ? 'This one is thriving.' : st.level === 'steady' ? 'A quick note keeps it growing.' : st.level === 'fading' ? 'A hello would go a long way.' : 'Resting, not lost. Old friends are usually glad to hear from you.'}
               </div>
             </div>
           </div>
@@ -88,7 +88,7 @@ export default function ConnectionDetail() {
           {showWhy && (
             <div className="mt-2 rounded-xl bg-white/70 p-3">
               <p className="text-xs leading-relaxed text-ink/60">
-                Closeness adds up everything you’ve done together. A coffee chat counts most, more so if it went well. Each one counts for less as time passes, halving about every two months.
+                Closeness adds up everything you’ve done together. A coffee chat counts most, more so if it went well. Each one counts for less as time passes. How fast depends on how often you mean to be in touch: set a rhythm below and closeness is judged against it.
               </p>
               <ul className="mt-2 space-y-1.5">
                 {parts.map((p, i) => (

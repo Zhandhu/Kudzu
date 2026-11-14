@@ -50,7 +50,7 @@ const NETWORK: Step[] = [
     body: 'Most of what you do here is with people you already know from school. Tap Network.' },
   { chapter: 'Your network', target: 'map', advance: 'next', route: '/network',
     title: 'Everyone you know, on one map',
-    body: 'Each leaf is someone you know. Green means you’re in close touch. Yellow and brown mean it has gone quiet. The vines are thicker the closer you are.' },
+    body: 'Each leaf is someone you know. Green means you’re in close touch. Yellow means it has been a while. A grey bud is resting: not lost, and ready to pick up again.' },
   { chapter: 'Your network', target: 'bundle', advance: 'tap', route: '/network',
     title: 'Tap a bundle',
     body: 'A bundle is several people in one city. Tap one and the map flies in.' },
@@ -68,7 +68,7 @@ const STAYING: Step[] = [
     body: 'A yellow leaf means you haven’t been in touch for a while. Tap this person to open their page.' },
   { chapter: 'Staying in touch', target: 'strength', advance: 'next',
     title: 'How close you are, and why',
-    body: 'Closeness adds up real contact: a coffee, an event, a message. It fades as time passes, and you get a reminder before a friendship lapses.' },
+    body: 'Closeness adds up real contact: a coffee, an event, a message. It fades as time passes, at a pace set by how often you mean to be in touch. You get a reminder when it has been a while.' },
 ]
 
 const CATCH_UP: Step[] = [
@@ -80,7 +80,7 @@ const CATCH_UP: Step[] = [
     body: 'Choose how and when if you like, then tap Log it.' },
   { chapter: 'Staying in touch', target: 'strength', advance: 'next',
     title: 'Back in touch',
-    body: 'The leaf has turned green and the reminder is gone. That is the habit the app is built around: a little contact, noted, before it lapses.' },
+    body: 'The leaf has turned green and the reminder is gone. That is the habit the app is built around: a little contact, noted.' },
 ]
 
 const BACK_TO_NETWORK: Step = { chapter: 'Staying in touch', target: 'back', advance: 'tap',
@@ -111,7 +111,7 @@ const REACH: Step[] = [
     body: 'A few, not a feed. The tag on each picture shows how far away they are: 2nd means someone you know knows them. Tap one.' },
   { chapter: 'Verified members only', target: 'verified', advance: 'next', route: '/find',
     title: 'Every account is verified',
-    body: 'Nobody gets in without being confirmed as a student or graduate of the school, by school email or by the alumni office. So you always know who you are talking to.' },
+    body: 'Nobody gets in without being confirmed as a student or graduate of the school, by school email or by the alumni office. So you know every member is a real student or graduate of the school.' },
 ]
 
 const ASK: Step[] = [
@@ -123,7 +123,7 @@ const ASK: Step[] = [
     body: 'Type a sentence about what you’d like to ask. A request without a reason can’t be sent.' },
   { chapter: 'Reaching someone new', target: 'send-request', advance: 'tap', route: '/find',
     title: 'Send it',
-    body: 'Each person takes only a few requests a month, so the ones they get are answered.' },
+    body: 'Each person takes only a few requests a month, so nobody is flooded.' },
   { chapter: 'Reaching someone new', target: 'go-message', advance: 'tap', route: '/find',
     title: 'She said yes',
     body: 'If someone can’t answer within ten days you’re told, and shown who else could help. A request never just goes quiet. Tap Message to talk to her.' },
@@ -147,10 +147,10 @@ const MEET: Step[] = [
 const EVENTS: Step[] = [
   { chapter: 'Events', target: 'tab-events', advance: 'tap', route: '/find',
     title: 'One more place: events',
-    body: 'Meet-ups, panels and reunions for your school. Tap Events.' },
+    body: 'Meet-ups and reunions are a reason to see people you know again. Tap Events.' },
   { chapter: 'Events', target: 'event', advance: 'tap', route: '/events',
     title: 'Open one',
-    body: 'You’re already going to this one. Tap it.' },
+    body: 'You’re already going to this one. Its page starts with the people you know who are going too. Tap it.' },
   { chapter: 'Events', target: 'event-chat', advance: 'tap', route: '/events',
     title: 'A chat for the people going',
     body: 'Small, and tied to the event. Tap to open it.' },

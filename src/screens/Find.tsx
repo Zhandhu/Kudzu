@@ -88,7 +88,7 @@ function RequestsSheet({ open, onClose, incoming, outgoing }: { open: boolean; o
                   <span className="block truncate text-sm font-semibold">{u.name}</span>
                   <span className="block truncate text-xs text-ink/55">{roleLine(u)}</span>
                 </span>
-                <span className="shrink-0 text-[11px] text-ink/45">{daysLeft(r, now)}d left</span>
+                <span className="shrink-0 text-[11px] text-ink/45">{requestState(r, now) === "expired" ? `Waiting ${Math.round((now - r.at) / 86400000)} days` : `${daysLeft(r, now)}d left`}</span>
               </Link>
               {r.topic && <div className="mt-2.5"><Chip small tone="coffee">{topicLabel(r.topic)}</Chip></div>}
               <p className="mt-2 text-[14px] leading-snug text-ink/80">“{r.note}”</p>
@@ -117,7 +117,7 @@ function RequestsSheet({ open, onClose, incoming, outgoing }: { open: boolean; o
                 <Link to={`/u/${u.id}`} className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold">{u.name}</span>
                   <span className="block truncate text-xs text-ink/55">
-                    {lapsed ? `${firstName(u.name)} couldn’t get to this one` : `Sent ${ago(r.at, now)} · ${daysLeft(r, now)} days left`}
+                    {lapsed ? `${firstName(u.name)} hasn’t answered yet. If they do, it still counts` : `Sent ${ago(r.at, now)} · ${daysLeft(r, now)} days left`}
                     {r.topic ? ` · ${topicLabel(r.topic)}` : ''}
                   </span>
                 </Link>
@@ -125,7 +125,7 @@ function RequestsSheet({ open, onClose, incoming, outgoing }: { open: boolean; o
               </div>
               {lapsed && (
                 <button
-                  onClick={() => { s.dismissRequest(r.id); onClose(); nav(r.topic ? `/find?topic=${r.topic}` : '/find') }}
+                  onClick={() => { onClose(); nav(r.topic ? `/find?topic=${r.topic}` : "/find") }}
                   className="mt-2.5 flex w-full items-center justify-center gap-1 rounded-full bg-coffee-500 py-2 text-xs font-semibold text-cream"
                 >
                   See who else can help{r.topic ? ` with ${topicLabel(r.topic).toLowerCase()}` : ''} <ChevronRight size={14} />

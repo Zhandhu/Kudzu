@@ -9,7 +9,7 @@ import { Avatar, Sheet } from './ui'
 const OPTIONS: { when: LastTalked; label: string; hint: string }[] = [
   { when: 'recent', label: 'In the past month', hint: 'Starts as a strong connection' },
   { when: 'months', label: 'A few months ago', hint: 'Starts as fading, with a nudge to catch up' },
-  { when: 'year', label: 'Over a year ago', hint: 'Starts as dormant, ready to revive' },
+  { when: 'year', label: 'Over a year ago', hint: 'Starts as resting, ready to pick up again' },
 ]
 
 /**

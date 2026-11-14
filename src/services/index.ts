@@ -311,7 +311,12 @@ export function suggestForText(s: FindState, text: string): (Found & { via?: Use
 
 /** How many requests someone may have waiting at once, so each one is considered. */
 export const REQUEST_LIMIT = 5
-/** After this many days without an answer a request lapses and the sender is told. */
+/**
+ * After this many days without an answer the sender is told and shown who else
+ * could help, and the request stops counting toward their limit. The expiry is
+ * soft: the other person can still answer, so a late yes is not lost. A hard
+ * deadline has been found to cost replies.
+ */
 export const REQUEST_DAYS = 10
 
 export type RequestState = Request['status'] | 'expired'
@@ -328,9 +333,9 @@ const inScope = (s: RequestsState, r: Request) => {
   return inSchool(other, s.schoolId) && !s.blocked.includes(other)
 }
 
-/** Requests waiting on the user. */
+/** Requests waiting on the user. A lapsed one is still here, and can still be answered. */
 export const incomingRequests = (s: RequestsState, now: number) =>
-  s.requests.filter((r) => r.toId === 'me' && inScope(s, r) && requestState(r, now) === 'pending')
+  s.requests.filter((r) => r.toId === 'me' && inScope(s, r) && r.status === 'pending')
 
 /** Requests the user sent that are still waiting, or lapsed and not yet dismissed. */
 export const outgoingRequests = (s: RequestsState, now: number) =>
@@ -425,20 +430,32 @@ const WEIGHT: Record<InteractionType, number> = {
   thanks: 0.5,
   messaged: 0.35,
   matched: 0.1,
-  caught: 0.9, // caught up outside the app; scaled by how, below
+  caught: 1.0, // caught up outside the app; scaled by how, below
 }
 
 /**
- * A catch-up logged by hand counts by how it happened. Meeting is close to a coffee
- * chat. A call counts for less, and a text for about what a message in the app does.
- * It counts a little less than the same thing done through the app, since nobody
- * else confirms it.
+ * A catch-up logged by hand counts the same as one arranged through the app.
+ * Research gives no reason to count it for less, and most contact between friends
+ * happens off the app. Meeting counts as a coffee chat does. A call counts almost
+ * the same: voice builds closeness about as well as richer contact. A text counts
+ * what a message in the app does.
  */
-const HOW_FACTOR = { person: 1, call: 0.75, text: 0.45 } as const
+const HOW_FACTOR = { person: 1, call: 0.95, text: 0.35 } as const
 export const HOW_LABEL = { person: 'Met in person', call: 'Phone or video call', text: 'Text or email' } as const
 
-/** Every interaction loses half its value in this many days. */
-const HALF_LIFE_DAYS = 60
+/**
+ * How fast closeness fades depends on how often you mean to be in touch. There is
+ * no single right rate: people see their closest friends weekly and others once a
+ * year, and both are healthy. So each tie is judged against the rhythm chosen for
+ * it. A contact keeps half its value for one period of that rhythm. So one good
+ * catch-up reads as "strong" for about one period, "steady" until about one and a
+ * half, and "fading" until nearly three.
+ *
+ * With no rhythm chosen the fade is slow. That number is our own guess: no study
+ * gives a rate for how quickly a friendship fades.
+ */
+export const DEFAULT_HALF_LIFE_DAYS = 180
+export const halfLifeOf = (c: Pick<Connection, 'rhythmDays'>) => c.rhythmDays ?? DEFAULT_HALF_LIFE_DAYS
 
 /** Messages add up, but a long text thread never outweighs meeting in person. */
 const MESSAGE_CAP = 0.8
@@ -451,10 +468,10 @@ export interface ClosenessPart {
   value: number
 }
 
-function partValue(i: Connection['interactions'][number], now: number): number {
+function partValue(i: Connection['interactions'][number], now: number, halfLife: number): number {
   const quality = i.type === 'coffee' ? (i.quality === 'up' ? 1.3 : i.quality === 'down' ? 0.5 : 1) : i.type === 'caught' ? HOW_FACTOR[i.how ?? 'call'] : 1
   const ageDays = Math.max(0, (now - i.at) / DAY)
-  return WEIGHT[i.type] * quality * Math.pow(0.5, ageDays / HALF_LIFE_DAYS)
+  return WEIGHT[i.type] * quality * Math.pow(0.5, ageDays / halfLife)
 }
 
 /**
@@ -463,7 +480,8 @@ function partValue(i: Connection['interactions'][number], now: number): number {
  * Many small contacts and one good coffee can both keep a tie strong.
  */
 export function closeness(c: Connection, now: number): { score: number; parts: ClosenessPart[] } {
-  const parts = c.interactions.map((i) => ({ type: i.type, at: i.at, quality: i.quality, value: partValue(i, now) }))
+  const halfLife = halfLifeOf(c)
+  const parts = c.interactions.map((i) => ({ type: i.type, at: i.at, quality: i.quality, value: partValue(i, now, halfLife) }))
   const messages = parts.filter((p) => p.type === 'messaged').reduce((sum, p) => sum + p.value, 0)
   const rest = parts.filter((p) => p.type !== 'messaged').reduce((sum, p) => sum + p.value, 0)
   return { score: rest + Math.min(messages, MESSAGE_CAP), parts: parts.sort((a, b) => b.value - a.value) }
@@ -500,8 +518,12 @@ export function pendingConnections(s: Pick<KudzuState, 'connections' | 'schoolId
 export const RHYTHMS: { days: number | undefined; label: string; short: string }[] = [
   { days: 30, label: 'Check in monthly', short: 'Monthly' },
   { days: 120, label: 'Catch up each semester', short: 'Each semester' },
+  // many good friendships are kept alive by one catch-up a year
+  { days: 365, label: 'Catch up once a year', short: 'Once a year' },
   { days: undefined, label: 'No set rhythm', short: 'No set rhythm' },
 ]
+/** "monthly", "semester", "yearly": the rhythm in a word, for a reminder. */
+const rhythmWord = (days: number) => (days <= 31 ? 'monthly' : days <= 130 ? 'semester' : 'yearly')
 
 export const rhythmLabel = (days?: number) => RHYTHMS.find((r) => r.days === days)?.short ?? `Every ${days} days`
 
@@ -523,20 +545,21 @@ export function computeNudges(s: KudzuState, now: number): Nudge[] {
     out.push({
       id: `rhythm-${c.otherId}-${periods}`,
       otherId: c.otherId,
-      text: `Time for your ${c.rhythmDays <= 31 ? 'monthly' : 'semester'} catch-up with ${firstName(u.name)}.`,
+      text: `Time for your ${rhythmWord(c.rhythmDays)} catch-up with ${firstName(u.name)}.`,
       action: 'coffee',
     })
   }
 
-  // then timely reasons to get in touch (in town, new job)
-  out.push(...SEED_NUDGES.filter((n) => n.schoolId === s.schoolId && ids.has(n.otherId)))
+  // Then timely reasons to get in touch (in town, new job). These and the "gone quiet"
+  // reminders below are not timed by the user, so each kind can be switched off.
+  if (s.settings.nudgeTimely !== false) out.push(...SEED_NUDGES.filter((n) => n.schoolId === s.schoolId && ids.has(n.otherId)))
 
-  for (const { c, st } of byAge) {
-    const u = getUser(c.otherId)
-    if (!u || (c.rhythmDays && st.days >= c.rhythmDays)) continue
-    const name = firstName(u.name)
-    const months = Math.round(st.days / 30)
-    if (st.level === 'fading') {
+  if (s.settings.nudgeQuiet !== false) {
+    for (const { c, st } of byAge) {
+      const u = getUser(c.otherId)
+      if (!u || (c.rhythmDays && st.days >= c.rhythmDays) || st.level !== 'fading') continue
+      const name = firstName(u.name)
+      const months = Math.round(st.days / 30)
       out.push({
         id: `fade-${c.otherId}-${months}`,
         otherId: c.otherId,
@@ -544,12 +567,24 @@ export function computeNudges(s: KudzuState, now: number): Nudge[] {
         action: 'message',
         draft: `Hi ${name}, it’s been a while! How have things been at ${u.company ?? 'work'}?`,
       })
-    } else if (st.level === 'dormant' && months <= 9) {
+    }
+
+    // A tie that has been quiet for a long time is resting, not lost. Old friends are
+    // among the most valuable people to hear from again, and they are the ones nobody
+    // thinks to write to. So one of them is suggested at a time, a different one each
+    // week, however long it has been. One, so that these stay rare.
+    const resting = byAge.filter(({ c, st }) => st.level === 'dormant' && !(c.rhythmDays && st.days >= c.rhythmDays)).reverse()
+    const pick = resting[Math.floor(now / (7 * DAY)) % Math.max(1, resting.length)]
+    const u = pick && getUser(pick.c.otherId)
+    if (pick && u) {
+      const name = firstName(u.name)
+      const months = Math.round(pick.st.days / 30)
       out.push({
-        id: `dormant-${c.otherId}`,
-        otherId: c.otherId,
-        text: `You and ${name} haven’t talked in over ${Math.min(months, 8)} months. Worth reconnecting?`,
-        action: 'coffee',
+        id: `resting-${pick.c.otherId}-${Math.floor(now / (7 * DAY))}`,
+        otherId: pick.c.otherId,
+        text: `It’s been ${months >= 12 ? 'over a year' : `${months} months`} since you talked to ${name}. Old friends are usually glad to hear from you.`,
+        action: 'message',
+        draft: `Hi ${name}, it’s been far too long. I was thinking of you and wanted to say hello. How are you?`,
       })
     }
   }

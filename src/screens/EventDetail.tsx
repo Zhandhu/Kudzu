@@ -34,6 +34,9 @@ function EventBody({ e, onPerson }: { e: KEvent; onPerson?: (id: string) => void
   const host = getUser(e.hostId)
   const group = groups.find((g) => g.id === e.groupId)
   const chat = eventChatState(e, me, useNow())
+  const connections = useKudzu((s) => s.connections)
+  // people already in your network who are going
+  const known = guests.filter((g) => g.id !== 'me' && connections.some((c) => c.otherId === g.id))
   const set = (status: 'going' | 'interested') => {
     const next = e.myRsvp === status ? undefined : status
     rsvp(e.id, next)
@@ -57,6 +60,24 @@ function EventBody({ e, onPerson }: { e: KEvent; onPerson?: (id: string) => void
           <div className="flex items-center gap-2.5">{e.virtual ? <Video size={17} className="text-coffee-500" /> : <MapPin size={17} className="text-coffee-500" />} {e.virtual ? 'Online · link sent after RSVP' : `${e.place}, ${e.city}`}</div>
           <div className="flex items-center gap-2.5"><Users size={17} className="text-coffee-500" /> {guests.length} going · {Math.max(0, e.capacity - guests.length)} spots left</div>
         </div>
+
+        {/* An event is mostly a reason to see people you know: at a mixer, guests spend
+            most of their time with people they knew already. So that comes first. */}
+        {known.length > 0 ? (
+          <div className="mt-4 rounded-2xl bg-vine-50 p-3 ring-1 ring-vine-200" data-known-going>
+            <div className="text-[13px] font-semibold text-vine-800">{known.length === 1 ? 'Someone you know is going' : `${known.length} people you know are going`}</div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {known.slice(0, 6).map((g) => (
+                <Link key={g.id} {...personProps(g.id)} className="flex items-center gap-1.5 rounded-full bg-white py-1 pl-1 pr-2.5 text-[13px] font-medium ring-1 ring-sage-200">
+                  <Avatar user={g} size={24} /> {g.name.split(' ')[0]}
+                </Link>
+              ))}
+              {known.length > 6 && <span className="self-center text-xs text-ink/55">and {known.length - 6} more</span>}
+            </div>
+          </div>
+        ) : (
+          <p className="mt-4 text-[13px] text-ink/55">Nobody you know is going yet. The guest list is below.</p>
+        )}
 
         <div className="mt-5 grid grid-cols-2 gap-2.5">
           <button onClick={() => set('going')} className={`flex items-center justify-center gap-2 rounded-full py-3 text-sm font-semibold ${e.myRsvp === 'going' ? 'bg-vine-700 text-cream' : 'border border-vine-700 text-vine-700'}`} aria-pressed={e.myRsvp === 'going'}>

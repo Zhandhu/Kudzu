@@ -179,20 +179,23 @@ export function seedConnections(now: number): Connection[] {
     { ...c('g5', 'Offered to run a mock case with me before recruiting starts.', ix('matched', 34), ix('messaged', 30), good(28), ix('event', 21, 'Fall alumni mixer'), ix('messaged', 6)), rhythmDays: 30 },
     { ...c('g7', 'Knows a lot about grid modernization. Has two kids, early mornings only.', ix('matched', 60), good(41), ix('messaged', 12)), rhythmDays: 120 },
     c('g25', 'First-year in Computer Engineering. Asked about clubs and picking a thread.', ix('matched', 40), good(18), ix('thanks', 17)),
-    // steady
-    c('g2', 'Met at the fall mixer, works on engines. Travels to Atlanta a few times a year.', ix('matched', 120), ix('messaged', 110), ix('coffee', 55)),
-    c('g15', 'Said to send my resume when product internships open.', ix('matched', 150), ix('coffee', 96), ix('messaged', 55)),
-    c('g31', '', ix('matched', 90), ix('event', 75, 'Consulting info session'), ix('messaged', 62)),
-    c('g4', 'Was at Stripe as an intern, now moving to Google.', ix('matched', 140), ix('coffee', 100), ix('messaged', 70)),
-    c('g28', '', ix('matched', 130), ix('coffee', 110), ix('messaged', 85)),
-    // fading
-    c('g19', '', ix('matched', 210), ix('coffee', 160), ix('messaged', 100)),
-    c('g3', 'Great on management vs. IC. Follow up about her team’s internship.', ix('matched', 240), ix('coffee', 180), ix('messaged', 125)),
-    c('g10', '', ix('matched', 200), ix('event', 110, 'DC alumni coffee')),
-    // dormant
-    c('g17', '', ix('matched', 300), ix('coffee', 250), ix('messaged', 200)),
-    c('g13', 'Introduced by Marcus.', ix('matched', 320), ix('coffee', 260)),
-    c('g21', '', ix('matched', 400), ix('coffee', 360), ix('messaged', 330)),
+    // The gaps below are sized for the slow default fade (see `halfLifeOf` in services):
+    // with no rhythm set, one coffee reads as strong for about three months, steady
+    // for about nine, and fading until about sixteen.
+    // steady: in touch within the last several months
+    c('g2', 'Met at the fall mixer, works on engines. Travels to Atlanta a few times a year.', ix('matched', 190), ix('event', 150, 'Fall alumni mixer'), ix('messaged', 110)),
+    c('g15', 'Said to send my resume when product internships open.', ix('matched', 280), ix('coffee', 240), ix('messaged', 200)),
+    c('g31', '', ix('matched', 220), ix('event', 200, 'Consulting info session'), ix('messaged', 180)),
+    c('g4', 'Was at Stripe as an intern, now moving to Google.', ix('matched', 260), ix('coffee', 230), ix('messaged', 190)),
+    c('g28', '', ix('matched', 290), ix('coffee', 260), ix('messaged', 230)),
+    // fading: about a year since the last real contact
+    c('g19', '', ix('matched', 450), ix('coffee', 420), ix('messaged', 380)),
+    c('g3', 'Great on management vs. IC. Follow up about her team’s internship.', ix('matched', 430), ix('coffee', 400), ix('messaged', 340)),
+    c('g10', '', ix('matched', 330), ix('event', 300, 'DC alumni coffee')),
+    // resting: quiet for well over a year. Not lost, and the app keeps suggesting them
+    c('g17', '', ix('matched', 660), ix('coffee', 620), ix('messaged', 560)),
+    c('g13', 'Introduced by Marcus.', ix('matched', 680), ix('coffee', 640)),
+    c('g21', '', ix('matched', 840), ix('coffee', 800), ix('messaged', 760)),
 
     // other schools (visible after switching school in the demo panel)
     c('e1', '', ix('matched', 70), ix('coffee', 60), ix('messaged', 40)),
