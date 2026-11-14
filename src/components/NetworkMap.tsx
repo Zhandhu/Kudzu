@@ -242,7 +242,7 @@ function PersonRow({ p }: { p: MapPerson }) {
         <div className="mt-0.5"><StrengthBadge level={p.level} /></div>
       </Link>
       <Link to={`/messages/${p.user.id}`} className="flex h-9 w-9 items-center justify-center rounded-full bg-sage-100 text-vine-700" aria-label={`Message ${p.user.name}`}><MessageCircle size={17} /></Link>
-      <Link to={`/messages/${p.user.id}?propose=1`} className="flex h-9 w-9 items-center justify-center rounded-full bg-coffee-100 text-coffee-600" aria-label={`Propose coffee with ${p.user.name}`}><Coffee size={17} /></Link>
+      <Link to={`/messages/${p.user.id}?coffee=1`} className="flex h-9 w-9 items-center justify-center rounded-full bg-coffee-100 text-coffee-600" aria-label={`Propose coffee with ${p.user.name}`}><Coffee size={17} /></Link>
     </div>
   )
 }

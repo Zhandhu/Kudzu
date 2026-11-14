@@ -11,7 +11,7 @@ import ChatThread from './screens/ChatThread'
 import Network from './screens/Network'
 import ConnectionDetail from './screens/ConnectionDetail'
 import Events from './screens/Events'
-import EventDetail from './screens/EventDetail'
+import EventDetail, { EventPopup } from './screens/EventDetail'
 import GroupDetail from './screens/GroupDetail'
 import Profile from './screens/Profile'
 import UserProfile from './screens/UserProfile'
@@ -100,6 +100,7 @@ export default function App() {
           </main>
           {showTabs && <TabBar />}
           <div ref={setOverlay} className="pointer-events-none absolute inset-0 z-[1500]" />
+          {onboarded && <EventPopup />}
           <CheckInSheet />
           <DemoPanel />
           <Toast />

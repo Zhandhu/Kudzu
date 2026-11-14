@@ -20,10 +20,10 @@ type SectionId = 'school' | 'find' | 'known' | 'here' | 'work' | 'interests' | '
 
 const SECTIONS: { id: SectionId; title: string; hint: string; needed: boolean }[] = [
   { id: 'school', title: 'You and your school', hint: 'Your name and where you studied', needed: true },
-  { id: 'find', title: 'Fields you care about', hint: 'Decides who you are shown first', needed: true },
+  { id: 'work', title: 'Your current career', hint: 'Your role and where you work. Add your path if you like', needed: true },
   { id: 'known', title: 'People you already know', hint: 'Start with a network, and bring people in', needed: true },
   { id: 'here', title: 'What you’re here for', hint: 'What you’re looking for and what you can offer', needed: false },
-  { id: 'work', title: 'Work and career path', hint: 'Your role, where you’ve been, career changes', needed: false },
+  { id: 'find', title: 'Fields you’re interested in', hint: 'Puts those people first. Skip it to see everyone', needed: false },
   { id: 'interests', title: 'Hobbies, clubs and affiliations', hint: 'Common ground beyond work', needed: false },
   { id: 'prompts', title: 'Prompts', hint: 'Up to three short answers people can reply to', needed: false },
 ]
@@ -92,7 +92,7 @@ export default function Onboarding() {
     find: prefs.industries.length > 0,
     known: known.length + invites.length > 0 || nobody,
     here: hereFull,
-    work: !!me.title?.trim() || filledPath.length > 0,
+    work: !!me.title?.trim(), // the role is the part that is needed; the path and the flag are extras
     interests: (me.interests ?? []).length > 0,
     prompts: filledPrompts.length > 0,
   }
@@ -378,6 +378,7 @@ export default function Onboarding() {
 
     work: (
       <div className="space-y-5">
+        <p className="text-sm text-ink/60">Your current role is the first thing people read about you, so it is the one part of this that is needed.{role === 'student' ? ' As a student, your year or an internship counts.' : ''}</p>
         <WorkFields value={{ ...me, role }} onChange={up} />
         <div>
           <div className="mb-1 text-sm font-semibold">Career path</div>

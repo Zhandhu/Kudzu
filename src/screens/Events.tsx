@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import { CalendarDays, Lock, MapPin, Plus, Users, Video } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import type { EventType, Group, KEvent } from '../types'
-import { useKudzu, useNow } from '../store/useKudzu'
+import { openEvent, useKudzu, useNow } from '../store/useKudzu'
 import { eventGuests, getUser, groupMembers, isForYou, schoolEvents } from '../services'
 import { CITIES, CITY_NAMES, DAY, coordsFor, fmtDateTime, uid } from '../lib/util'
 import { Avatar, Button, Chip, EmptyState, Field, SchoolChip, Sheet, Toggle, inputCls } from '../components/ui'
@@ -36,7 +36,7 @@ function EventCard({ e }: { e: KEvent }) {
   const guests = eventGuests(e, me)
   const host = getUser(e.hostId)
   return (
-    <Link to={`/events/${e.id}`} className="block overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-sage-200">
+    <Link to={`/events/${e.id}`} onClick={openEvent(e.id)} className="block overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-sage-200">
       <EventCover e={e} />
       <div className="p-3.5">
         <div className="text-xs font-semibold text-coffee-500">{fmtDateTime(e.start)}</div>
@@ -57,7 +57,6 @@ function EventCard({ e }: { e: KEvent }) {
 function HostSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const s = useKudzu()
   const now = useNow()
-  const nav = useNavigate()
   const myGroups = s.groups.filter((g) => g.schoolId === s.schoolId && s.me.groupIds.includes(g.id))
   const defaultWhen = new Date(now + 7 * DAY)
   defaultWhen.setHours(18, 0, 0, 0)
@@ -77,7 +76,7 @@ function HostSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
     })
     s.say('Your event is live')
     onClose()
-    nav(`/events/${id}`)
+    s.set({ eventOpen: id })
   }
 
   return (

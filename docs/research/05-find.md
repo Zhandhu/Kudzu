@@ -127,14 +127,13 @@ Chips are leaf-shaped, which costs nothing and carries the theme. The bar should
 
 ## What a leaf shows
 
-Each result is a leaf carrying a first name and last initial. Its colour is the mode (learn, give, trade), matching the Network tab.
+Each result is a leaf carrying four things and no more: a headshot (an emoji stands in until photos exist), a first name and last initial, a class year, and a company. Its tint is the mode (learn, give, trade), matching the Network tab.
 
-| Action | Gesture | Shows |
-| --- | --- | --- |
-| **Glance** | First tap | A small card: role, company, city, the reason line, mutual connections, spots left |
-| **Open** | Second tap, on the leaf or the card | The full profile, as now |
+One tap opens the whole profile as a card floating over the search. Tapping outside it, or the close button, returns to the same results.
 
-There is no hover. An earlier build showed the card on hover on a computer, but a phone has no hover and the app is mobile-first, so it was removed. The behaviour is the same everywhere: one tap for the small card, a second for the profile.
+This replaced two earlier builds. The first showed a small card on hover, which a phone cannot do. The second showed the small card on a first tap and the profile on a second, which was one step more than needed. The reason line, mutual connections and spots left that the small card carried are all on the profile.
+
+On the front door, the leaves drop out from directly under the need that was tapped, so it is clear which need they answer.
 
 ## What replaces the match
 
@@ -205,7 +204,7 @@ The answers stay editable in Profile.
 | --- | --- | --- |
 | 1 | Find tab with the bar, chips and results as rows. Swipe deck removed | Medium |
 | 2 | Requests in place of matches: send, inbox, accept or decline | Medium |
-| 3 | Leaves on branches with grouping, the small card on first tap | Medium |
+| 3 | Leaves on branches with grouping, the whole profile on one tap | Medium |
 | 4 | Pathfinder front door, with paths through people you both know | Medium |
 | 5 | Sign-up questions in place of the filter form. Preferences as weights | Small |
 | 6 | Rename and tidy: Messages, Network, demo controls, demo script | Small |
@@ -262,7 +261,7 @@ There is a trade-off underneath. Every protection for senders asks something of 
 | Search with chips for text, field, city, level and "can help with" | Yes. Typing offers a matching chip. The + button lists them all |
 | Results as leaves on branches, grouped by city, field or level | Yes. This is the default view |
 | A plain list as an option | Yes. The Simple button switches to rows, and the choice is remembered |
-| A summary on first tap, the full profile on the next | Yes. Tap only; hover was removed |
+| A summary on first tap, the full profile on the next | Replaced. One tap now opens the whole profile as a floating card |
 | Requests in place of matches | Yes. Swiping, the mutual match and the celebration screen are removed |
 | Rules against unanswered requests | Capacity gate, reply record, cap of five, one-tap answers, ten-day lapse with a suggestion, and the pause after two lapses |
 | Sign-up questions in place of the filter form | Yes. Fields, cities and levels, used to order results and never to hide anyone |

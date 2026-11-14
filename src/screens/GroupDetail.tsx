@@ -1,6 +1,6 @@
 import { ChevronRight, Users } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
-import { useKudzu, useNow } from '../store/useKudzu'
+import { openEvent, useKudzu, useNow } from '../store/useKudzu'
 import { groupMembers } from '../services'
 import { DAY, fmtDateTime } from '../lib/util'
 import { Avatar, BackHeader, Button } from '../components/ui'
@@ -39,7 +39,7 @@ export default function GroupDetail() {
         ) : (
           <div className="space-y-2">
             {groupEvents.map((e) => (
-              <Link key={e.id} to={`/events/${e.id}`} className="flex items-center gap-3 rounded-2xl bg-white p-3 ring-1 ring-sage-200">
+              <Link key={e.id} to={`/events/${e.id}`} onClick={openEvent(e.id)} className="flex items-center gap-3 rounded-2xl bg-white p-3 ring-1 ring-sage-200">
                 <div className="min-w-0 flex-1">
                   <div className="text-xs font-semibold text-coffee-500">{fmtDateTime(e.start)}</div>
                   <div className="truncate text-sm font-semibold">{e.title}</div>

@@ -48,15 +48,15 @@ Demo controls:
 
 | Tab | Features |
 | --- | --- |
-| **Find** | "What are you looking for?": tap a need, or describe one in your own words, and the people who can help grow out. Search by name, field, city, level or the help someone offers, results as leaves on branches (or a plain list), a summary on first tap and the full profile on the next, requests for a chat, and people you have connected with but not yet met |
-| **Events** | For You / All feeds, type filters, event detail with map and guest list, RSVP, host an event, community groups |
+| **Find** | "What are you looking for?": tap a need, or describe one in your own words, and the people who can help drop out from under it. Search by name, field, city, level or the help someone offers, results as leaves on branches (or a plain list), each leaf a face, name, class and company. One tap opens the whole profile as a floating card. Requests for a chat, and people you have connected with but not yet met |
+| **Events** | For You / All feeds, type filters, each event as a floating card with map and guest list, RSVP, host an event, community groups |
 | **Network** | Connection strength shown as leaf states, nudges, searchable list, and a map where vines run from you to each connection. Class and city cohorts, and a way to add people you already know |
-| **Messages** | Chat with mock auto-replies, coffee-chat proposals that become confirmed chats, post-chat check-in with a thank-you note |
+| **Messages** | Chat with mock auto-replies, a coffee button at the bottom right with a first-time hint, coffee-chat proposals that become confirmed chats, post-chat check-in with a thank-you note |
 | **Profile** | Edit profile and prompts, career path, hobbies and clubs, thank-you notes you've received, who you want to find, groups, events, settings |
 
 **No one picks a role.** People say what they are looking for and what they can offer, from one shared list of topics. From that and each person's stage, the app works out the relationship for every pairing: **Learn from**, **Give back** or **Trade notes**. The same student learns from an alum, gives back to a first-year and trades notes with a classmate.
 
-**Sign-up is one menu.** Three sections are needed: you and your school, the fields you care about, and people you already know. The rest are optional and can be added later from the profile: what you're here for, work and career path (with a flag for people who changed careers), hobbies, clubs and affiliations, and prompts. Each row has a box that fills in when the section is done, and they can be done in any order. Sign-up also covers .edu detection, alum verification, request-a-school, inviting someone by phone number, and choosing between leaves and a simple list.
+**Sign-up is one menu.** Three sections are needed: you and your school, your current career, and people you already know. The rest are optional and can be added later from the profile: what you're here for, the fields you're interested in, hobbies, clubs and affiliations, and prompts. The career section also takes earlier roles and a flag for people who changed careers. Each row has a box that fills in when the section is done, and they can be done in any order. Sign-up also covers .edu detection, alum verification, request-a-school, inviting someone by phone number, and choosing between leaves and a simple list.
 
 **More than one school.** Someone with degrees from two schools belongs to both networks. One is their default, which the app opens on. Tapping the school name at the top of any tab lists their networks, swaps between them, changes the default, or adds another.
 

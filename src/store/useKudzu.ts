@@ -34,12 +34,16 @@ interface Data {
   paused: boolean
   /** Whether Find shows results as leaves on branches or as plain rows. */
   findView: 'leaves' | 'rows'
+  /** Set once the user has seen the hint that a coffee chat can be proposed from a chat. */
+  coffeeHintSeen: boolean
   settings: { notifications: boolean; privateMode: boolean }
   // transient UI state (not persisted)
   checkin: { otherId: string; msgId: string } | null
   toast: { id: string; text: string } | null
   demoOpen: boolean
   typing: Record<string, boolean>
+  /** The event shown as a floating card, if any. */
+  eventOpen: string | null
 }
 
 interface Actions {
@@ -105,11 +109,13 @@ const fresh = (): Data => {
     showWarning: false,
     paused: false,
     findView: 'leaves',
+    coffeeHintSeen: false,
     settings: { notifications: true, privateMode: false },
     checkin: null,
     toast: null,
     demoOpen: false,
     typing: {},
+    eventOpen: null,
   }
 }
 
@@ -364,13 +370,17 @@ export const useKudzu = create<KudzuState>()(
       // bump this when the saved shape changes, so old browsers start from fresh seed data
       name: 'kudzu-demo-v6',
       partialize: (s) => {
-        const { checkin, toast, demoOpen, typing, ...rest } = s
-        void checkin, toast, demoOpen, typing
+        const { checkin, toast, demoOpen, typing, eventOpen, ...rest } = s
+        void checkin, toast, demoOpen, typing, eventOpen
         return rest as KudzuState
       },
     },
   ),
 )
+
+type Tap = { preventDefault(): void }
+/** Click handler that opens an event as a floating card instead of following the link. */
+export const openEvent = (id: string) => (ev?: Tap) => { ev?.preventDefault(); useKudzu.setState({ eventOpen: id }) }
 
 /** Current demo time. Re-renders whenever the demo clock is moved. */
 export function useNow(): number {

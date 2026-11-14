@@ -106,7 +106,7 @@ export function WorkFields({ value, onChange }: { value: User; onChange: (patch:
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-2">
-        <Field label="Current role"><input className={inputCls} value={value.title ?? ''} onChange={(e) => onChange({ title: e.target.value })} placeholder={value.role === 'alum' ? 'Product Manager' : 'Intern, co-op…'} /></Field>
+        <Field label="Current role"><input className={inputCls} value={value.title ?? ''} onChange={(e) => onChange({ title: e.target.value })} placeholder={value.role === 'alum' ? 'Product Manager' : '3rd-year student, intern…'} aria-label="Current role" /></Field>
         <Field label="Company"><input className={inputCls} value={value.company ?? ''} onChange={(e) => onChange({ company: e.target.value || undefined })} placeholder="Where you work" /></Field>
       </div>
       <div className="grid grid-cols-2 gap-2">

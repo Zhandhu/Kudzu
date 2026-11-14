@@ -110,7 +110,7 @@ export default function ConnectionDetail() {
 
       <div className="mx-4 mt-4 grid grid-cols-3 gap-2">
         <Link to={`/messages/${user.id}`} className="flex flex-col items-center gap-1 rounded-2xl bg-vine-700 py-3 text-xs font-semibold text-cream"><MessageCircle size={18} /> Message</Link>
-        <Link to={`/messages/${user.id}?propose=1`} className="flex flex-col items-center gap-1 rounded-2xl bg-coffee-500 py-3 text-xs font-semibold text-cream"><Coffee size={18} /> Propose coffee</Link>
+        <Link to={`/messages/${user.id}?coffee=1`} className="flex flex-col items-center gap-1 rounded-2xl bg-coffee-500 py-3 text-xs font-semibold text-cream"><Coffee size={18} /> Propose coffee</Link>
         <Link to={`/u/${user.id}`} className="flex flex-col items-center gap-1 rounded-2xl border border-sage-200 bg-white py-3 text-xs font-semibold"><UserRound size={18} /> Profile</Link>
       </div>
 

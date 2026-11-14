@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { CalendarDays, ChevronRight, GraduationCap, MapPin } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import type { User } from '../types'
-import { useKudzu, useNow } from '../store/useKudzu'
+import { openEvent, useKudzu, useNow } from '../store/useKudzu'
 import { byCity, cityCohort, isEstablished, classCohort, classLabel, getSchool, isClassEvent, schoolEvents, schoolUsers, strengthOf } from '../services'
 import { fmtDateTime } from '../lib/util'
 import { LeafIcon } from '../components/brand'
@@ -73,7 +73,7 @@ export default function Cohort() {
             <h2 className="mb-2 mt-5 flex items-center gap-2 text-sm font-semibold"><CalendarDays size={15} className="text-coffee-500" /> {isClass ? 'For your class' : `Coming up in ${city}`}</h2>
             <div className="space-y-2">
               {events.slice(0, 3).map((e) => (
-                <Link key={e.id} to={`/events/${e.id}`} className="flex items-center gap-3 rounded-2xl bg-white p-3 ring-1 ring-sage-200">
+                <Link key={e.id} to={`/events/${e.id}`} onClick={openEvent(e.id)} className="flex items-center gap-3 rounded-2xl bg-white p-3 ring-1 ring-sage-200">
                   <div className="min-w-0 flex-1">
                     <div className="text-xs font-semibold text-coffee-500">{fmtDateTime(e.start)}</div>
                     <div className="truncate text-sm font-semibold">{e.title}</div>

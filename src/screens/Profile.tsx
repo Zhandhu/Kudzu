@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Bell, BookOpen, ChevronRight, Eye, HeartHandshake, Lock, LogOut, PauseCircle, Pencil, SlidersHorizontal } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { User } from '../types'
-import { useKudzu, useNow } from '../store/useKudzu'
+import { openEvent, useKudzu, useNow } from '../store/useKudzu'
 import { accountStanding, getSchool, promptText, receivedThanks, schoolEvents } from '../services'
 import { CITIES, ago, fmtDateTime } from '../lib/util'
 import { Logo, VineDivider } from '../components/brand'
@@ -161,7 +161,7 @@ export default function Profile() {
         ) : (
           <div className="divide-y divide-sage-200 rounded-2xl bg-white ring-1 ring-sage-200">
             {myEvents.map((e) => (
-              <Link key={e.id} to={`/events/${e.id}`} className="flex items-center gap-3 px-3.5 py-3">
+              <Link key={e.id} to={`/events/${e.id}`} onClick={openEvent(e.id)} className="flex items-center gap-3 px-3.5 py-3">
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-semibold">{e.title}</div>
                   <div className="text-xs text-ink/55">{fmtDateTime(e.start)}</div>

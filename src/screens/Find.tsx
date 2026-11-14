@@ -7,73 +7,54 @@ import { INDUSTRIES, MODE_META, TOPICS, topicLabel } from '../config/brand'
 import { useKudzu, useNow } from '../store/useKudzu'
 import {
   EMPTY_QUERY, LEVELS, REQUEST_LIMIT, accountStanding, answerRequest, daysLeft, findPeople, getUser, incomingRequests, isEmptyQuery,
-  levelLabel, levelOf, mutualConnections, openRequestCount, outgoingRequests, pendingConnections, quietPaused, replyLine, requestState,
+  levelLabel, levelOf, outgoingRequests, pendingConnections, quietPaused, requestState,
   requestTo, spotsLeft, suggestFor, suggestForText, type Found, type Query,
 } from '../services'
-import { CITY_NAMES, ago, firstName } from '../lib/util'
+import { CITY_NAMES, ago, firstName, hash } from '../lib/util'
 import { Logo, TendrilIcon } from '../components/brand'
 import { Avatar, Button, Chip, EmptyState, SchoolChip, Sheet, inputCls } from '../components/ui'
-import { ModeTag, roleLine } from '../components/ProfileView'
+import { roleLine } from '../components/ProfileView'
 import { AccountNotice } from '../components/AccountNotice'
 import { LeafSprig, type LeafItem } from '../components/NetworkLeaves'
+import { ProfilePopup } from '../components/ProfilePopup'
 
 type GroupBy = 'city' | 'industry' | 'level'
 const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v])
 const shortName = (u: User) => { const p = u.name.split(' '); return p.length > 1 ? `${p[0]} ${p[p.length - 1][0]}.` : p[0] }
 
-/** One person as a leaf: a lens-shaped tag carrying their name, coloured by how you relate to them. */
-function PersonLeaf({ f, index, selected, requested, onPick }: { f: Found; index: number; selected: boolean; requested: boolean; onPick: () => void }) {
+/** Stand-in headshots until photos exist. Each person always gets the same one. */
+const FACES = ['🧑', '🧑‍🦱', '🧑‍🦰', '🧑‍🦳', '🧑‍🦲', '👱', '🧔']
+const faceFor = (u: User) => FACES[hash(u.id + u.name) % FACES.length]
+
+/**
+ * One person as a leaf: a headshot, their name, class and company, and nothing else.
+ * The tint says how you relate to them. One tap opens the whole profile.
+ */
+function PersonLeaf({ f, index, requested, onPick }: { f: Found; index: number; requested: boolean; onPick: () => void }) {
   const m = MODE_META[f.info.mode]
-  const full = !f.connected && spotsLeft(f.user) === 0
+  const u = f.user
+  const full = !f.connected && spotsLeft(u) === 0
   return (
     <button
       onClick={onPick}
-      className={`relative flex h-10 items-center gap-1.5 px-4 text-[13px] font-semibold shadow-sm ${selected ? 'ring-2 ring-ink/70 ring-offset-2 ring-offset-cream' : ''} ${full ? 'opacity-55' : ''}`}
+      className={`relative flex w-full items-center gap-2 py-3 pl-2.5 pr-3 text-left shadow-sm ${full ? 'opacity-55' : ''}`}
       style={{
-        background: f.connected ? '#fff' : m.color,
-        color: f.connected ? m.color : '#faf6ee',
-        border: f.connected ? `1.5px solid ${m.color}` : undefined,
+        background: f.connected ? '#fff' : m.bg,
+        border: `1.5px solid ${f.connected ? m.color : 'transparent'}`,
         // a leaf: pointed at two opposite corners, round at the other two
-        borderRadius: index % 2 ? '4px 999px 4px 999px' : '999px 4px 999px 4px',
-        transform: `rotate(${[-2, 1.5, -1, 2][index % 4]}deg)`,
+        borderRadius: index % 2 ? '12px 40px 12px 40px' : '40px 12px 40px 12px',
       }}
-      aria-label={`${f.user.name}, ${roleLine(f.user)}`}
-      aria-pressed={selected}
+      data-leaf
+      aria-label={`${u.name}, ${roleLine(u)}`}
     >
-      {shortName(f.user)}
-      {requested && <TendrilIcon size={14} color={f.connected ? m.color : '#faf6ee'} />}
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/85 text-[24px] leading-none" aria-hidden>{faceFor(u)}</span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[14.5px] font-semibold leading-tight" style={{ color: m.color }}>{shortName(u)}</span>
+        <span className="block whitespace-nowrap text-[12px] leading-snug text-ink/55">Class of ’{String(u.gradYear).slice(2)}</span>
+        <span className="block truncate text-[12px] leading-snug text-ink/70">{u.company ?? (u.role === 'student' ? 'Student' : u.industry)}</span>
+      </span>
+      {requested && <span className="absolute right-2.5 top-2"><TendrilIcon size={14} color={m.color} /></span>}
     </button>
-  )
-}
-
-/** The synopsis shown when a leaf is tapped once. Tapping the leaf again, or the card, opens the full profile. */
-function Synopsis({ f, requested, onClose }: { f: Found; requested: boolean; onClose: () => void }) {
-  const s = useKudzu()
-  const nav = useNavigate()
-  const u = f.user
-  const mutual = mutualConnections(s, u)
-  const spots = spotsLeft(u)
-  return (
-    <div className="absolute inset-x-3 bottom-3 z-[1200] rounded-2xl bg-white p-3.5 shadow-xl ring-1 ring-sage-200">
-      <button onClick={onClose} className="absolute right-2 top-2 rounded-full p-1 text-ink/40 hover:bg-sage-100" aria-label="Close"><X size={16} /></button>
-      <button onClick={() => nav(`/u/${u.id}`)} className="flex w-full items-start gap-3 pr-6 text-left">
-        <Avatar user={u} size={48} />
-        <span className="min-w-0 flex-1">
-          <span className="block truncate font-display text-[17px] font-semibold">{u.name}</span>
-          <span className="block truncate text-[13px] text-ink/65">{roleLine(u)}</span>
-          <span className="block text-xs text-ink/50">{u.city} · Class of {u.gradYear}</span>
-        </span>
-      </button>
-      <div className="mt-2.5 flex flex-wrap items-center gap-2"><ModeTag mode={f.info.mode} /><span className="text-[13px] text-ink/75">{f.info.reason}</span></div>
-      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-ink/55">
-        {mutual.length > 0 && <span>You both know {mutual.slice(0, 2).map((m) => firstName(m.name)).join(' and ')}{mutual.length > 2 ? ` +${mutual.length - 2}` : ''}</span>}
-        {f.connected ? <span>In your network</span> : requested ? <span>Request sent</span> : spots > 0 ? <span>{spots} of {u.capacity} spots left</span> : <span>Full this month</span>}
-        {!f.connected && <span>{replyLine(u)}</span>}
-      </div>
-      <button onClick={() => nav(`/u/${u.id}`)} className="mt-3 flex w-full items-center justify-center gap-1 rounded-full bg-vine-700 py-2.5 text-sm font-semibold text-cream">
-        Open full profile <ChevronRight size={16} />
-      </button>
-    </div>
   )
 }
 
@@ -151,7 +132,6 @@ function RequestsSheet({ open, onClose, incoming, outgoing }: { open: boolean; o
 export default function Find() {
   const s = useKudzu()
   const now = useNow()
-  const nav = useNavigate()
   const [params, setParams] = useSearchParams()
   const startTopic = params.get('topic')
   const [q, setQ] = useState<Query>(startTopic ? { ...EMPTY_QUERY, topics: [startTopic] } : EMPTY_QUERY)
@@ -192,7 +172,6 @@ export default function Find() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [s.me, s.prefs, s.schoolId, s.connections, s.blocked, s.feedback, s.groups, ask, needSent],
   )
-  const pickedFound = picked ? results.find((f) => f.user.id === picked) ?? suggested.find((f) => f.user.id === picked) : undefined
 
   const applyFilter = (next: Query) => { setQ(next); setAdding(false); setPicked(null) }
 
@@ -233,8 +212,48 @@ export default function Find() {
     { key: 'pending', label: 'Not yet met', count: pending.length, onClick: () => setSheet('pending') },
   ]
 
+  const leaf = (f: Found, i: number) => <PersonLeaf key={f.user.id} f={f} index={i} requested={isRequested(f.user.id)} onPick={() => setPicked(f.user.id)} />
+
+  // What drops out from under the need you tapped: a few people, or the reason there are none.
+  const dropOut = () => {
+    if (!ask || (ask === OTHER && !needSent)) return null
+    return (
+      <div key={ask + needSent} className="relative ml-3 mt-1 pb-1 pl-2.5">
+        {/* a stem runs down from the need, and the leaves fall off it one by one */}
+        <motion.span className="absolute bottom-2 left-0 top-0 w-0.5 origin-top rounded-full bg-vine-300" initial={{ scaleY: 0 }} animate={{ scaleY: 1 }} transition={{ duration: 0.35, ease: 'easeOut' }} aria-hidden />
+        {ask === OTHER && suggested.length > 0 && (
+          <p className="pb-1 pt-2 text-xs text-ink/55">Matched on {[...new Set(suggested.flatMap((f) => f.matched ?? []))].join(', ')}</p>
+        )}
+        {suggested.length === 0 ? (
+          <p className="mt-2 rounded-2xl border border-dashed border-sage-300 p-4 text-center text-sm text-ink/55">
+            {ask === OTHER ? 'Nobody fits those words yet. Try a field, a company or a city.' : 'Nobody with room right now. Try another need, or search above.'}
+          </p>
+        ) : leaves ? (
+          <div className="grid grid-cols-2 gap-2 pt-2">
+            {suggested.map((f, i) => (
+              <motion.div
+                key={f.user.id}
+                style={{ transformOrigin: 'top left' }}
+                initial={{ y: -46 - Math.floor(i / 2) * 60, scale: 0.4, opacity: 0, rotate: i % 2 ? 8 : -8 }}
+                animate={{ y: 0, scale: 1, opacity: 1, rotate: 0 }}
+                transition={{ type: 'spring', stiffness: 210, damping: 17, delay: 0.12 + i * 0.1 }}
+              >
+                {leaf(f, i)}
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="pt-1">{suggested.map((f) => row(f, f.via))}</div>
+        )}
+        {ask !== OTHER && suggested.length > 0 && (
+          <button onClick={() => setQ({ ...EMPTY_QUERY, topics: [ask] })} className="mt-2 text-xs font-semibold text-vine-700">See everyone who can help</button>
+        )}
+      </div>
+    )
+  }
+
   const row = (f: Found, via?: User) => (
-    <Link key={f.user.id} to={`/u/${f.user.id}`} className="flex items-center gap-3 rounded-2xl px-2 py-2.5 hover:bg-sage-50">
+    <button key={f.user.id} onClick={() => setPicked(f.user.id)} data-person-row className="flex w-full items-center gap-3 rounded-2xl px-2 py-2.5 text-left hover:bg-sage-50">
       <Avatar user={f.user} size={44} />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5 truncate font-semibold">{f.user.name}{isRequested(f.user.id) && <TendrilIcon size={14} />}</span>
@@ -243,7 +262,7 @@ export default function Find() {
         {via && <span className="block truncate text-[11px] text-coffee-600">You → {firstName(via.name)} → {firstName(f.user.name)}</span>}
       </span>
       <ChevronRight size={18} className="shrink-0 text-ink/30" />
-    </Link>
+    </button>
   )
 
   return (
@@ -278,7 +297,7 @@ export default function Find() {
         )}
       </header>
 
-      <div className="app-scroll min-h-0 flex-1 overflow-y-auto px-3 pb-36" onClick={(e) => { if (e.target === e.currentTarget) setPicked(null) }}>
+      <div className="app-scroll min-h-0 flex-1 overflow-y-auto px-3 pb-36">
         {accountStanding(s) === 'warning' && <div className="mb-3 px-1"><AccountNotice compact /></div>}
         {quietPaused(s, now) && (
           <div className="mx-1 mb-3 rounded-2xl border border-amber-200 bg-amber-50 p-3.5 text-[13px] leading-relaxed text-amber-900">
@@ -292,73 +311,33 @@ export default function Find() {
         {empty ? (
           <div className="px-1">
             <h1 className="mt-1 font-display text-2xl font-semibold">What are you looking for?</h1>
-            <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="What you’re looking for">
+            <p className="mt-1 text-[13px] text-ink/50">Tap one and the people who can help drop out below it.</p>
+            {/* one need per line, so the people it finds can fall out from right under it */}
+            <div className="mt-3 space-y-2" role="group" aria-label="What you’re looking for">
               {(s.me.asks.length ? s.me.asks : TOPICS.slice(0, 3).map((t) => t.id)).map((t) => (
-                <Chip key={t} active={ask === t} onClick={() => { setAsk(ask === t ? null : t); setPicked(null) }}>{topicLabel(t)}</Chip>
-              ))}
-              <Chip tone="plain" active={ask === OTHER} onClick={() => { setAsk(ask === OTHER ? null : OTHER); setPicked(null) }}><Plus size={12} /> Something else</Chip>
-            </div>
-
-            {!ask && <p className="mt-3 text-[13px] text-ink/50">Tap one and the people who can help will grow out.</p>}
-
-            {ask === OTHER && (
-              <form className="mt-3" onSubmit={(e) => { e.preventDefault(); setNeedSent(need.trim()); setPicked(null) }}>
-                <textarea
-                  className={`${inputCls} min-h-[72px] resize-none`}
-                  placeholder="In your own words. For example: someone who moved from finance into design"
-                  value={need}
-                  onChange={(e) => setNeed(e.target.value)}
-                  aria-label="Describe what you’re looking for"
-                  maxLength={160}
-                />
-                <Button type="submit" className="mt-2 w-full !py-2.5" disabled={!need.trim()}>Find someone</Button>
-              </form>
-            )}
-
-            {ask && (ask !== OTHER || needSent) && (
-              <div key={ask + needSent}>
-                <div className="mb-1 mt-5 flex items-baseline justify-between">
-                  <h2 className="text-sm font-semibold">People who can help</h2>
-                  {ask !== OTHER && <button onClick={() => setQ({ ...EMPTY_QUERY, topics: [ask] })} className="text-xs font-semibold text-vine-700">See everyone</button>}
+                <div key={t}>
+                  <Chip active={ask === t} onClick={() => setAsk(ask === t ? null : t)}>{topicLabel(t)}</Chip>
+                  {ask === t && dropOut()}
                 </div>
-                {ask === OTHER && suggested.length > 0 && (
-                  <p className="mb-2 text-xs text-ink/55">Matched on {[...new Set(suggested.flatMap((f) => f.matched ?? []))].join(', ')}</p>
-                )}
-                {suggested.length === 0 ? (
-                  <p className="rounded-2xl border border-dashed border-sage-300 p-4 text-center text-sm text-ink/55">
-                    {ask === OTHER ? 'Nobody fits those words yet. Try a field, a company or a city.' : 'Nobody with room right now. Try another topic, or search above.'}
-                  </p>
-                ) : leaves ? (
-                  // the stem grows down first, then each leaf opens out from it in turn
-                  <div className="relative mt-2 pl-3.5">
-                    <motion.span
-                      className="absolute bottom-0 left-0 top-0 w-0.5 origin-top rounded-full bg-vine-300"
-                      initial={{ scaleY: 0 }} animate={{ scaleY: 1 }} transition={{ duration: 0.45, ease: 'easeOut' }} aria-hidden
+              ))}
+              <div>
+                <Chip tone="plain" active={ask === OTHER} onClick={() => setAsk(ask === OTHER ? null : OTHER)}><Plus size={12} /> Something else</Chip>
+                {ask === OTHER && (
+                  <form className="ml-4 mt-2" onSubmit={(e) => { e.preventDefault(); setNeedSent(need.trim()) }}>
+                    <textarea
+                      className={`${inputCls} min-h-[72px] resize-none`}
+                      placeholder="In your own words. For example: someone who moved from finance into design"
+                      value={need}
+                      onChange={(e) => setNeed(e.target.value)}
+                      aria-label="Describe what you’re looking for"
+                      maxLength={160}
                     />
-                    <div className="flex flex-wrap gap-x-2.5 gap-y-3 py-1">
-                      {suggested.map((f, i) => (
-                        <motion.div
-                          key={f.user.id}
-                          style={{ transformOrigin: 'left center' }}
-                          initial={{ scale: 0, opacity: 0, x: -14 }}
-                          animate={{ scale: 1, opacity: 1, x: 0 }}
-                          transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 0.25 + i * 0.12 }}
-                        >
-                          <PersonLeaf f={f} index={i} selected={picked === f.user.id} requested={isRequested(f.user.id)} onPick={() => (picked === f.user.id ? nav(`/u/${f.user.id}`) : setPicked(f.user.id))} />
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div>{suggested.map((f) => row(f, f.via))}</div>
+                    <Button type="submit" className="mt-2 w-full !py-2.5" disabled={!need.trim()}>Find someone</Button>
+                  </form>
                 )}
-                {leaves && suggested.some((f) => f.via) && (
-                  <p className="mt-3 text-xs text-ink/55">
-                    {suggested.filter((f) => f.via).slice(0, 2).map((f) => `${firstName(f.via!.name)} knows ${firstName(f.user.name)}`).join(' · ')}
-                  </p>
-                )}
+                {ask === OTHER && dropOut()}
               </div>
-            )}
+            </div>
 
             <h2 className="mb-2 mt-6 text-sm font-semibold">Or look around</h2>
             <div className="flex flex-wrap gap-2">
@@ -389,9 +368,7 @@ export default function Find() {
                 <section key={name} className="relative pb-4 pl-4">
                   <span className="absolute left-0 top-[11px] h-0.5 w-3 bg-vine-300" aria-hidden />
                   <h2 className="text-[13px] font-semibold text-ink/75">{name} <span className="font-normal text-ink/40">· {list.length}</span></h2>
-                  <div className="mt-2 flex flex-wrap gap-x-2.5 gap-y-3">
-                    {list.map((f, i) => <PersonLeaf key={f.user.id} f={f} index={i} selected={picked === f.user.id} requested={isRequested(f.user.id)} onPick={() => (picked === f.user.id ? nav(`/u/${f.user.id}`) : setPicked(f.user.id))} />)}
-                  </div>
+                  <div className="mt-2 grid grid-cols-2 gap-2">{list.map(leaf)}</div>
                 </section>
               ))}
             </div>
@@ -410,7 +387,9 @@ export default function Find() {
         )}
       </div>
 
-      {pickedFound && leaves ? <Synopsis f={pickedFound} requested={isRequested(pickedFound.user.id)} onClose={() => setPicked(null)} /> : <LeafSprig items={sprig} />}
+      <LeafSprig items={sprig} />
+      {/* one tap on anyone opens their whole profile, floating over the search */}
+      <ProfilePopup userId={picked} onClose={() => setPicked(null)} />
 
       {/* picking a filter applies it and closes the sheet: one tap, nothing to dismiss */}
       <Sheet open={adding} onClose={() => setAdding(false)} title="Narrow it down">
@@ -452,7 +431,7 @@ export default function Find() {
                     <span className="block truncate text-xs text-ink/55">{roleLine(u)}</span>
                   </span>
                 </Link>
-                <Link to={`/messages/${u.id}?propose=1`} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-coffee-100 text-coffee-600" aria-label={`Propose coffee with ${u.name}`}><Coffee size={17} /></Link>
+                <Link to={`/messages/${u.id}?coffee=1`} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-coffee-100 text-coffee-600" aria-label={`Propose coffee with ${u.name}`}><Coffee size={17} /></Link>
               </div>
             ))}
           </div>

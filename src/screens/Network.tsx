@@ -19,7 +19,7 @@ function NudgeCard({ n }: { n: Nudge }) {
   if (!u) return null
   const go = () => {
     dismiss(n.id)
-    nav(n.action === 'coffee' ? `/messages/${u.id}?propose=1` : `/messages/${u.id}?draft=${encodeURIComponent(n.draft ?? '')}`)
+    nav(n.action === 'coffee' ? `/messages/${u.id}?coffee=1` : `/messages/${u.id}?draft=${encodeURIComponent(n.draft ?? '')}`)
   }
   return (
     <motion.div layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -40 }} className="rounded-2xl border border-sage-200 bg-white p-3 shadow-sm">
@@ -143,8 +143,8 @@ export default function Network() {
           </div>
         </EmptyState>
       ) : view === 'map' ? (
-        <div className="min-h-0 flex-1 px-3 pb-3">
-          <div className="h-full overflow-hidden rounded-3xl ring-1 ring-sage-200">
+        <div className="min-h-0 flex-1 border-t border-sage-200">
+          <div className="h-full">
             <NetworkMap me={s.me} people={people} onSelection={onSelection} />
           </div>
         </div>
