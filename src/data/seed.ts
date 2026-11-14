@@ -26,6 +26,8 @@ export const STUDENT_PERSONA: User = {
   used: 1,
   groupIds: ['grp-fg', 'grp-startup'],
   verified: 'verified',
+  degrees: [{ schoolId: 'gt', level: 'Bachelor’s', major: 'Industrial Engineering', gradYear: 2028 }],
+  interests: ['Climbing', 'Hackathons', 'Co-op program'],
 }
 
 export const ALUM_PERSONA: User = {
@@ -51,6 +53,10 @@ export const ALUM_PERSONA: User = {
   used: 1,
   groupIds: ['grp-fg', 'grp-startup'],
   verified: 'verified',
+  degrees: [{ schoolId: 'gt', level: 'Bachelor’s', major: 'Industrial Engineering', gradYear: 2015 }],
+  path: [{ title: 'Operations Analyst', company: 'UPS' }, { title: 'Product Manager', company: 'Delta Air Lines' }],
+  careerChange: true,
+  interests: ['Running', 'Volunteering', 'Study abroad'],
 }
 
 export const DEFAULT_PREFS: Prefs = {

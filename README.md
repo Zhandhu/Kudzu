@@ -52,11 +52,15 @@ Demo controls:
 | **Events** | For You / All feeds, type filters, event detail with map and guest list, RSVP, host an event, community groups |
 | **Network** | Connection strength shown as leaf states, nudges, searchable list, and a map where vines run from you to each connection. Class and city cohorts, and a way to add people you already know |
 | **Messages** | Chat with mock auto-replies, coffee-chat proposals that become confirmed chats, post-chat check-in with a thank-you note |
-| **Profile** | Edit profile and prompts, thank-you notes you've received, who you want to find, groups, events, settings |
+| **Profile** | Edit profile and prompts, career path, hobbies and clubs, thank-you notes you've received, who you want to find, groups, events, settings |
 
 **No one picks a role.** People say what they are looking for and what they can offer, from one shared list of topics. From that and each person's stage, the app works out the relationship for every pairing: **Learn from**, **Give back** or **Trade notes**. The same student learns from an alum, gives back to a first-year and trades notes with a classmate.
 
-Also included: a full onboarding flow (school selection with .edu detection, alum verification, request-a-school), a private feedback and trust system, and Report / Block on every profile and chat.
+**Sign-up is one menu.** Three sections are needed: you and your school, the fields you care about, and people you already know. The rest are optional and can be added later from the profile: what you're here for, work and career path (with a flag for people who changed careers), hobbies, clubs and affiliations, and prompts. Each row has a box that fills in when the section is done, and they can be done in any order. Sign-up also covers .edu detection, alum verification, request-a-school, inviting someone by phone number, and choosing between leaves and a simple list.
+
+**More than one school.** Someone with degrees from two schools belongs to both networks. One is their default, which the app opens on. Tapping the school name at the top of any tab lists their networks, swaps between them, changes the default, or adds another.
+
+Also included: a private feedback and trust system, and Report / Block on every profile and chat.
 
 Kudzu is **college-agnostic**. Schools are data, not code: a `School` has an id, name, email domains, city and accent colour, and every user, event and group carries a school id. The demo is seeded with Georgia Tech as the featured school plus three others.
 
@@ -95,6 +99,9 @@ Screens read data through `src/services`, never straight from the seed files, so
 - **Demo time** is the real clock plus an offset. "Fast-forward one month" adds 30 days to the offset, which is why strengths fade and confirmed chats become due for a check-in.
 - **Replies are mocked.** About 60% of people accept a request after a moment. The rest never answer, so that a lapsed request can be shown. Maya, the first suggestion at Georgia Tech, always accepts so the demo is repeatable.
 - **Feedback is private, with one exception.** Check-in answers feed a hidden score used only to order search results and are never shown to anyone. The thank-you note at the end is the one part the other person sees, and only if you write one.
+- **Nobody asks for a referral.** "Referrals and introductions" can be offered but is not in the list of things to look for. "Friends after graduation" is in both lists.
+- **Zero chats a month is allowed.** Someone can be here only to ask. Nobody can send them a request.
+- **Invites and usernames are mocked.** A phone invite is stored and nothing is sent. Usernames are made from each person's name.
 - **Soft roles** come from `matchInfo` in `src/services`. Someone further along is someone to learn from by default; what each person asks for and offers supplies the reason and can tip the result.
 
 ## Research

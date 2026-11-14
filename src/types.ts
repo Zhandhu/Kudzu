@@ -21,6 +21,21 @@ export interface PromptAnswer {
   answer: string
 }
 
+/** One degree at one school. Someone with two degrees belongs to both schools' networks. */
+export interface Degree {
+  schoolId: string
+  /** "Bachelor’s", "Master’s", "MBA" and so on. */
+  level: string
+  major: string
+  gradYear: number
+}
+
+/** One stop on a career path, oldest first. */
+export interface PathStep {
+  title: string
+  company: string
+}
+
 export interface User {
   id: string
   /** Array so a user can later belong to more than one school (undergrad + grad). */
@@ -44,6 +59,14 @@ export interface User {
   used: number
   groupIds: string[]
   verified: 'verified' | 'pending'
+  /** Every degree, one per school at least. `schoolIds`, `major` and `gradYear` mirror the default school's. */
+  degrees?: Degree[]
+  /** Earlier roles, oldest first. The current role is `title` and `company`. */
+  path?: PathStep[]
+  /** Set by people who moved from one field into another, so others can find them for that. */
+  careerChange?: boolean
+  /** Hobbies, clubs and affiliations. */
+  interests?: string[]
 }
 
 /** Where someone is in their career, worked out from their class year. */

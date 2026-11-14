@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowLeftRight, Briefcase, Compass, Flag, GraduationCap, HandHeart, Heart, MapPin, MoreHorizontal, ShieldOff, Sparkles, Sprout, Users } from 'lucide-react'
+import { ArrowLeftRight, Briefcase, Compass, Flag, GraduationCap, HandHeart, Heart, MapPin, MoreHorizontal, ShieldOff, Shuffle, Sparkles, Sprout, Users } from 'lucide-react'
 import type { Mode, User } from '../types'
 import { MODE_META, topicLabel } from '../config/brand'
 import { useKudzu } from '../store/useKudzu'
@@ -85,6 +85,38 @@ export function TopicRows({ user, highlightAsks = [], highlightOffers = [] }: { 
   )
 }
 
+/** Career path, the career-change flag, and hobbies, clubs and affiliations. Shows nothing if none are set. */
+export function Background({ user }: { user: User }) {
+  const path = user.path ?? []
+  const interests = user.interests ?? []
+  if (!path.length && !interests.length && !user.careerChange) return null
+  const head = 'mb-1.5 text-xs font-semibold uppercase tracking-wide text-ink/50'
+  return (
+    <div className="space-y-3">
+      {(path.length > 0 || user.careerChange) && (
+        <div>
+          <div className={`${head} flex items-center gap-2`}>
+            Career path
+            {user.careerChange && <span className="inline-flex items-center gap-1 rounded-full bg-coffee-500 px-2 py-0.5 text-[10px] font-bold normal-case tracking-normal text-cream"><Shuffle size={10} /> Changed careers</span>}
+          </div>
+          {path.length > 0 && (
+            <ol className="space-y-1 border-l-2 border-vine-200 pl-3 text-[13px]">
+              {path.map((p, i) => <li key={i} className="text-ink/70">{p.title}{p.company && <span className="text-ink/45"> · {p.company}</span>}</li>)}
+              {user.title && <li className="font-semibold text-ink">{roleLine(user)} <span className="font-normal text-ink/45">· now</span></li>}
+            </ol>
+          )}
+        </div>
+      )}
+      {interests.length > 0 && (
+        <div>
+          <div className={head}>Hobbies, clubs and affiliations</div>
+          <div className="flex flex-wrap gap-1.5">{interests.map((i) => <Chip key={i} small tone="plain">{i}</Chip>)}</div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function roleLine(u: User) {
   if (u.title && u.company) return `${u.title} @ ${u.company}`
   return u.title ?? (u.role === 'student' ? 'Student' : 'Alum')
@@ -129,7 +161,7 @@ export function ProfileView({ user, onLikePrompt, showMenu = true, onBlocked }: 
       <div className="space-y-4 px-5 py-4">
         <div className="space-y-1.5 text-sm">
           <div className="flex items-center gap-2"><Briefcase size={15} className="text-coffee-500" /> {roleLine(user)}</div>
-          <div className="flex items-center gap-2"><GraduationCap size={15} className="text-coffee-500" /> {user.major}</div>
+          <div className="flex items-center gap-2"><GraduationCap size={15} className="text-coffee-500" /> {user.major || 'Major not added'}</div>
           <div className="flex items-center gap-2">
             <MapPin size={15} className="text-coffee-500" /> {user.city}
             {!isMe && <span className="text-ink/50">· {distanceLabel(me, user)}</span>}
@@ -149,8 +181,10 @@ export function ProfileView({ user, onLikePrompt, showMenu = true, onBlocked }: 
 
         <div className={`flex items-center gap-2 rounded-xl px-3 py-2 text-[13px] font-medium ${spots > 0 ? 'bg-coffee-100 text-coffee-700' : 'bg-sage-100 text-ink/60'}`}>
           <Users size={15} />
-          {spots > 0 ? `${spots} of ${user.capacity} chat spots left this month` : `Full this month (${user.capacity} chats)`}
+          {spots > 0 ? `${spots} of ${user.capacity} chat spots left this month` : user.capacity === 0 ? 'Not taking chats right now' : `Full this month (${user.capacity} chats)`}
         </div>
+
+        <Background user={user} />
 
         {(common.length > 0 || mutuals.length > 0 || gap) && (
           <div className="space-y-2.5 rounded-xl border border-sage-200 bg-sage-50 p-3">

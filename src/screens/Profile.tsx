@@ -7,9 +7,9 @@ import { accountStanding, getSchool, promptText, receivedThanks, schoolEvents } 
 import { CITIES, ago, fmtDateTime } from '../lib/util'
 import { Logo, VineDivider } from '../components/brand'
 import { Avatar, Button, Chip, Field, SchoolChip, Sheet, Toggle } from '../components/ui'
-import { TopicRows, roleLine } from '../components/ProfileView'
+import { Background, TopicRows, roleLine } from '../components/ProfileView'
 import { PrefsForm } from '../components/PrefsForm'
-import { AsksOffersFields, BasicsFields, PromptEditor } from '../components/ProfileEditor'
+import { AsksOffersFields, BasicsFields, CapacityField, InterestsField, PathEditor, PromptEditor } from '../components/ProfileEditor'
 import { AccountNotice } from '../components/AccountNotice'
 
 function EditSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -24,7 +24,7 @@ function EditSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   }
   const up = (patch: Partial<User>) => setDraft((d) => ({ ...d, ...patch }))
   const save = () => {
-    updateMe({ ...draft, coords: CITIES[draft.city] ?? draft.coords, prompts: draft.prompts.filter((p) => p.promptId && p.answer.trim()) })
+    updateMe({ ...draft, coords: CITIES[draft.city] ?? draft.coords, prompts: draft.prompts.filter((p) => p.promptId && p.answer.trim()), path: (draft.path ?? []).filter((p) => p.title.trim()) })
     say('Profile updated')
     onClose()
   }
@@ -37,9 +37,15 @@ function EditSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
         </div>
         <BasicsFields value={draft} onChange={up} />
         <AsksOffersFields value={draft} onChange={up} />
-        <Field label={`Open to ${draft.capacity} chats per month`}>
-          <input type="range" min={1} max={10} className="w-full" value={draft.capacity} onChange={(e) => up({ capacity: +e.target.value })} />
-        </Field>
+        <CapacityField value={draft.capacity} onChange={(capacity) => up({ capacity })} />
+        <div>
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink/50">Career path</div>
+          <PathEditor value={draft} onChange={up} />
+        </div>
+        <div>
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink/50">Hobbies, clubs and affiliations</div>
+          <InterestsField value={draft.interests ?? []} onChange={(interests) => up({ interests })} />
+        </div>
         <Field label="Prompts"><PromptEditor value={draft.prompts} onChange={(prompts) => up({ prompts })} /></Field>
         <Button className="w-full" disabled={!draft.name.trim()} onClick={save}>Save changes</Button>
       </div>
@@ -70,7 +76,10 @@ export default function Profile() {
         <Avatar user={me} size={96} />
         <h1 className="mt-3 font-display text-2xl font-semibold">{me.name}</h1>
         <p className="text-sm text-ink/60">{roleLine(me)}</p>
-        <p className="text-xs text-ink/45">{me.major} · {school.name} ’{String(me.gradYear).slice(2)} · {me.city}</p>
+        <p className="text-xs text-ink/45">{[me.major, `${school.name} ’${String(me.gradYear).slice(2)}`, me.city].filter(Boolean).join(' · ')}</p>
+        {me.schoolIds.length > 1 && (
+          <p className="text-xs text-ink/45">Also {me.schoolIds.filter((id) => id !== s.schoolId).map((id) => getSchool(id).shortName).join(', ')}</p>
+        )}
         {me.verified === 'pending' && <span className="mt-2 rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800">Alum verification pending</span>}
         <div className="mt-3 flex gap-2">
           <Button variant="secondary" className="!py-2" onClick={() => setEditing(true)}><Pencil size={15} /> Edit profile</Button>
@@ -84,11 +93,11 @@ export default function Profile() {
       <section className="mx-4 mt-5 rounded-2xl bg-white p-4 ring-1 ring-sage-200">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-sm font-semibold">Open to {me.capacity} chats per month</div>
-            <div className="text-xs text-ink/55">{Math.max(0, me.capacity - me.used)} spots left this month</div>
+            <div className="text-sm font-semibold">{me.capacity === 0 ? 'Not taking chats right now' : `Open to ${me.capacity} ${me.capacity === 1 ? 'chat' : 'chats'} per month`}</div>
+            <div className="text-xs text-ink/55">{me.capacity === 0 ? 'Nobody can send you a request. You can still ask others.' : `${Math.max(0, me.capacity - me.used)} spots left this month`}</div>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => s.updateMe({ capacity: Math.max(1, me.capacity - 1) })} className="h-8 w-8 rounded-full bg-sage-100 text-lg font-semibold text-vine-700" aria-label="Fewer chats">−</button>
+            <button onClick={() => s.updateMe({ capacity: Math.max(0, me.capacity - 1) })} className="h-8 w-8 rounded-full bg-sage-100 text-lg font-semibold text-vine-700" aria-label="Fewer chats">−</button>
             <button onClick={() => s.updateMe({ capacity: Math.min(10, me.capacity + 1) })} className="h-8 w-8 rounded-full bg-sage-100 text-lg font-semibold text-vine-700" aria-label="More chats">+</button>
           </div>
         </div>
@@ -121,6 +130,7 @@ export default function Profile() {
 
       <section className="mx-4 mt-4">
         <div className="mb-3"><TopicRows user={me} /></div>
+        <div className="mb-3"><Background user={me} /></div>
         <div className="space-y-2">
           {me.prompts.map((p) => (
             <div key={p.promptId} className="rounded-2xl border border-sage-200 bg-white p-3.5">

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Connection, Conversation, Feedback, Group, InteractionType, KEvent, LastTalked, Message, Prefs, Proposal, Request, User } from '../types'
+import type { Connection, Conversation, Degree, Feedback, Group, InteractionType, KEvent, LastTalked, Message, Prefs, Proposal, Request, User } from '../types'
 import { ALUM_PERSONA, DEFAULT_PREFS, SEED_GROUPS, STUDENT_PERSONA, seedConnections, seedConversations, seedEvents, seedRequests } from '../data/seed'
 import { SCHOOLS } from '../data/schools'
 import { CITIES, DAY, uid } from '../lib/util'
@@ -9,7 +9,12 @@ interface Data {
   onboarded: boolean
   me: User
   persona: 'student' | 'alum' | 'custom'
+  /** The school network being looked at now. Every tab is scoped to it. */
   schoolId: string
+  /** The school the user ties themselves to most. The app opens on it. */
+  homeSchoolId: string
+  /** Phone numbers of people the user asked to join. Mocked: nothing is sent. */
+  invites: string[]
   /** Demo clock: "now" is the real time plus this many days. */
   timeOffsetDays: number
   prefs: Prefs
@@ -47,6 +52,10 @@ interface Actions {
   set: (patch: Partial<Data>) => void
   switchPersona: () => void
   switchSchool: (id: string) => void
+  /** Look at another of the user's own school networks. */
+  viewSchool: (id: string) => void
+  setHomeSchool: (id: string) => void
+  addSchool: (d: Degree) => void
   fastForward: (days: number) => void
   addRequest: (r: Omit<Request, 'id' | 'at' | 'status'>) => void
   resolveRequest: (id: string, status: 'accepted' | 'declined') => void
@@ -79,6 +88,8 @@ const fresh = (): Data => {
     me: STUDENT_PERSONA,
     persona: 'student',
     schoolId: 'gt',
+    homeSchoolId: 'gt',
+    invites: [],
     timeOffsetDays: 0,
     prefs: DEFAULT_PREFS,
     requests: seedRequests(now),
@@ -135,7 +146,8 @@ export const useKudzu = create<KudzuState>()(
       ...fresh(),
 
       reset: () => set({ ...fresh() }),
-      finishOnboarding: (me, prefs) => set({ me, prefs, schoolId: me.schoolIds[0], persona: 'custom', onboarded: true }),
+      // the default school comes first in `schoolIds`
+      finishOnboarding: (me, prefs) => set({ me, prefs, schoolId: me.schoolIds[0], homeSchoolId: me.schoolIds[0], persona: 'custom', onboarded: true }),
       skipOnboarding: () => set({ onboarded: true }),
       signOut: () => set({ onboarded: false }),
       updateMe: (patch) =>
@@ -162,14 +174,45 @@ export const useKudzu = create<KudzuState>()(
           const base = s.persona === 'alum' ? ALUM_PERSONA : s.persona === 'student' ? STUDENT_PERSONA : s.me
           return {
             schoolId: id,
+            homeSchoolId: id,
             me: {
               ...s.me,
               schoolIds: [id],
+              degrees: [{ schoolId: id, level: s.me.degrees?.[0]?.level ?? 'Bachelor’s', major: s.me.major, gradYear: s.me.gradYear }],
               groupIds: id === 'gt' ? base.groupIds : firstGroup ? [firstGroup.id] : [],
               city: s.me.city,
               coords: CITIES[s.me.city] ?? CITIES.Atlanta,
             },
             toast: { id: uid(), text: `Switched to ${school.name}` },
+          }
+        }),
+
+      viewSchool: (id) =>
+        set((s) => {
+          if (id === s.schoolId || !s.me.schoolIds.includes(id)) return {}
+          // the profile shows the degree from whichever network is open
+          const d = s.me.degrees?.find((x) => x.schoolId === id)
+          return {
+            schoolId: id,
+            me: d ? { ...s.me, major: d.major, gradYear: d.gradYear } : s.me,
+            toast: { id: uid(), text: `Now in ${SCHOOLS.find((x) => x.id === id)!.name}` },
+          }
+        }),
+
+      setHomeSchool: (id) =>
+        set((s) => ({
+          homeSchoolId: id,
+          me: { ...s.me, schoolIds: [id, ...s.me.schoolIds.filter((x) => x !== id)] },
+          toast: { id: uid(), text: `${SCHOOLS.find((x) => x.id === id)!.shortName} is now your default network` },
+        })),
+
+      addSchool: (d) =>
+        set((s) => {
+          if (s.me.schoolIds.includes(d.schoolId)) return {}
+          const mine = s.me.degrees ?? [{ schoolId: s.me.schoolIds[0], level: 'Bachelor’s', major: s.me.major, gradYear: s.me.gradYear }]
+          return {
+            me: { ...s.me, schoolIds: [...s.me.schoolIds, d.schoolId], degrees: [...mine, d] },
+            toast: { id: uid(), text: `Added ${SCHOOLS.find((x) => x.id === d.schoolId)!.name}` },
           }
         }),
 
@@ -319,7 +362,7 @@ export const useKudzu = create<KudzuState>()(
     }),
     {
       // bump this when the saved shape changes, so old browsers start from fresh seed data
-      name: 'kudzu-demo-v5',
+      name: 'kudzu-demo-v6',
       partialize: (s) => {
         const { checkin, toast, demoOpen, typing, ...rest } = s
         void checkin, toast, demoOpen, typing

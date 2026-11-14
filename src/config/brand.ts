@@ -18,7 +18,22 @@ export const TOPICS: { id: string; label: string }[] = [
   { id: 'referral', label: 'Referrals and introductions' },
   { id: 'recruiting', label: 'Recruiting tips and timelines' },
   { id: 'campus', label: 'Classes, clubs and campus life' },
+  { id: 'friends', label: 'Friends after graduation' },
 ]
+
+/** Nobody asks for a referral here: it is something a person may offer once they know you. */
+export const ASK_TOPICS = TOPICS.filter((t) => t.id !== 'referral')
+
+/** Starting points for "hobbies, clubs and affiliations". People can add their own. */
+export const INTEREST_IDEAS = [
+  'Running', 'Climbing', 'Pickup basketball', 'Cooking', 'Board games', 'Live music', 'Photography', 'Hiking', 'Gaming', 'Volunteering',
+  'Greek life', 'Student government', 'Club sports', 'Marching band', 'Hackathons', 'Co-op program', 'Study abroad', 'First-generation students',
+]
+
+export const DEGREE_LEVELS = ['Bachelor’s', 'Master’s', 'MBA', 'PhD', 'Other']
+
+/** The year used to tell a student from a graduate. */
+export const CURRENT_CLASS_YEAR = 2027
 
 export const topicLabel = (id: string) => TOPICS.find((t) => t.id === id)?.label ?? id
 

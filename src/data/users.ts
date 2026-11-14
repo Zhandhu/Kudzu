@@ -15,18 +15,18 @@ function topicsFor(role: Role, gradYear: number, codes: string): { asks: string[
     return {
       offers: pick(
         [true, 'industry'], [has('A'), 'decision'], [has('M'), 'path'], [has('J') || has('M'), 'interview'],
-        [has('C'), 'resume'], [has('J'), 'referral'], [gradYear >= 2018, 'recruiting'],
+        [has('C'), 'resume'], [has('J'), 'referral'], [gradYear >= 2018, 'recruiting'], [has('L'), 'friends'],
       ),
       // recent graduates still want guidance; others are curious about fields beyond their own
-      asks: gradYear >= 2021 ? ['decision', 'path'] : has('L') ? ['industry'] : [],
+      asks: [...(gradYear >= 2021 ? ['decision', 'path'] : has('L') ? ['industry'] : []), ...(has('L') ? ['friends'] : [])],
     }
   }
   return {
     asks: pick(
       [true, 'industry'], [has('A'), 'decision'], [has('M'), 'path'], [has('J') || has('C'), 'interview'],
-      [has('C'), 'resume'], [has('J'), 'referral'], [gradYear >= 2028, 'recruiting'], [gradYear >= 2029, 'campus'],
+      [has('C'), 'resume'], [gradYear >= 2028, 'recruiting'], [gradYear >= 2029, 'campus'], [has('L'), 'friends'],
     ),
-    offers: pick([gradYear <= 2029, 'campus'], [gradYear <= 2028, 'path'], [gradYear <= 2027, 'recruiting'], [gradYear <= 2027, 'interview']),
+    offers: pick([gradYear <= 2029, 'campus'], [gradYear <= 2028, 'path'], [gradYear <= 2027, 'recruiting'], [gradYear <= 2027, 'interview'], [has('L'), 'friends']),
   }
 }
 

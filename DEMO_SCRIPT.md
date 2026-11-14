@@ -16,10 +16,12 @@ The demo controls are referred to below as **Demo**.
 
 "Kudzu connects students and alumni of the same school, and helps them stay connected."
 
-1. Tap **Verify with your .edu email**.
-2. Type `riley@gatech.edu`. Point out that Georgia Tech is detected and selected from the email domain. Mention the other schools in the list, the alum verification path, and **My school isn't here yet**.
-3. Tap **Continue** once to show the Student / Alum step. Mention that sign-up also asks who you **already know**, so nobody starts with an empty network.
-4. Say that the remaining steps collect basics, **what you're looking for and what you can offer**, three prompts, and **who you want to find**: fields, cities and career level. Those answers decide who is shown first and never hide anyone. Nobody picks "mentor" or "mentee": the app works that out. Then tap **Skip** (top right) to load the prefilled demo user, Riley, a third-year Industrial Engineering student.
+1. Tap **Verify with your .edu email**. Sign-up is **one menu**, not a queue of screens. Three sections are needed. The rest are optional. Each row has a box that fills in when it is done.
+2. Open **You and your school**. Type a name, then `riley@gatech.edu`. Georgia Tech is detected and selected from the email domain. Tap a second school to show that someone with **two degrees** joins both networks and picks one as their **default**. Mention the alum verification path and **My school isn't here yet**. Tap **Done**: the box fills in.
+3. Open **Fields you care about** and pick one. These answers decide who is shown first and never hide anyone.
+4. Open **People you already know**. Search by name or **@username**, tap someone, and add a **phone number** to invite a friend who isn't on Kudzu. Nobody starts with an empty network.
+5. Point to the optional rows: **what you're here for** (nobody picks "mentor" or "mentee": the app works that out), **work and career path** with the **I changed careers** flag, **hobbies, clubs and affiliations**, and **prompts**. Point to **Leaves** or **Simple list** at the bottom.
+6. Tap **Skip** (top right) to load the prefilled demo user, Riley, a third-year Industrial Engineering student.
 
 ## 0:40 Find (70 seconds)
 
@@ -76,8 +78,9 @@ The demo controls are referred to below as **Demo**.
 
 ## Closing: any school (10 seconds)
 
-1. **Demo → Switch school → Emory.** Flip through Find, Events and Network. Everything is now Emory.
-2. **Demo → Switch user** to show the alum view.
+1. Tap the **GT** chip at the top of any tab. It lists Riley's school networks and marks the default. Tap **Add another school** to show how a second degree is added, then swap into it.
+2. **Demo → Switch school → Emory.** Flip through Find, Events and Network. Everything is now Emory.
+3. **Demo → Switch user** to show the alum view. Morgan’s profile shows a career path and the **Changed careers** flag.
 
 "Kudzu works for any school. Schools are data, not code."
 

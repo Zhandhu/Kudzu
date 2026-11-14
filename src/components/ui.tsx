@@ -1,12 +1,12 @@
-import { createContext, useContext, useEffect, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronLeft, X } from 'lucide-react'
+import { ChevronDown, ChevronLeft, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import type { User } from '../types'
 import { avatarGradient, initials } from '../lib/util'
 import { useKudzu } from '../store/useKudzu'
-import { getSchool } from '../services'
+import { getSchool, listSchools } from '../services'
 import { Tendril } from './brand'
 
 /** Element inside the phone frame that sheets and overlays render into. */
@@ -147,14 +147,65 @@ export function BackHeader({ title, right }: { title?: string; right?: ReactNode
   )
 }
 
+/**
+ * The school network being looked at. Tapping it lists the user's networks:
+ * one is the default the app opens on, and the others are a tap away.
+ */
 export function SchoolChip() {
   const schoolId = useKudzu((s) => s.schoolId)
+  const homeSchoolId = useKudzu((s) => s.homeSchoolId)
+  const me = useKudzu((s) => s.me)
+  const { viewSchool, setHomeSchool, addSchool } = useKudzu.getState()
+  const [open, setOpen] = useState(false)
+  const [adding, setAdding] = useState(false)
   const school = getSchool(schoolId)
+  const others = listSchools().filter((sc) => !me.schoolIds.includes(sc.id))
+  const close = () => { setOpen(false); setAdding(false) }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-sage-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-ink/70">
-      <span className="h-2 w-2 rounded-full" style={{ background: school.accent }} />
-      {school.shortName}
-    </span>
+    <>
+      <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 rounded-full border border-sage-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-ink/70" aria-label={`${school.shortName}. Your school networks`}>
+        <span className="h-2 w-2 rounded-full" style={{ background: school.accent }} />
+        {school.shortName}
+        <ChevronDown size={12} className="text-ink/40" />
+      </button>
+      <Sheet open={open} onClose={close} title={adding ? 'Add a school' : 'Your school networks'}>
+        {adding ? (
+          <div className="space-y-2">
+            <p className="mb-3 text-sm text-ink/60">Add another school you have a degree from. You’ll be able to swap into its network.</p>
+            {others.map((sc) => (
+              <button key={sc.id} onClick={() => { addSchool({ schoolId: sc.id, level: 'Master’s', major: '', gradYear: me.gradYear }); setAdding(false) }} className="flex w-full items-center gap-3 rounded-2xl border border-sage-200 bg-white p-3 text-left">
+                <span className="h-9 w-9 shrink-0 rounded-xl" style={{ background: sc.accent }} />
+                <span className="min-w-0 flex-1"><span className="block font-semibold">{sc.name}</span><span className="block text-xs text-ink/50">{sc.city}</span></span>
+              </button>
+            ))}
+            {others.length === 0 && <p className="py-4 text-center text-sm text-ink/55">You’re in every school on Kudzu.</p>}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {me.schoolIds.map((id) => {
+              const sc = getSchool(id)
+              const d = me.degrees?.find((x) => x.schoolId === id)
+              const isHome = id === homeSchoolId
+              const viewing = id === schoolId
+              return (
+                <div key={id} className={`rounded-2xl border p-3 ${viewing ? 'border-vine-600 bg-vine-50' : 'border-sage-200 bg-white'}`}>
+                  <button onClick={() => { viewSchool(id); close() }} className="flex w-full items-center gap-3 text-left" aria-pressed={viewing} aria-label={`Open ${sc.name}`}>
+                    <span className="h-9 w-9 shrink-0 rounded-xl" style={{ background: sc.accent }} />
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center gap-1.5 font-semibold">{sc.name}{isHome && <span className="rounded-full bg-vine-700 px-2 py-0.5 text-[10px] font-bold uppercase text-cream">Default</span>}</span>
+                      <span className="block text-xs text-ink/50">{d ? `${d.level}${d.major ? ` · ${d.major}` : ''} · ’${String(d.gradYear).slice(2)}` : sc.city}{viewing ? ' · Viewing now' : ''}</span>
+                    </span>
+                  </button>
+                  {!isHome && <button onClick={() => setHomeSchool(id)} className="mt-2 text-[12px] font-semibold text-vine-700 underline underline-offset-4">Make this my default</button>}
+                </div>
+              )
+            })}
+            <button onClick={() => setAdding(true)} className="w-full rounded-2xl border border-dashed border-sage-300 p-3 text-center text-sm font-semibold text-vine-700">+ Add another school</button>
+            <p className="px-1 pt-1 text-xs text-ink/50">Everything you see is from one school at a time. The app opens on your default.</p>
+          </div>
+        )}
+      </Sheet>
+    </>
   )
 }
 
