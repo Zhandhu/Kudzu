@@ -10,9 +10,9 @@ import {
   levelLabel, levelOf, mutualConnections, outgoingRequests, pendingConnections, quietPaused, requestState,
   requestTo, spotsLeft, suggestFor, suggestForText, type Found, type Query,
 } from '../services'
-import { CITY_NAMES, ago, firstName, hash } from '../lib/util'
+import { CITY_NAMES, ago, firstName } from '../lib/util'
 import { Logo, TendrilIcon } from '../components/brand'
-import { Avatar, Button, Chip, EmptyState, SchoolChip, Sheet, inputCls } from '../components/ui'
+import { Avatar, Button, Chip, EmptyState, SchoolChip, Sheet, faceFor, inputCls } from '../components/ui'
 import { roleLine } from '../components/ProfileView'
 import { AccountNotice } from '../components/AccountNotice'
 import { LeafSprig, type LeafItem } from '../components/NetworkLeaves'
@@ -22,9 +22,6 @@ type GroupBy = 'city' | 'industry' | 'level'
 const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v])
 const shortName = (u: User) => { const p = u.name.split(' '); return p.length > 1 ? `${p[0]} ${p[p.length - 1][0]}.` : p[0] }
 
-/** Stand-in headshots until photos exist. Each person always gets the same one. */
-const FACES = ['🧑', '🧑‍🦱', '🧑‍🦰', '🧑‍🦳', '🧑‍🦲', '👱', '🧔']
-const faceFor = (u: User) => FACES[hash(u.id + u.name) % FACES.length]
 
 /** Connection distance: 1st is in your network, 2nd is known by someone you know, 3rd is further out. */
 const DEGREE = { 1: '1st', 2: '2nd', 3: '3rd' } as const

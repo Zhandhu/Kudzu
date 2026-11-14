@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import L from 'leaflet'
 import { AttributionControl, MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from 'react-leaflet'
-import { Coffee, MessageCircle, X } from 'lucide-react'
+import { Coffee, MessageCircle, Minimize2, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { Strength, User } from '../types'
 import { STRENGTH_META, STRENGTH_ORDER } from '../config/brand'
@@ -214,6 +214,32 @@ function ZoomWatcher({ onZoom, onMapClick }: { onZoom: (z: number) => void; onMa
   return null
 }
 
+/**
+ * One tap back to the whole network. It shows only when you are closer in than
+ * the view that fits everyone, so it is there exactly when it is useful.
+ */
+function ZoomOutButton({ points, zoom, pilot, onPress }: { points: LatLng[]; zoom: number; pilot: { current: Pilot }; onPress: () => void }) {
+  const map = useMap()
+  const bounds = L.latLngBounds(points)
+  if (zoom <= map.getBoundsZoom(bounds, false, L.point(40, 40))) return null
+  return (
+    <button
+      ref={(el) => { if (el) L.DomEvent.disableClickPropagation(el) }}
+      onClick={() => {
+        // this is the user asking for the overview, so nothing should fly back afterwards
+        pilot.current.auto = false
+        pilot.current.flying = true
+        onPress()
+        map.flyToBounds(bounds, { padding: [40, 40], maxZoom: 11, duration: 0.9 })
+      }}
+      className="absolute right-3 top-12 z-[1000] flex items-center gap-1.5 rounded-full bg-cream px-3 py-2 text-xs font-semibold text-vine-800 shadow-md ring-1 ring-sage-200"
+      aria-label="Zoom out to your whole network"
+    >
+      <Minimize2 size={14} /> Zoom out
+    </button>
+  )
+}
+
 function FitTo({ points, token }: { points: LatLng[]; token: string }) {
   const map = useMap()
   useEffect(() => {
@@ -366,6 +392,7 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
         <ZoomWatcher onZoom={setZoom} onMapClick={() => setSel(null)} />
         <FitTo points={allPoints} token={`${me.schoolIds[0]}-${people.length}`} />
         <MapPilot pilot={pilot} target={flyCity ? cities.find((c) => c.city === flyCity)?.center ?? null : null} points={allPoints} />
+        <ZoomOutButton points={allPoints} zoom={zoom} pilot={pilot} onPress={() => setSel(null)} />
 
         {strands.map((v) => {
           // a shared strand (no id) lights up whenever anyone in its city is selected

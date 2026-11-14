@@ -6,7 +6,7 @@ import { useKudzu, useNow } from '../store/useKudzu'
 import { EMPTY_QUERY, answerRequest, computeNudges, findPeople, getUser, incomingRequests, strengthOf, webConnections } from '../services'
 import { firstName } from '../lib/util'
 import { LeafIcon, Logo } from '../components/brand'
-import { Avatar, SchoolChip, Toggle, inputCls } from '../components/ui'
+import { Face, SchoolChip, Toggle, inputCls } from '../components/ui'
 import { roleLine } from '../components/ProfileView'
 import { ProfilePopup } from '../components/ProfilePopup'
 import { CatchUpSheet } from '../components/CatchUpSheet'
@@ -82,7 +82,7 @@ export default function Home() {
                 return (
                   <div key={n.id} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-sage-200">
                     <div className="flex items-center gap-3">
-                      <Avatar user={u} size={48} />
+                      <Face user={u} size={48} />
                       <p className="flex-1 text-[15px] leading-snug">{n.text}</p>
                     </div>
                     <div className="mt-3 flex gap-2">
@@ -118,7 +118,7 @@ export default function Home() {
                 return (
                   <div key={r.id} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-sage-200">
                     <button onClick={() => setPicked(u.id)} className="flex w-full items-center gap-3 text-left">
-                      <Avatar user={u} size={48} />
+                      <Face user={u} size={48} />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[16px] font-semibold">{u.name} asked you</span>
                         <span className="block truncate text-[13px] text-ink/55">{roleLine(u)} · Class of {u.gradYear}</span>
@@ -135,7 +135,7 @@ export default function Home() {
               })}
               {couldHelp.map((f) => (
                 <button key={f.user.id} onClick={() => setPicked(f.user.id)} className="flex w-full items-center gap-3 rounded-2xl bg-white p-4 text-left shadow-sm ring-1 ring-sage-200">
-                  <Avatar user={f.user} size={48} />
+                  <Face user={f.user} size={48} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[16px] font-semibold">{f.user.name}</span>
                     <span className="block truncate text-[13px] text-ink/55">{roleLine(f.user)} · Class of {f.user.gradYear}</span>
@@ -162,7 +162,7 @@ export default function Home() {
             <div className="divide-y divide-sage-200 rounded-2xl bg-white ring-1 ring-sage-200">
               {shown.map((p) => (
                 <Link key={p.user.id} to={`/network/${p.user.id}`} className="flex items-center gap-3 px-3.5 py-3.5">
-                  <Avatar user={p.user} size={48} />
+                  <Face user={p.user} size={48} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[16px] font-semibold">{p.user.name}</span>
                     <span className="block truncate text-[13px] text-ink/55">{roleLine(p.user)}</span>

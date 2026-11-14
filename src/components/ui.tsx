@@ -5,7 +5,7 @@ import { Check, ChevronDown, ChevronLeft, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import type { School, User } from '../types'
 import { DEGREE_LEVELS } from '../config/brand'
-import { avatarGradient, initials } from '../lib/util'
+import { avatarGradient, hash, initials } from '../lib/util'
 import { useKudzu } from '../store/useKudzu'
 import { getSchool, listSchools } from '../services'
 import { Tendril } from './brand'
@@ -26,6 +26,23 @@ export function Avatar({ user, size = 44, ring = false }: { user: Pick<User, 'id
     >
       {initials(user.name)}
     </div>
+  )
+}
+
+/** Stand-in headshots until photos exist. Each person always gets the same one, wherever they appear. */
+const FACES = ['🧑', '🧑‍🦱', '🧑‍🦰', '🧑‍🦳', '🧑‍🦲', '👱', '🧔']
+export const faceFor = (u: Pick<User, 'id' | 'name'>) => FACES[hash(u.id + u.name) % FACES.length]
+
+/** A person's headshot as a face on a soft circle. Used where a face reads better than initials. */
+export function Face({ user, size = 48 }: { user: Pick<User, 'id' | 'name'>; size?: number }) {
+  return (
+    <span
+      className="flex shrink-0 items-center justify-center rounded-full bg-sage-100 leading-none ring-1 ring-sage-200"
+      style={{ width: size, height: size, fontSize: size * 0.56 }}
+      role="img" aria-label={user.name}
+    >
+      {faceFor(user)}
+    </span>
   )
 }
 
