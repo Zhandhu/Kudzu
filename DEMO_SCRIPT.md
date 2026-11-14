@@ -50,8 +50,9 @@ The demo controls are referred to below as **Demo**.
 3. Scroll the list. Connections are grouped by strength with **leaf icons**: Strong, Steady, Fading, Dormant. Each also carries a tag for the kind of relationship: **Learning from**, **Trading notes** or **Giving back**. Tap **Giving back** in the chip row to show Diego, a first-year Riley has helped. At the top, open **Class of 2028** to show where the class has ended up and the class event, then tap **I know them** on a classmate and say when you last talked. They join the network with the right leaf.
 4. Tap **Map**. Vines grow out from your root marker to each city. Stronger connections get thicker, greener vines. Fading ones are thin and dashed.
 5. Tap the **Seattle cluster**. The other vines dim and a card lists the people there, with message and coffee buttons. Tap **Zoom in** to see individual leaf pins.
-6. Switch back to **List** and open **Jordan Alvarez**: strength, interaction timeline and a private note.
-7. **Demo → Fast-forward one month.** Back on Network, the counts at the top shift toward Fading, and new nudges appear.
+6. Switch back to **List**. Point out **Not in your web yet**: Nina and Kwame have matched with Riley but not met, so they are not connections. "A match isn't a relationship."
+7. Open **Devon Brooks**. Tap **What this is based on**: closeness adds up every interaction, a good coffee chat counts most, and each one fades with time. Below it, **Keeping in touch** shows the monthly rhythm Riley chose.
+8. **Demo → Fast-forward one month.** Back on Network, the counts at the top shift toward Fading, and the first nudge is the monthly catch-up with Devon.
 
 ## 4:00 Events and groups (40 seconds)
 
@@ -63,10 +64,11 @@ The demo controls are referred to below as **Demo**.
 ## 4:40 Feedback, thank-yous and profile (40 seconds)
 
 1. **Demo → Trigger a post-chat check-in.** Answer *Did you meet?*, give a thumbs up and pick a tag. Stress that these answers are **private and never shown on a profile**.
-2. Scroll to **Send a thank-you**, type one line and submit. This is the one part the other person sees. Open their chat to show the thank-you card and their reply. "Research shows a thank-you is what brings a mentor back."
-3. **Demo → Receive a thank-you note.** The Profile tab opens on **Thank-you notes**, which only Riley can see.
-4. **Demo → Show account-warning notice.** Show the gentle notice on Profile and tap it to open the community guidelines.
-5. On Profile, point out edit profile, chat capacity, groups, events and **Pause my profile**.
+2. Scroll to **Send a thank-you** and type one line. This is the one part the other person sees. "Research shows a thank-you is what brings a mentor back."
+3. Under **What next with Kwame?**, choose **Check in monthly** and submit. Open the Network tab: Kwame has moved out of "Not in your web yet" and into the web. Open his chat to show the thank-you card and his reply.
+4. **Demo → Receive a thank-you note.** The Profile tab opens on **Thank-you notes**, which only Riley can see.
+5. **Demo → Show account-warning notice.** Show the gentle notice on Profile and tap it to open the community guidelines.
+6. On Profile, point out edit profile, chat capacity, groups, events and **Pause my profile**.
 
 ## Closing: any school (10 seconds)
 

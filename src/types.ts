@@ -89,7 +89,7 @@ export interface Group {
 }
 
 /** "known" marks a relationship that existed before the app and was added by hand. */
-export type InteractionType = 'matched' | 'messaged' | 'coffee' | 'event' | 'known'
+export type InteractionType = 'matched' | 'messaged' | 'coffee' | 'event' | 'known' | 'thanks'
 
 /** How recently someone last talked to a person they already know. */
 export type LastTalked = 'recent' | 'months' | 'year' | 'unsure'
@@ -98,12 +98,16 @@ export interface Interaction {
   type: InteractionType
   at: number
   note?: string
+  /** How a coffee chat went, from the private check-in. Feeds closeness. */
+  quality?: 'up' | 'down'
 }
 
 export interface Connection {
   otherId: string
   interactions: Interaction[]
   note: string
+  /** How often the user wants to keep in touch, in days. Unset means no set rhythm. */
+  rhythmDays?: number
 }
 
 export interface Proposal {

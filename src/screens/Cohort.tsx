@@ -3,7 +3,7 @@ import { CalendarDays, ChevronRight, GraduationCap, MapPin } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import type { User } from '../types'
 import { useKudzu, useNow } from '../store/useKudzu'
-import { byCity, cityCohort, classCohort, classLabel, getSchool, isClassEvent, schoolEvents, schoolUsers, strengthOf } from '../services'
+import { byCity, cityCohort, isEstablished, classCohort, classLabel, getSchool, isClassEvent, schoolEvents, schoolUsers, strengthOf } from '../services'
 import { fmtDateTime } from '../lib/util'
 import { LeafIcon } from '../components/brand'
 import { Avatar, BackHeader, Chip, EmptyState } from '../components/ui'
@@ -27,12 +27,12 @@ export default function Cohort() {
   const cities = byCity(everyone)
   const people = (isClass ? (city ? everyone.filter((u) => u.city === city) : everyone) : cityCohort(s, city ?? s.me.city))
     .sort((a, b) => a.name.localeCompare(b.name))
-  const known = people.filter((u) => s.connections.some((c) => c.otherId === u.id)).length
+  const known = people.filter((u) => s.connections.some((c) => c.otherId === u.id && isEstablished(c))).length
   const events = schoolEvents(s, now).filter((e) => (isClass ? isClassEvent(e, s.me) : e.city === city))
   const title = isClass ? classLabel(s.me) : `${school.shortName} in ${city}`
 
   const row = (u: User) => {
-    const conn = s.connections.find((c) => c.otherId === u.id)
+    const conn = s.connections.find((c) => c.otherId === u.id && isEstablished(c))
     return (
       <div key={u.id} className="flex items-center gap-3 px-3 py-2.5">
         <Link to={conn ? `/network/${u.id}` : `/u/${u.id}`} className="flex min-w-0 flex-1 items-center gap-3">

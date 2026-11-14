@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react'
-import { HeartHandshake, Lock, ThumbsDown, ThumbsUp } from 'lucide-react'
+import { Check, HeartHandshake, Lock, Repeat, ThumbsDown, ThumbsUp } from 'lucide-react'
 import type { Feedback } from '../types'
 import { FEEDBACK_TAGS } from '../config/brand'
 import { useKudzu } from '../store/useKudzu'
-import { getUser, submitCheckin } from '../services'
+import { RHYTHMS, getUser, submitCheckin } from '../services'
+import { firstName } from '../lib/util'
+import { Avatar, Button, Chip, Sheet, inputCls } from './ui'
 
 const STARTERS = [
   'Thank you for making the time.',
   'Your advice changed what I’ll do next.',
 ]
-import { firstName } from '../lib/util'
-import { Avatar, Button, Chip, Sheet, inputCls } from './ui'
 
 /** Private post-chat check-in. Answers are never shown on anyone's profile. */
 export default function CheckInSheet() {
@@ -22,9 +22,13 @@ export default function CheckInSheet() {
   const [tags, setTags] = useState<string[]>([])
   const [note, setNote] = useState('')
   const [thanks, setThanks] = useState('')
+  const [rhythm, setRhythm] = useState<number | undefined>()
 
   useEffect(() => {
-    if (checkin) { setMet(null); setRating(undefined); setTags([]); setNote(''); setThanks('') }
+    if (!checkin) return
+    setMet(null); setRating(undefined); setTags([]); setNote(''); setThanks('')
+    // keep any rhythm already chosen for this person
+    setRhythm(useKudzu.getState().connections.find((c) => c.otherId === checkin.otherId)?.rhythmDays)
   }, [checkin])
 
   const name = other ? firstName(other.name) : ''
@@ -98,9 +102,31 @@ export default function CheckInSheet() {
             </div>
           )}
 
+          {met === 'yes' && rating !== 'down' && (
+            <div className="mt-4 rounded-2xl border border-vine-200 bg-vine-50 p-4">
+              <div className="flex items-center gap-2 text-sm font-semibold text-vine-800"><Repeat size={16} /> What next with {name}?</div>
+              <p className="mt-1 text-xs leading-relaxed text-ink/60">
+                {name} is now in your web. One good chat is a start. Pick how you’d like to keep in touch and we’ll remind you when it’s time.
+              </p>
+              <div className="mt-3 space-y-2">
+                {RHYTHMS.map((r) => (
+                  <button
+                    key={r.label}
+                    onClick={() => setRhythm(r.days)}
+                    className={`flex w-full items-center justify-between rounded-xl border px-3.5 py-2.5 text-left text-sm font-medium ${rhythm === r.days ? 'border-vine-700 bg-vine-700 text-cream' : 'border-sage-200 bg-white'}`}
+                    aria-pressed={rhythm === r.days}
+                  >
+                    {r.label}
+                    {rhythm === r.days && <Check size={16} />}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <Button
             className="mt-5 w-full" disabled={!met}
-            onClick={() => met && submitCheckin({ otherId: checkin.otherId, met, rating: met === 'yes' ? rating : undefined, tags: met === 'yes' ? tags : [], note }, checkin.msgId, rating === 'down' ? '' : thanks)}
+            onClick={() => met && submitCheckin({ otherId: checkin.otherId, met, rating: met === 'yes' ? rating : undefined, tags: met === 'yes' ? tags : [], note }, checkin.msgId, rating === 'down' ? '' : thanks, rhythm)}
           >
             {met === 'yes' && rating !== 'down' && thanks.trim() ? 'Submit and send thank-you' : 'Submit'}
           </Button>

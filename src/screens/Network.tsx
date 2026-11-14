@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronRight, Coffee, GraduationCap, List, Map as MapIcon, MapPin, MessageCircle, Search, UserPlus, X } from 'lucide-react'
+import { ChevronRight, Coffee, GraduationCap, List, Map as MapIcon, MapPin, MessageCircle, Repeat, Search, UserPlus, X } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import type { Mode, Nudge, Strength, User } from '../types'
 import { MODES, MODE_META, STRENGTH_META, STRENGTH_ORDER } from '../config/brand'
 import { useKudzu, useNow } from '../store/useKudzu'
-import { cityCohort, classCohort, classLabel, computeNudges, getSchool, getUser, matchInfo, schoolConnections, strengthOf, suggestKnown } from '../services'
+import { cityCohort, classCohort, classLabel, computeNudges, getSchool, getUser, matchInfo, pendingConnections, rhythmLabel, strengthOf, suggestKnown, webConnections } from '../services'
 import { LeafIcon } from '../components/brand'
 import { Avatar, Chip, EmptyState, SchoolChip, inputCls } from '../components/ui'
 import { ModeIcon, ModeTag, roleLine } from '../components/ProfileView'
@@ -37,6 +37,8 @@ function NudgeCard({ n }: { n: Nudge }) {
   )
 }
 
+type Person = MapPerson & { rhythmDays?: number }
+
 /** One of the automatic slices of your school: your class, or your city. */
 function CohortCard({ to, icon: Icon, title, people, connected }: { to: string; icon: typeof MapPin; title: string; people: User[]; connected: Set<string> }) {
   const known = people.filter((u) => connected.has(u.id)).length
@@ -57,16 +59,19 @@ export default function Network() {
   const [sort, setSort] = useState<'strength' | 'recent' | 'name'>('strength')
   const [mode, setMode] = useState<Mode | null>(null)
 
-  const people = useMemo<MapPerson[]>(
+  // the web: only people there has been a real exchange with
+  const people = useMemo<Person[]>(
     () =>
-      schoolConnections(s)
-        .map((c) => ({ user: getUser(c.otherId)!, ...strengthOf(c, now) }))
+      webConnections(s)
+        .map((c) => ({ user: getUser(c.otherId)!, ...strengthOf(c, now), rhythmDays: c.rhythmDays }))
         .filter((p) => p.user),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [s.connections, s.schoolId, s.blocked, s.timeOffsetDays],
   )
+  // matched, but no real exchange yet
+  const pending = pendingConnections(s).map((c) => getUser(c.otherId)).filter((u): u is User => !!u)
   const nudges = computeNudges(s, now).slice(0, 3)
-  const connectedIds = new Set(s.connections.map((c) => c.otherId))
+  const connectedIds = new Set(people.map((p) => p.user.id))
   const classmates = classCohort(s)
   const neighbours = cityCohort(s, s.me.city)
   const suggestionCount = suggestKnown(s).length
@@ -79,14 +84,16 @@ export default function Network() {
   })
   const sorted = [...filtered].sort((a, b) => (sort === 'name' ? a.user.name.localeCompare(b.user.name) : a.days - b.days))
 
-  const row = (p: MapPerson) => (
+  const row = (p: Person) => (
     <Link key={p.user.id} to={`/network/${p.user.id}`} className="flex items-center gap-3 rounded-2xl px-2 py-2.5 hover:bg-sage-50">
       <Avatar user={p.user} size={46} />
       <div className="min-w-0 flex-1">
         <div className="truncate font-semibold">{p.user.name}</div>
         <div className="truncate text-[13px] text-ink/55">{roleLine(p.user)}</div>
         <div className="mt-0.5 flex items-center gap-2 text-[11px] text-ink/45">
-          <ModeTag mode={matchInfo(s.me, p.user).mode} /> {p.user.city} · {p.days === 0 ? 'today' : `${p.days}d ago`}
+          <ModeTag mode={matchInfo(s.me, p.user).mode} />
+          {p.rhythmDays && <span className="inline-flex items-center gap-0.5 font-semibold text-vine-700"><Repeat size={11} /> {rhythmLabel(p.rhythmDays)}</span>}
+          <span className="truncate">{p.user.city} · {p.days === 0 ? 'today' : `${p.days}d ago`}</span>
         </div>
       </div>
       <LeafIcon level={p.level} size={22} />
@@ -116,7 +123,7 @@ export default function Network() {
         </div>
       </header>
 
-      {people.length === 0 ? (
+      {people.length === 0 && pending.length === 0 ? (
         <EmptyState title="Your network starts here" body="Add the people you already know, and meet new ones. Each connection grows the more you keep in touch.">
           <div className="flex flex-col gap-2">
             <Link to="/known" className="inline-flex justify-center rounded-full bg-vine-700 px-5 py-3 text-sm font-semibold text-cream">Add people you know</Link>
@@ -146,6 +153,27 @@ export default function Network() {
               <ChevronRight size={18} className="text-ink/30" />
             </Link>
           </div>
+
+          {pending.length > 0 && (
+            <div className="mb-4 px-1">
+              <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink/50">Not in your web yet · {pending.length}</div>
+              <p className="mb-2 text-xs text-ink/55">You’ve matched, but a match isn’t a relationship. They join your web after your first coffee chat.</p>
+              <div className="divide-y divide-sage-200 rounded-2xl border border-dashed border-sage-300 bg-white/60">
+                {pending.map((u) => (
+                  <div key={u.id} className="flex items-center gap-3 px-3 py-2.5">
+                    <Link to={`/u/${u.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+                      <Avatar user={u} size={38} />
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-semibold">{u.name}</span>
+                        <span className="block truncate text-xs text-ink/55">{roleLine(u)}</span>
+                      </span>
+                    </Link>
+                    <Link to={`/messages/${u.id}?propose=1`} className="inline-flex shrink-0 items-center gap-1 rounded-full bg-coffee-500 px-3 py-1.5 text-xs font-semibold text-cream"><Coffee size={13} /> Propose coffee</Link>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {nudges.length > 0 && (
             <div className="mb-4 space-y-2 px-1">

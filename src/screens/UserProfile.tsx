@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Coffee, MessageCircle } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useKudzu } from '../store/useKudzu'
-import { getUser, promptText } from '../services'
+import { getUser, isEstablished, promptText } from '../services'
 import { firstName } from '../lib/util'
 import { BackHeader, Button, Sheet, inputCls } from '../components/ui'
 import { ProfileView } from '../components/ProfileView'
@@ -15,6 +15,7 @@ export default function UserProfile() {
   const user = getUser(id)
   const connected = useKudzu((s) => s.connections.some((c) => c.otherId === id))
   const liked = useKudzu((s) => s.swiped[id] === 'like')
+  const inWeb = useKudzu((s) => s.connections.some((c) => c.otherId === id && isEstablished(c)))
   const swipe = useKudzu((s) => s.swipe)
   const say = useKudzu((s) => s.say)
   const [liking, setLiking] = useState<string | null>(null)
@@ -44,7 +45,7 @@ export default function UserProfile() {
         ) : (
           <Button className="w-full" onClick={() => connect()}><Coffee size={17} /> Connect with {name}</Button>
         )}
-        {!connected && <KnowButton user={user} variant="link" />}
+        {!inWeb && <KnowButton user={user} variant="link" />}
       </div>
 
       <Sheet open={!!liking} onClose={() => setLiking(null)} title={`Like ${name}’s answer`}>

@@ -66,6 +66,9 @@ export default function MatchCelebration() {
             <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.200 }} className="mt-3 rounded-full bg-white/10 px-3.5 py-1.5 text-[13px] font-medium text-cream">
               {matchInfo(me, other).reason}
             </motion.p>
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.300 }} className="mt-3 text-xs text-vine-200">
+              Have your first coffee chat and {firstName(other.name)} joins your web.
+            </motion.p>
 
             <motion.div initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 1.300 }} className="mt-10 flex w-full flex-col gap-3">
               <Button variant="coffee" onClick={() => close(`/messages/${other.id}?propose=1`)}><Coffee size={17} /> Propose a coffee chat</Button>

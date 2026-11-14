@@ -54,6 +54,7 @@ interface Actions {
   setTyping: (otherId: string, on: boolean) => void
   submitFeedback: (fb: Omit<Feedback, 'at'>, msgId: string) => void
   setNote: (otherId: string, note: string) => void
+  setRhythm: (otherId: string, rhythmDays: number | undefined) => void
   addKnown: (otherId: string, when: LastTalked, quiet?: boolean) => void
   rsvp: (eventId: string, status: 'going' | 'interested' | undefined) => void
   addEvent: (e: KEvent) => void
@@ -107,7 +108,7 @@ const LAST_TALKED: Record<LastTalked, { days: number; note: string }> = {
   unsure: { days: 60, note: 'Added from people you know' },
 }
 
-function touch(connections: Connection[], otherId: string, type: InteractionType, at: number, note?: string): Connection[] {
+function touch(connections: Connection[], otherId: string, type: InteractionType, at: number, note?: string, quality?: 'up' | 'down'): Connection[] {
   const existing = connections.find((c) => c.otherId === otherId)
   if (!existing) return [...connections, { otherId, note: '', interactions: [{ type: 'matched', at }] }]
   return connections.map((c) => {
@@ -117,7 +118,7 @@ function touch(connections: Connection[], otherId: string, type: InteractionType
     if (type === 'messaged' && last?.type === 'messaged' && at - last.at < DAY) {
       return { ...c, interactions: [...c.interactions.slice(0, -1), { ...last, at }] }
     }
-    return { ...c, interactions: [...c.interactions, { type, at, note }] }
+    return { ...c, interactions: [...c.interactions, { type, at, note, quality }] }
   })
 }
 
@@ -221,7 +222,8 @@ export const useKudzu = create<KudzuState>()(
               messages: [...c.messages, full],
               unread: msg.from !== 'me',
             })),
-            connections: msg.system ? s.connections : touch(s.connections, otherId, 'messaged', at),
+            // a thank-you counts for more than an ordinary message
+            connections: msg.system ? s.connections : touch(s.connections, otherId, msg.thanks ? 'thanks' : 'messaged', at),
           }
         })
       },
@@ -260,7 +262,8 @@ export const useKudzu = create<KudzuState>()(
           return {
             conversations,
             feedback: [...s.feedback, { ...fb, at: now }],
-            connections: fb.met === 'yes' ? touch(s.connections, fb.otherId, 'coffee', slot) : s.connections,
+            // how the chat went is stored with it, so a good chat counts for more than a poor one
+            connections: fb.met === 'yes' ? touch(s.connections, fb.otherId, 'coffee', slot, undefined, fb.rating) : s.connections,
             checkin: null,
             toast: { id: uid(), text: 'Thanks. Your feedback stays private.' },
           }
@@ -269,14 +272,22 @@ export const useKudzu = create<KudzuState>()(
       setNote: (otherId, note) =>
         set((s) => ({ connections: s.connections.map((c) => (c.otherId === otherId ? { ...c, note } : c)) })),
 
+      setRhythm: (otherId, rhythmDays) =>
+        set((s) => ({ connections: s.connections.map((c) => (c.otherId === otherId ? { ...c, rhythmDays } : c)) })),
+
       // Adds someone the user already knew. The answer to "when did you last talk?"
       // dates the tie, so it starts with the right strength instead of looking brand new.
       addKnown: (otherId, when, quiet) =>
         set((s) => {
-          if (s.connections.some((c) => c.otherId === otherId)) return {}
           const { days, note } = LAST_TALKED[when]
+          const known = { type: 'known' as const, at: nowOf(s) - days * DAY, note }
+          const existing = s.connections.find((c) => c.otherId === otherId)
+          if (existing?.interactions.some((i) => i.type === 'known')) return {}
           return {
-            connections: [...s.connections, { otherId, note: '', interactions: [{ type: 'known', at: nowOf(s) - days * DAY, note }] }],
+            // someone you matched with but already knew joins your web straight away
+            connections: existing
+              ? s.connections.map((c) => (c.otherId === otherId ? { ...c, interactions: [...c.interactions, known] } : c))
+              : [...s.connections, { otherId, note: '', interactions: [known] }],
             swiped: { ...s.swiped, [otherId]: 'like' },
             ...(quiet ? {} : { toast: { id: uid(), text: 'Added to your network' } }),
           }
@@ -306,7 +317,7 @@ export const useKudzu = create<KudzuState>()(
     }),
     {
       // bump this when the saved shape changes, so old browsers start from fresh seed data
-      name: 'kudzu-demo-v3',
+      name: 'kudzu-demo-v4',
       partialize: (s) => {
         const { matchWith, checkin, toast, demoOpen, typing, ...rest } = s
         void matchWith, checkin, toast, demoOpen, typing

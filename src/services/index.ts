@@ -2,7 +2,7 @@
  * Service layer. Screens read data through these functions rather than importing
  * seed files, so a real API can replace this file later without touching the UI.
  */
-import type { Connection, Feedback, KEvent, Mode, Nudge, Prefs, Proposal, Strength, User } from '../types'
+import type { Connection, Feedback, InteractionType, KEvent, Mode, Nudge, Prefs, Proposal, Strength, User } from '../types'
 import { MODE_META, topicLabel } from '../config/brand'
 import { USERS, USERS_BY_ID, knows } from '../data/users'
 import { SCHOOLS, PROMPTS } from '../data/schools'
@@ -107,7 +107,7 @@ type NetworkState = Pick<KudzuState, 'connections' | 'schoolId' | 'blocked'>
 
 /** People you are connected to who also know `other`. */
 export function mutualConnections(s: NetworkState, other: User): User[] {
-  return schoolConnections(s)
+  return webConnections(s)
     .filter((c) => c.otherId !== other.id && knows(c.otherId, other.id))
     .map((c) => getUser(c.otherId))
     .filter((u): u is User => !!u)
@@ -122,7 +122,7 @@ export const mutualValue = (n: number) => (n === 0 ? 0 : n === 1 ? 0.6 : n <= 3 
 
 /** 0–1: how under-represented this person's industry is among your connections. */
 export function noveltyValue(s: NetworkState, other: User): number {
-  const mine = schoolConnections(s).map((c) => getUser(c.otherId)).filter((u): u is User => !!u && u.id !== other.id)
+  const mine = webConnections(s).map((c) => getUser(c.otherId)).filter((u): u is User => !!u && u.id !== other.id)
   if (mine.length < 3) return 0
   return 1 - mine.filter((u) => u.industry === other.industry).length / mine.length
 }
@@ -189,40 +189,122 @@ export function lastInteraction(c: Connection): number {
 }
 
 /**
- * Strength comes from how recently you interacted, stretched a little
- * if you interact often (4+ touchpoints in the last six months).
+ * How much each kind of interaction counts toward closeness on the day it happens.
+ * A coffee chat is the benchmark at 1.0.
  */
-export function strengthOf(c: Connection, now: number): { level: Strength; days: number } {
+const WEIGHT: Record<InteractionType, number> = {
+  coffee: 1.0,
+  known: 0.8, // a relationship that existed before the app
+  event: 0.6,
+  thanks: 0.5,
+  messaged: 0.35,
+  matched: 0.1,
+}
+
+/** Every interaction loses half its value in this many days. */
+const HALF_LIFE_DAYS = 60
+
+/** Messages add up, but a long text thread never outweighs meeting in person. */
+const MESSAGE_CAP = 0.8
+
+export interface ClosenessPart {
+  type: InteractionType
+  at: number
+  quality?: 'up' | 'down'
+  /** What this interaction is worth today, after fading. */
+  value: number
+}
+
+function partValue(i: Connection['interactions'][number], now: number): number {
+  const quality = i.type === 'coffee' ? (i.quality === 'up' ? 1.3 : i.quality === 'down' ? 0.5 : 1) : 1
+  const ageDays = Math.max(0, (now - i.at) / DAY)
+  return WEIGHT[i.type] * quality * Math.pow(0.5, ageDays / HALF_LIFE_DAYS)
+}
+
+/**
+ * Closeness is a score, not a rule. Each interaction contributes according to
+ * what kind it was and how it went, and every contribution fades with time.
+ * Many small contacts and one good coffee can both keep a tie strong.
+ */
+export function closeness(c: Connection, now: number): { score: number; parts: ClosenessPart[] } {
+  const parts = c.interactions.map((i) => ({ type: i.type, at: i.at, quality: i.quality, value: partValue(i, now) }))
+  const messages = parts.filter((p) => p.type === 'messaged').reduce((sum, p) => sum + p.value, 0)
+  const rest = parts.filter((p) => p.type !== 'messaged').reduce((sum, p) => sum + p.value, 0)
+  return { score: rest + Math.min(messages, MESSAGE_CAP), parts: parts.sort((a, b) => b.value - a.value) }
+}
+
+/** Turns the closeness score into one of the four leaf states. */
+export function strengthOf(c: Connection, now: number): { level: Strength; days: number; score: number } {
   const days = Math.max(0, Math.floor((now - lastInteraction(c)) / DAY))
-  const recent = c.interactions.filter((i) => now - i.at < 180 * DAY).length
-  const k = recent >= 4 ? 1.25 : 1
-  const level: Strength = days < 30 * k ? 'strong' : days < 90 * k ? 'steady' : days < 180 * k ? 'fading' : 'dormant'
-  return { level, days }
+  const { score } = closeness(c, now)
+  const level: Strength = score >= 0.7 ? 'strong' : score >= 0.35 ? 'steady' : score >= 0.15 ? 'fading' : 'dormant'
+  return { level, days, score }
 }
 
 export function schoolConnections(s: Pick<KudzuState, 'connections' | 'schoolId' | 'blocked'>): Connection[] {
   return s.connections.filter((c) => inSchool(c.otherId, s.schoolId) && !s.blocked.includes(c.otherId))
 }
 
+/**
+ * A match is not yet a relationship. Someone joins your web once there has been
+ * a real exchange: a coffee chat, an event together, or knowing them already.
+ */
+export const isEstablished = (c: Connection) => c.interactions.some((i) => i.type === 'coffee' || i.type === 'event' || i.type === 'known')
+
+/** Your web: connections with a real exchange behind them. */
+export function webConnections(s: Pick<KudzuState, 'connections' | 'schoolId' | 'blocked'>): Connection[] {
+  return schoolConnections(s).filter(isEstablished)
+}
+
+/** People you have matched with but not yet met. */
+export function pendingConnections(s: Pick<KudzuState, 'connections' | 'schoolId' | 'blocked'>): Connection[] {
+  return schoolConnections(s).filter((c) => !isEstablished(c))
+}
+
+export const RHYTHMS: { days: number | undefined; label: string; short: string }[] = [
+  { days: 30, label: 'Check in monthly', short: 'Monthly' },
+  { days: 120, label: 'Catch up each semester', short: 'Each semester' },
+  { days: undefined, label: 'No set rhythm', short: 'No set rhythm' },
+]
+
+export const rhythmLabel = (days?: number) => RHYTHMS.find((r) => r.days === days)?.short ?? `Every ${days} days`
+
 /* ---------------- nudges ---------------- */
 
 export function computeNudges(s: KudzuState, now: number): Nudge[] {
-  const conns = schoolConnections(s)
+  const conns = webConnections(s)
   const ids = new Set(conns.map((c) => c.otherId))
-  const out: Nudge[] = SEED_NUDGES.filter((n) => n.schoolId === s.schoolId && ids.has(n.otherId))
+  const out: Nudge[] = []
   const byAge = conns
     .map((c) => ({ c, st: strengthOf(c, now) }))
     .sort((a, b) => a.st.days - b.st.days)
+
+  // Rhythms come first: these are check-ins the user chose, due before the tie fades.
   for (const { c, st } of byAge) {
     const u = getUser(c.otherId)
-    if (!u) continue
+    if (!u || !c.rhythmDays || st.days < c.rhythmDays) continue
+    const periods = Math.floor(st.days / c.rhythmDays)
+    out.push({
+      id: `rhythm-${c.otherId}-${periods}`,
+      otherId: c.otherId,
+      text: `Time for your ${c.rhythmDays <= 31 ? 'monthly' : 'semester'} catch-up with ${firstName(u.name)}.`,
+      action: 'coffee',
+    })
+  }
+
+  // then timely reasons to get in touch (in town, new job)
+  out.push(...SEED_NUDGES.filter((n) => n.schoolId === s.schoolId && ids.has(n.otherId)))
+
+  for (const { c, st } of byAge) {
+    const u = getUser(c.otherId)
+    if (!u || (c.rhythmDays && st.days >= c.rhythmDays)) continue
     const name = firstName(u.name)
     const months = Math.round(st.days / 30)
     if (st.level === 'fading') {
       out.push({
         id: `fade-${c.otherId}-${months}`,
         otherId: c.otherId,
-        text: `It’s been ${months} months since you talked to ${name}. Send a quick hello?`,
+        text: `It’s been ${months <= 1 ? 'about a month' : `${months} months`} since you talked to ${name}. Send a quick hello?`,
         action: 'message',
         draft: `Hi ${name}, it’s been a while! How have things been at ${u.company ?? 'work'}?`,
       })
@@ -378,9 +460,11 @@ export function acceptTheirProposal(otherId: string, msgId: string, slot: number
  * Saves the private check-in, then delivers the thank-you note (if any) to the
  * other person. The note is the only part of a check-in they ever see.
  */
-export function submitCheckin(fb: Omit<Feedback, 'at'>, msgId: string, thanks: string) {
+export function submitCheckin(fb: Omit<Feedback, 'at'>, msgId: string, thanks: string, rhythmDays?: number) {
   const st = () => useKudzu.getState()
   st().submitFeedback(fb, msgId)
+  // a chat that went well is the moment to decide how to keep in touch
+  if (fb.met === 'yes' && fb.rating !== 'down') st().setRhythm(fb.otherId, rhythmDays)
   const note = thanks.trim()
   if (fb.met !== 'yes' || !note) return
   st().addMessage(fb.otherId, { from: 'me', text: note, thanks: true })
@@ -416,7 +500,7 @@ const SAMPLE_THANKS = [
 /** Demo panel: someone the user helped sends a thank-you note. Returns their id. */
 export function receiveThanks(s: KudzuState): string | null {
   const thanked = new Set(receivedThanks(s).map((t) => t.from.id))
-  const candidates = schoolConnections(s)
+  const candidates = webConnections(s)
     .map((c) => getUser(c.otherId))
     .filter((u): u is User => !!u && !thanked.has(u.id))
   // prefer people the user would have been helping

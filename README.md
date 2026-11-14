@@ -84,7 +84,9 @@ Screens read data through `src/services`, never straight from the seed files, so
 
 ### How a few things work
 
-- **Connection strength** is derived, not stored: days since the last interaction, with a little extra grace if you interact often. Strong is under 30 days, Steady under 90, Fading under 180, Dormant beyond that.
+- **Closeness is a score, not a rule.** Every interaction adds to it according to what kind it was (a coffee chat counts most, a message least) and how it went (a chat rated well counts for more). Each contribution halves about every 60 days. The four leaf states are bands of that score. See `closeness` in `src/services`.
+- **A match is not yet a connection.** Someone joins your web only after a real exchange: a coffee chat, an event together, or marking them as someone you already know. Until then they sit under "Not in your web yet."
+- **Rhythms.** After a good chat you can choose to check in monthly or each semester. A nudge appears when that is due, before the tie has started to fade.
 - **Demo time** is the real clock plus an offset. "Fast-forward one month" adds 30 days to the offset, which is why strengths fade and confirmed chats become due for a check-in.
 - **Matching** is mocked: about 40% of right swipes match instantly. The first profile in the Georgia Tech deck always matches so the demo is repeatable.
 - **Feedback is private, with one exception.** Check-in answers feed a hidden score used only to rank the Meet deck and are never shown to anyone. The thank-you note at the end is the one part the other person sees, and only if you write one.

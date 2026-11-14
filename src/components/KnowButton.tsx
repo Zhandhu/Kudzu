@@ -3,6 +3,7 @@ import { Check, UserPlus } from 'lucide-react'
 import type { LastTalked, User } from '../types'
 import { useKudzu } from '../store/useKudzu'
 import { firstName } from '../lib/util'
+import { isEstablished } from '../services'
 import { Avatar, Sheet } from './ui'
 
 const OPTIONS: { when: LastTalked; label: string; hint: string }[] = [
@@ -17,7 +18,8 @@ const OPTIONS: { when: LastTalked; label: string; hint: string }[] = [
  */
 export function KnowButton({ user, variant = 'pill' }: { user: User; variant?: 'pill' | 'link' }) {
   const [open, setOpen] = useState(false)
-  const connected = useKudzu((s) => s.connections.some((c) => c.otherId === user.id))
+  // "in your network" means in your web, not merely matched
+  const connected = useKudzu((s) => s.connections.some((c) => c.otherId === user.id && isEstablished(c)))
   const addKnown = useKudzu((s) => s.addKnown)
   const name = firstName(user.name)
 
