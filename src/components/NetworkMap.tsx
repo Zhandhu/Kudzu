@@ -99,7 +99,7 @@ const smooth = (v: number) => { const c = clamp(v, 0, 1); return c * c * (3 - 2 
  * of one screen pixel at the current zoom, so the rope keeps the same thickness
  * on screen however far in you are.
  */
-function strandPath(origin: LatLng, hub: LatLng, seed: number, index: number, count: number, radPerPx: number): LatLng[] {
+function strandPath(origin: LatLng, hub: LatLng, seed: number, index: number, count: number, radPerPx: number, lane: number): LatLng[] {
   const p = project(origin)
   const q = project(hub)
   const dx = q.x - p.x
@@ -145,7 +145,11 @@ function strandPath(origin: LatLng, hub: LatLng, seed: number, index: number, co
     const closeness = 0.5 + 0.25 * (1 + Math.sin(TAU * hug.rate * t + hug.shift))
     const stray = loop.size * Math.max(0, Math.sin(TAU * loop.rate * t + loop.shift)) ** 8
     const wrap = radius * open * (closeness * Math.sin(angle) + stray * Math.sin(angle * 0.5 + 1))
-    pts.push(unproject(p.x + dx * t + nx * (axis + wrap), p.y + dy * t + ny * (axis + wrap)))
+    // Each strand also keeps to its own lane beside the centre line. The lanes start
+    // together at your end and stay apart all the way to the city, so close up you
+    // see every strand arriving side by side and not one line hiding the rest.
+    const side = lane * (index - (count - 1) / 2) * smooth(t / gather)
+    pts.push(unproject(p.x + dx * t + nx * (axis + wrap + side), p.y + dy * t + ny * (axis + wrap + side)))
   }
   return pts
 }
@@ -292,6 +296,11 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
   const radPerPx = (2 * Math.PI) / (256 * 2 ** zoom)
   // Lines are drawn lighter the further out you are, so a whole continent of vines does not look heavy.
   const thin = clamp(0.35 + 0.115 * zoom, 0.5, 1)
+  // How far apart the strands of a vine run, in map units. Almost nothing from far
+  // away, where the twist does the work, and a few pixels once you are close.
+  const lane = clamp(0.55 * (zoom - 3), 0.5, 3.4) * radPerPx
+  // Close up the strands are side by side, so each can wear its own style again.
+  const closeUp = zoom >= 7
 
   // One strand per person. The strands to a city twist together into one vine,
   // then branch to each leaf. The shapes are the same at every zoom level, so
@@ -307,16 +316,20 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
       }
       const shown = strandPeople(c.list)
       const capped = shown.length < c.list.length
-      shown.forEach((p, index) =>
-        out.push({ key: `${c.city}-strand-${index}`, id: capped ? undefined : p.user.id, city: c.city, level: p.level, inRope: shown.length > 1, pts: strandPath(origin, c.center, hash(c.city) % 997, index, shown.length, radPerPx) }),
-      )
+      // where each person's strand ends, so their branch can carry straight on from it
+      const ends = new Map<string, LatLng>()
+      shown.forEach((p, index) => {
+        const pts = strandPath(origin, c.center, hash(c.city) % 997, index, shown.length, radPerPx, lane)
+        if (!capped) ends.set(p.user.id, pts[pts.length - 1])
+        out.push({ key: `${c.city}-strand-${index}`, id: capped ? undefined : p.user.id, city: c.city, level: p.level, inRope: shown.length > 1, pts })
+      })
       for (const p of c.list) {
-        const pts = branchPath(origin, c.center, p.user.coords)
+        const pts = branchPath(origin, ends.get(p.user.id) ?? c.center, p.user.coords)
         if (pts.length) out.push({ key: `${p.user.id}-branch`, id: p.user.id, city: c.city, level: p.level, pts })
       }
     }
     return out.sort((a, b) => STRENGTH_ORDER.indexOf(b.level) - STRENGTH_ORDER.indexOf(a.level)) // strongest drawn last, on top
-  }, [cities, origin, me.city, radPerPx])
+  }, [cities, origin, me.city, radPerPx, lane])
 
   return (
     <div className="relative z-0 h-full w-full overflow-hidden">
@@ -341,12 +354,12 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
               smoothFactor={0}
               pathOptions={{
                 color: STRENGTH_META[v.level].color,
-                // Thinner when zoomed out. Inside a rope every strand is solid and a similar
-                // weight, so each colour shows in the tangle. The dashed, faint styling that
-                // marks a fading or dormant tie is kept for the branch to that person's leaf.
-                weight: (v.inRope ? clamp(style.weight, 1.9, 2.6) * 0.8 : style.weight) * thin,
-                opacity: active ? (v.inRope ? Math.max(style.opacity, 0.8) : style.opacity) : 0.12,
-                dashArray: v.inRope ? undefined : style.dash,
+                // Thinner when zoomed out. From a distance every strand in a vine is solid and
+                // a similar weight, so each colour shows in the tangle. Close up, where the
+                // strands run side by side, fading and dormant ones go back to dashed and faint.
+                weight: (v.inRope && !closeUp ? clamp(style.weight, 1.9, 2.6) * 0.8 : style.weight) * thin,
+                opacity: active ? (v.inRope && !closeUp ? Math.max(style.opacity, 0.8) : style.opacity) : 0.12,
+                dashArray: v.inRope && !closeUp ? undefined : style.dash,
                 lineCap: 'round',
               }}
             />
