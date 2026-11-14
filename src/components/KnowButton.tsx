@@ -36,7 +36,7 @@ export function KnowButton({ user, variant = 'pill' }: { user: User; variant?: '
           I already know {name}
         </button>
       ) : (
-        <button onClick={() => setOpen(true)} className="inline-flex shrink-0 items-center gap-1 rounded-full border border-vine-600 px-3 py-1.5 text-xs font-semibold text-vine-700 hover:bg-vine-50" aria-label={`I know ${user.name}`}>
+        <button data-tour="know" onClick={() => setOpen(true)} className="inline-flex shrink-0 items-center gap-1 rounded-full border border-vine-600 px-3 py-1.5 text-xs font-semibold text-vine-700 hover:bg-vine-50" aria-label={`I know ${user.name}`}>
           <UserPlus size={13} /> I know them
         </button>
       )}
@@ -47,7 +47,7 @@ export function KnowButton({ user, variant = 'pill' }: { user: User; variant?: '
         </div>
         <div className="mt-4 space-y-2">
           {OPTIONS.map((o) => (
-            <button key={o.when} onClick={() => { addKnown(user.id, o.when); setOpen(false) }} className="w-full rounded-2xl border border-sage-200 bg-white px-4 py-3 text-left hover:bg-sage-50">
+            <button key={o.when} data-tour="know-when" onClick={() => { addKnown(user.id, o.when); setOpen(false) }} className="w-full rounded-2xl border border-sage-200 bg-white px-4 py-3 text-left hover:bg-sage-50">
               <div className="text-sm font-semibold">{o.label}</div>
               <div className="text-xs text-ink/55">{o.hint}</div>
             </button>

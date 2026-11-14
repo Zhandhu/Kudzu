@@ -151,7 +151,7 @@ export default function Home() {
         <motion.section key="help" data-tour="home-help-list" className="overflow-hidden" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.28, ease: 'easeOut' }}>
           <div className="mb-2 mt-3 flex items-center justify-between gap-3 rounded-2xl bg-sage-100 px-3.5 py-2.5">
             <span className="text-[14px] font-medium">Show people I could help</span>
-            <Toggle on={s.openToHelp} onChange={(openToHelp) => { s.set({ openToHelp }); if (!openToHelp) setPanel(null) }} label="Show people I could help" />
+            <span data-tour="home-help-switch" className="flex"><Toggle on={s.openToHelp} onChange={(openToHelp) => { s.set({ openToHelp }); if (!openToHelp) setPanel(null) }} label="Show people I could help" /></span>
           </div>
           {!s.openToHelp ? (
             <p className="text-[15px] text-ink/55">Off. Switch it on to see students and recent graduates you could help.</p>
@@ -220,7 +220,7 @@ export default function Home() {
               ))}
             </div>
           )}
-          <Link to="/known" className="mt-3 block rounded-full border border-sage-200 bg-white py-3 text-center text-[15px] font-semibold text-vine-800">Add someone you know</Link>
+          <Link to="/known" data-tour="home-add" className="mt-3 block rounded-full border border-sage-200 bg-white py-3 text-center text-[15px] font-semibold text-vine-800">Add someone you know</Link>
         </section>
       </div>
 
