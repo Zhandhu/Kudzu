@@ -5,7 +5,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import type { Mode, Nudge, Strength, User } from '../types'
 import { MODES, MODE_META, STRENGTH_META, STRENGTH_ORDER } from '../config/brand'
 import { useKudzu, useNow } from '../store/useKudzu'
-import { cityCohort, classCohort, classLabel, computeNudges, getSchool, getUser, matchInfo, rhythmLabel, strengthOf, suggestKnown, webConnections } from '../services'
+import { cityCohort, classCohort, classLabel, computeNudges, getSchool, getUser, matchInfo, rhythmLabel, strengthOf, suggestKnown, unreadAnnouncements, webConnections } from '../services'
+import { AnnouncementList } from '../components/Announcements'
 import { LeafIcon } from '../components/brand'
 import { Avatar, Chip, EmptyState, SchoolChip, Sheet, inputCls } from '../components/ui'
 import { ModeIcon, ModeTag, roleLine } from '../components/ProfileView'
@@ -80,14 +81,18 @@ export default function Network() {
   const classmates = classCohort(s)
   const neighbours = cityCohort(s, s.me.city)
   const suggestionCount = suggestKnown(s).length
+  const news = unreadAnnouncements(s, now)
   const counts = STRENGTH_ORDER.map((l) => [l, people.filter((p) => p.level === l).length] as [Strength, number])
 
   // The page opens on the network. Everything else sits behind two leaves.
   // (People you have connected with but not yet met live on the Find tab.)
   const leaves: LeafItem[] = [
     { key: 'reach', label: 'Reach out', count: nudges.length, onClick: () => setOpen('reach') },
-    { key: 'grow', label: 'Grow', count: 0, onClick: () => setOpen('grow') },
+    // the lighter leaf carries news from your class and city: its blossom counts what you have not seen
+    { key: 'grow', label: 'Your class and city', count: news.length, onClick: () => setOpen('grow') },
   ]
+  // seen once the sheet is closed, so "New" stays visible while you read
+  const closeGrow = () => { s.markAnnouncementsRead(news.map((a) => a.id)); setOpen(null) }
 
   const filtered = people.filter((p) => {
     const t = q.trim().toLowerCase()
@@ -211,8 +216,10 @@ export default function Network() {
         )}
       </Sheet>
 
-      <Sheet open={open === 'grow'} onClose={() => setOpen(null)} title="Grow your network">
-        <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink/50">Your cohorts</div>
+      <Sheet open={open === 'grow'} onClose={closeGrow} title="Your class and city">
+        <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink/50">Announcements</div>
+        <AnnouncementList onLeave={closeGrow} />
+        <div className="mb-2 mt-5 text-xs font-semibold uppercase tracking-wide text-ink/50">Your cohorts</div>
         <div className="grid grid-cols-2 gap-2">
           <CohortCard to="/cohorts/class" icon={GraduationCap} title={classLabel(s.me)} people={classmates} connected={connectedIds} />
           <CohortCard to="/cohorts/city" icon={MapPin} title={`${getSchool(s.schoolId).shortName} in ${s.me.city}`} people={neighbours} connected={connectedIds} />

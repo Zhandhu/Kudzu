@@ -1,7 +1,7 @@
-import { AlertTriangle, ClipboardCheck, FastForward, GraduationCap, HeartHandshake, RotateCcw, UserRoundCog } from 'lucide-react'
+import { AlertTriangle, ClipboardCheck, FastForward, GraduationCap, HeartHandshake, Megaphone, RotateCcw, UserRoundCog } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { nowOf, useKudzu } from '../store/useKudzu'
-import { findCheckinTarget, listSchools, receiveRequest, receiveThanks } from '../services'
+import { findCheckinTarget, listSchools, receiveAnnouncement, receiveRequest, receiveThanks } from '../services'
 import { TendrilIcon } from './brand'
 import { Chip, Sheet, Toggle } from './ui'
 
@@ -67,6 +67,11 @@ export default function DemoPanel() {
         >
           <HeartHandshake size={19} className="text-coffee-500" />
           <span className="flex-1">Receive a thank-you note<span className={sub}>Someone you helped thanks you. Shows on your profile and in the chat.</span></span>
+        </button>
+
+        <button className={item} onClick={() => { receiveAnnouncement(); close(); nav('/network') }}>
+          <Megaphone size={19} className="text-vine-600" />
+          <span className="flex-1">Receive a class announcement<span className={sub}>A notice to your class. It appears on the lighter green leaf on Network.</span></span>
         </button>
 
         <div className={item}>

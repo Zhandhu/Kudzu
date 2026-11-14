@@ -1,10 +1,10 @@
 import { useMemo } from 'react'
-import { ClipboardCheck, Coffee } from 'lucide-react'
+import { ClipboardCheck, Coffee, MessagesSquare } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { Conversation } from '../types'
 import { useKudzu, useNow } from '../store/useKudzu'
-import { dueCheckins, getUser, inSchool } from '../services'
-import { ago, firstName } from '../lib/util'
+import { dueCheckins, eventChatMessages, eventGuests, getUser, inSchool, openEventChats } from '../services'
+import { ago, firstName, fmtDateTime } from '../lib/util'
 import { Avatar, EmptyState, SchoolChip } from '../components/ui'
 
 function preview(c: Conversation): string {
@@ -28,6 +28,7 @@ export default function Messages() {
     .filter((c) => c.messages.length > 0)
     .sort((a, b) => b.messages[b.messages.length - 1].at - a.messages[a.messages.length - 1].at)
   const due = dueCheckins(s)
+  const chats = openEventChats(s, now)
 
   return (
     <div className="app-scroll h-full overflow-y-auto">
@@ -49,6 +50,30 @@ export default function Messages() {
           </button>
         )
       })}
+
+      {/* chats for events you are going to: open from three days before to a week after */}
+      {chats.length > 0 && (
+        <section className="px-4 pb-3">
+          <div className="pb-2 text-xs font-semibold uppercase tracking-wide text-ink/50">Event chats</div>
+          <div className="space-y-2">
+            {chats.map((e) => {
+              const msgs = eventChatMessages(s, e, now)
+              const last = msgs[msgs.length - 1]
+              const who = last ? (last.from === 'me' ? 'You' : firstName(getUser(last.from)?.name ?? '')) : ''
+              return (
+                <Link key={e.id} to={`/event-chat/${e.id}`} className="flex items-center gap-3 rounded-2xl bg-vine-50 p-3 ring-1 ring-vine-200">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-vine-700 text-cream"><MessagesSquare size={20} /></span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold">{e.title}</span>
+                    <span className="block truncate text-[13px] text-ink/60">{last ? `${who}: ${last.text}` : 'Say hello to everyone going'}</span>
+                    <span className="block text-[11px] text-vine-700">{eventGuests(e, s.me).length} going · {fmtDateTime(e.start)}</span>
+                  </span>
+                </Link>
+              )
+            })}
+          </div>
+        </section>
+      )}
 
       {fresh.length > 0 && (
         <section className="pb-2">

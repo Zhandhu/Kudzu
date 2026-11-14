@@ -13,6 +13,7 @@ import Network from './screens/Network'
 import ConnectionDetail from './screens/ConnectionDetail'
 import Events from './screens/Events'
 import EventDetail, { EventPopup } from './screens/EventDetail'
+import EventChat from './screens/EventChat'
 import GroupDetail from './screens/GroupDetail'
 import Profile from './screens/Profile'
 import UserProfile from './screens/UserProfile'
@@ -99,6 +100,7 @@ export default function App() {
                 <Route path="/events" element={simple ? <Navigate to="/home" replace /> : <Events />} />
                 <Route path="/network" element={<Network />} />
                 <Route path="/events/:id" element={<EventDetail />} />
+                <Route path="/event-chat/:id" element={<EventChat />} />
                 <Route path="/groups/:id" element={<GroupDetail />} />
                 <Route path="/network/:id" element={<ConnectionDetail />} />
                 <Route path="/messages" element={<Messages />} />

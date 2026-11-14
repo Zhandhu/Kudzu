@@ -1,4 +1,4 @@
-import { HandHeart, Sprout, UserRoundPlus } from 'lucide-react'
+import { HandHeart, Megaphone, UserRoundPlus } from 'lucide-react'
 
 export type LeafKey = 'reach' | 'pending' | 'grow' | 'requests'
 
@@ -17,10 +17,10 @@ const REACH = 66
 const LEAF = 44
 
 /** A leaf has an icon on it. With no icon it is drawn as a tendril instead. */
-const LOOK: Record<LeafKey, { color: string; icon?: typeof Sprout }> = {
+const LOOK: Record<LeafKey, { color: string; icon?: typeof Megaphone }> = {
   reach: { color: '#2b502a', icon: HandHeart },
   pending: { color: '#8b5e3c', icon: UserRoundPlus },
-  grow: { color: '#6fa565', icon: Sprout },
+  grow: { color: '#6fa565', icon: Megaphone },
   requests: { color: '#2b502a' },
 }
 

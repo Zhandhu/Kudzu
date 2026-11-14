@@ -2,7 +2,7 @@
  * Service layer. Screens read data through these functions rather than importing
  * seed files, so a real API can replace this file later without touching the UI.
  */
-import type { Connection, Feedback, InteractionType, KEvent, Level, Mode, Nudge, Prefs, Proposal, Request, Strength, User } from '../types'
+import type { Announcement, Connection, Feedback, GroupMessage, InteractionType, KEvent, Level, Mode, Nudge, Prefs, Proposal, Request, Strength, User } from '../types'
 import { MODE_META, topicLabel } from '../config/brand'
 import { USERS, USERS_BY_ID, knows } from '../data/users'
 import { SCHOOLS, PROMPTS } from '../data/schools'
@@ -641,6 +641,153 @@ export const eventGuests = (e: KEvent, me: User): User[] => [
   ...(e.myRsvp === 'going' || e.hostId === 'me' ? [me] : []),
   ...e.attendeeIds.map((id) => USERS_BY_ID[id]).filter(Boolean),
 ]
+
+/* ---------------- the Find front door, filled in for you ---------------- */
+
+/** What people at each stage most often come looking for. Used to top up a short list. */
+const COMMON_NEEDS: Record<Level, string[]> = {
+  student: ['industry', 'interview', 'recruiting', 'decision', 'path'],
+  early: ['decision', 'path', 'industry', 'friends'],
+  mid: ['path', 'decision', 'industry', 'friends'],
+  senior: ['friends', 'industry', 'decision', 'path'],
+}
+
+/**
+ * The needs offered under "What are you looking for?". Everything the person said
+ * they want comes first. If that is fewer than four, the list is topped up with
+ * what people at their stage usually look for, so nobody is shown a single option.
+ */
+export function needsFor(me: User): string[] {
+  const own = me.asks.filter((t) => t !== 'referral')
+  const extra = COMMON_NEEDS[levelOf(me)].filter((t) => !own.includes(t))
+  return [...own, ...extra.slice(0, Math.max(0, 4 - own.length))]
+}
+
+/**
+ * Starting points under "Or look around", drawn from the person's own profile:
+ * the fields and cities they chose (or, failing that, their own), people who
+ * studied what they did, and the career level most useful to someone at their stage.
+ */
+export function lookAround(me: User, prefs: Prefs): { label: string; query: Partial<Query> }[] {
+  const out: { label: string; query: Partial<Query> }[] = []
+  // kept to five, so the front door still fits on one small screen
+  const fields = [...new Set([...prefs.industries, me.industry])].slice(0, 2)
+  const city = prefs.cities[0] ?? me.city
+  for (const i of fields) out.push({ label: i, query: { industries: [i] } })
+  out.push({ label: city, query: { cities: [city] } })
+  if (me.major.trim()) out.push({ label: `Studied ${me.major.trim()}`, query: { text: me.major.trim() } })
+  if (levelOf(me) !== 'senior') out.push({ label: 'Senior alumni', query: { levels: ['senior'] } })
+  else out.push({ label: 'Students', query: { levels: ['student'] } })
+  return out
+}
+
+/* ---------------- announcements ---------------- */
+
+type AnnounceState = Pick<KudzuState, 'announcements' | 'schoolId' | 'me' | 'blocked'>
+
+/** Which cohort an announcement is for, in words: "Class of 2028", "GT in Atlanta". */
+export function announcementAudience(a: Announcement): string {
+  if (a.years) return a.years[0] === a.years[1] ? `Class of ${a.years[0]}` : `Classes of ${a.years[0]}–${a.years[1]}`
+  return `${getSchool(a.schoolId).shortName} in ${a.city}`
+}
+
+/**
+ * The announcements meant for this person: their class years, or their city.
+ * Only ones already posted, newest first. A class or a city is too many people for
+ * a chat, so these are one-way notices, a few a year, and a reply goes to the poster.
+ */
+export function myAnnouncements(s: AnnounceState, now: number): Announcement[] {
+  return s.announcements
+    .filter((a) => a.schoolId === s.schoolId && a.at <= now && !s.blocked.includes(a.fromId))
+    .filter((a) => (a.years ? inSpan(s.me.gradYear, a.years) : a.city === s.me.city))
+    .sort((a, b) => b.at - a.at)
+}
+
+export const unreadAnnouncements = (s: AnnounceState & Pick<KudzuState, 'readAnnouncements'>, now: number) =>
+  myAnnouncements(s, now).filter((a) => !s.readAnnouncements.includes(a.id))
+
+/** Demo control: a notice arrives for the user's class, right now. */
+export function receiveAnnouncement() {
+  const s = useKudzu.getState()
+  const now = nowOf(s)
+  const from = schoolUsers(s.schoolId).find((u) => inSpan(u.gradYear, classSpan(s.me))) ?? schoolUsers(s.schoolId)[0]
+  if (!from) return
+  s.addAnnouncement({
+    id: `an-${now}`, schoolId: s.schoolId, years: classSpan(s.me), fromId: from.id, at: now,
+    title: 'Save the date: class dinner', body: 'A few of us are organising a dinner next month for anyone who can make it. More soon. Reply to me if you want to help plan it.',
+  })
+  s.say(`New announcement for ${classLabel(s.me)}. It’s on the Network tab.`)
+}
+
+/* ---------------- event chats ---------------- */
+
+/** An event chat opens this many days before the event and closes this many after. */
+export const EVENT_CHAT_OPENS_DAYS = 3
+export const EVENT_CHAT_CLOSES_DAYS = 7
+/** Above this many people a chat stops being a conversation, so large events do not get one. */
+export const EVENT_CHAT_MAX = 50
+
+export type EventChatState = 'none' | 'toobig' | 'soon' | 'open' | 'closed'
+
+/**
+ * Whether an event has a chat for this person right now. Only people who are
+ * going are in it. It is tied to the event: it opens shortly before and closes
+ * a week after, so it never turns into a standing group.
+ */
+export function eventChatState(e: KEvent, me: User, now: number): EventChatState {
+  if (e.myRsvp !== 'going' && e.hostId !== 'me') return 'none'
+  if (eventGuests(e, me).length > EVENT_CHAT_MAX) return 'toobig'
+  if (now < e.start - EVENT_CHAT_OPENS_DAYS * DAY) return 'soon'
+  if (now > e.start + EVENT_CHAT_CLOSES_DAYS * DAY) return 'closed'
+  return 'open'
+}
+
+const EVENT_CHAT_LINES = [
+  'Looking forward to this. Is anyone coming from campus? Happy to walk over together.',
+  'First time at one of these. Anything I should know?',
+  'Just turn up, it’s relaxed. I’ll be the one by the window with the green bag.',
+  'I can come for the first half hour. Hope to say hello to a few of you.',
+  'Does anyone know if there is parking nearby?',
+  'There’s a deck one block north. It’s free before nine.',
+]
+const EVENT_CHAT_REPLIES = [
+  'Good to have you. See you there!',
+  'Great, come and find me when you arrive.',
+  'Same here. See you then.',
+  'Nice. Looking forward to meeting you.',
+]
+
+/**
+ * Every message in an event's chat, oldest first: a few from other guests in the
+ * days before (made up, the same every time), then whatever has been said since.
+ */
+export function eventChatMessages(s: Pick<KudzuState, 'eventChats' | 'me'>, e: KEvent, now: number): GroupMessage[] {
+  const others = e.attendeeIds.filter((id) => USERS_BY_ID[id])
+  const opens = e.start - EVENT_CHAT_OPENS_DAYS * DAY
+  const seeded: GroupMessage[] = others.slice(0, 4).map((from, i) => ({
+    id: `${e.id}-seed-${i}`, from,
+    at: opens + (i + 1) * 5 * 3600000,
+    text: EVENT_CHAT_LINES[(hash(e.id) + i) % EVENT_CHAT_LINES.length],
+  }))
+  return [...seeded.filter((m) => m.at <= now), ...(s.eventChats[e.id] ?? [])].sort((a, b) => a.at - b.at)
+}
+
+/** The event chats this person can open now, soonest event first. */
+export function openEventChats(s: Pick<KudzuState, 'events' | 'schoolId' | 'me'>, now: number): KEvent[] {
+  return s.events
+    .filter((e) => e.schoolId === s.schoolId && eventChatState(e, s.me, now) === 'open')
+    .sort((a, b) => a.start - b.start)
+}
+
+/** Post to an event chat. One of the other guests answers a moment later (mocked). */
+export function sendEventMessage(e: KEvent, text: string) {
+  const st = () => useKudzu.getState()
+  st().addEventMessage(e.id, { from: 'me', text })
+  const others = e.attendeeIds.filter((id) => USERS_BY_ID[id])
+  if (!others.length) return
+  const from = others[Math.floor(Math.random() * others.length)]
+  setTimeout(() => st().addEventMessage(e.id, { from, text: EVENT_CHAT_REPLIES[Math.floor(Math.random() * EVENT_CHAT_REPLIES.length)] }), 1800 + Math.random() * 1000)
+}
 
 /* ---------------- chat (mock auto-replies) ---------------- */
 

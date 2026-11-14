@@ -27,7 +27,7 @@ The demo controls are referred to below as **Demo**.
 
 "This is where you find people. You say what you need, and the school's network answers."
 
-1. The tab opens on **What are you looking for?** with Riley's own asks ready to tap. Tap **An inside look at an industry**. A few people who can help **drop out from right under it**, each a **leaf** with a face, a name, a class year and a company. Mention **Something else**: type a need in your own words, such as "someone in consulting in New York", and the app finds people for it.
+1. The tab opens on **What are you looking for?** with Riley’s own asks ready to tap. (Someone who named only one or two gets the list topped up with what people at their stage usually look for.) Tap **An inside look at an industry**. A few people who can help **drop out from right under it**, each a **leaf** with a face, a name, a class year and a company. Mention **Something else**: type a need in your own words, such as "someone in consulting in New York", and the app finds people for it.
 2. Tap **Maya O.** Her whole profile opens as a **card floating over the search**. Point to the green **Learn from** box, people in common, and her three prompts.
 3. Tap **Ask Maya for a chat**. Pick what it is about, type one line and tap **Send request**. "No swiping, and no waiting for a mutual match. You ask, with a reason."
 4. After a moment the bar changes to **Message** and **Propose coffee**: Maya has accepted. (Maya always accepts. Others accept about 60% of the time, and some never answer, so that case can be shown.) Tap outside the card to close it. The search is still there.
@@ -53,9 +53,9 @@ The demo controls are referred to below as **Demo**.
 
 1. Open the **Network** tab. It opens on the **map**. A vine grows from your root marker to each city. Each vine is a tangle of strands, one per person there, coloured by how close you are: deep green for strong, pale and dashed for fading.
 2. Tap the **Seattle cluster**. The map flies in on its own: the vine arrives at the city and splits into a branch for each person, and a card lists them with message and coffee buttons. Tap the **X** and the map flies back out to the whole network. (If you drag the map or tap a person while zoomed in, it stays where you put it.)
-3. Point to the **two leaves** in the bottom-right corner. The purple blossom shows how many things are waiting, and it darkens as the number rises.
+3. Point to the **two leaves** in the bottom-right corner. The purple blossom shows how many things are waiting, and it darkens as the number rises. The lighter green leaf is **Your class and city**: its blossom counts announcements Riley has not seen.
 4. Tap the first leaf, **Reach out**. Read out one or two nudges: Jordan is in town this week, Sam just started at Google. Tap **Message** on the Sam nudge. The chat opens with a congratulation already drafted. Go back.
-5. Tap the second leaf, **Grow**. Open **Class of 2028** to show where the class has ended up and the class event, then tap **I know them** on a classmate and say when you last talked. They join the network with the right leaf. Go back.
+5. Tap the lighter green leaf, **Your class and city**. Two **announcements** are waiting, one to the Class of 2028 and one to alumni in Atlanta. "A class is thousands of people, so it gets announcements a few times a year, not a group chat. A reply goes only to the person who posted it." Tap **See the event** on one, then close it. Below are the cohorts: open **Class of 2028** to show where the class has ended up, then tap **I know them** on a classmate and say when you last talked. They join the network with the right leaf. Go back.
 6. Switch to **List**. Connections are grouped by strength with leaf icons, and each carries a tag for the kind of relationship: **Learning from**, **Trading notes** or **Giving back**. Tap **Giving back** in the chip row to show Diego, a first-year Riley has helped.
 7. Open **Devon Brooks**. Tap **What this is based on**: closeness adds up every interaction, a good coffee chat counts most, and each one fades with time. Below it, **Keeping in touch** shows the monthly rhythm Riley chose. Tap **We caught up outside Kudzu** to show how a phone call or a lunch is logged in two taps, so the tie does not look as though it has faded.
 8. **Demo → Fast-forward one month.** Back on Network, the counts at the top shift toward Fading. Open **Reach out**: the first nudge is the monthly catch-up with Devon.
@@ -63,7 +63,7 @@ The demo controls are referred to below as **Demo**.
 ## 4:00 Events and groups (40 seconds)
 
 1. Open the **Events** tab. Show **For You** against **All**, and tap a filter chip such as **Virtual**. Clear it.
-2. Tap **Midtown Morning Coffee Meetup**. It opens as a **large card floating over the list**. Show the map pin, the RSVP buttons, and the **guest list**. Tap a guest you haven't met, such as **Sofia Marin**: their profile opens on top, with an **Ask for a chat** button. Close it, then close the event.
+2. Tap **Midtown Morning Coffee Meetup**. It opens as a **large card floating over the list**. Show the map pin, the RSVP buttons, and the **guest list**. Tap a guest you haven't met, such as **Sofia Marin**: their profile opens on top, with an **Ask for a chat** button. Close it, then close the event. Before closing the event, point to **Event chat**: only people going are in it, it opens three days before and closes a week after. Open it and send a line; someone going answers. Tap a picture to show how it leads to a one-to-one chat.
 3. Tap **Host** to show the form: title, type, date, location, capacity, public or community-only. Close it.
 4. Tap the **Groups** tab. Join a group, then open one to see its members and events.
 

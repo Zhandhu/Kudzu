@@ -209,3 +209,31 @@ export interface Nudge {
   action: 'message' | 'coffee'
   draft?: string
 }
+
+/**
+ * A notice to a whole class or city. Announcements are for the few times a year
+ * something concerns everyone: a reunion, a city-wide meet-up. They are not a chat.
+ * Nobody replies to all; a reply goes to the person who posted it.
+ */
+export interface Announcement {
+  id: string
+  schoolId: string
+  /** Which cohort it is for: a span of class years, or one city. */
+  years?: [number, number]
+  city?: string
+  /** Who posted it, so a reply has somewhere to go. */
+  fromId: string
+  title: string
+  body: string
+  at: number
+  /** An event it is about, if any. */
+  eventId?: string
+}
+
+/** One message in an event's group chat. */
+export interface GroupMessage {
+  id: string
+  from: string
+  at: number
+  text: string
+}

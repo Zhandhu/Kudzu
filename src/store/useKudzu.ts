@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { CaughtUpHow, Connection, Conversation, Degree, Feedback, Group, InteractionType, KEvent, LastTalked, Message, Prefs, Proposal, Request, User } from '../types'
-import { ALUM_PERSONA, DEFAULT_PREFS, SEED_GROUPS, STUDENT_PERSONA, seedConnections, seedConversations, seedEvents, seedRequests } from '../data/seed'
+import type { Announcement, CaughtUpHow, Connection, Conversation, Degree, Feedback, Group, GroupMessage, InteractionType, KEvent, LastTalked, Message, Prefs, Proposal, Request, User } from '../types'
+import { ALUM_PERSONA, DEFAULT_PREFS, SEED_GROUPS, STUDENT_PERSONA, seedAnnouncements, seedConnections, seedConversations, seedEvents, seedRequests } from '../data/seed'
 import { SCHOOLS } from '../data/schools'
 import { CITIES, DAY, uid } from '../lib/util'
 
@@ -25,6 +25,12 @@ interface Data {
   connections: Connection[]
   conversations: Conversation[]
   events: KEvent[]
+  /** Notices to the user's class and city. Shown under the lighter green leaf on Network. */
+  announcements: Announcement[]
+  /** Ids of the announcements the user has seen. The rest are counted on the leaf. */
+  readAnnouncements: string[]
+  /** Messages in event chats, by event id: the user's own and the mocked replies. */
+  eventChats: Record<string, GroupMessage[]>
   groups: Group[]
   feedback: Feedback[]
   dismissedNudges: string[]
@@ -87,6 +93,9 @@ interface Actions {
   logCatchUp: (otherId: string, how: CaughtUpHow, daysAgo: number, note?: string) => void
   rsvp: (eventId: string, status: 'going' | 'interested' | undefined) => void
   addEvent: (e: KEvent) => void
+  addAnnouncement: (a: Announcement) => void
+  markAnnouncementsRead: (ids: string[]) => void
+  addEventMessage: (eventId: string, msg: Omit<GroupMessage, 'id' | 'at'>) => void
   toggleGroup: (groupId: string) => void
   addGroup: (g: Group) => void
   dismissNudge: (id: string) => void
@@ -113,6 +122,9 @@ const fresh = (): Data => {
     connections: seedConnections(now),
     conversations: seedConversations(now),
     events: seedEvents(now),
+    announcements: seedAnnouncements(now),
+    readAnnouncements: [],
+    eventChats: {},
     groups: SEED_GROUPS,
     feedback: [],
     dismissedNudges: [],
@@ -390,6 +402,12 @@ export const useKudzu = create<KudzuState>()(
 
       addEvent: (e) => set((s) => ({ events: [e, ...s.events] })),
 
+      addAnnouncement: (a) => set((s) => ({ announcements: [a, ...s.announcements] })),
+      markAnnouncementsRead: (ids) =>
+        set((s) => (ids.every((id) => s.readAnnouncements.includes(id)) ? {} : { readAnnouncements: [...new Set([...s.readAnnouncements, ...ids])] })),
+      addEventMessage: (eventId, msg) =>
+        set((s) => ({ eventChats: { ...s.eventChats, [eventId]: [...(s.eventChats[eventId] ?? []), { ...msg, id: uid(), at: nowOf(s) }] } })),
+
       toggleGroup: (groupId) =>
         set((s) => {
           const has = s.me.groupIds.includes(groupId)
@@ -409,7 +427,7 @@ export const useKudzu = create<KudzuState>()(
     }),
     {
       // bump this when the saved shape changes, so old browsers start from fresh seed data
-      name: 'kudzu-demo-v7',
+      name: 'kudzu-demo-v8',
       partialize: (s) => {
         const { checkin, toast, demoOpen, typing, eventOpen, ...rest } = s
         void checkin, toast, demoOpen, typing, eventOpen

@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react'
 import L from 'leaflet'
 import { AnimatePresence, motion } from 'framer-motion'
 import { MapContainer, Marker, TileLayer } from 'react-leaflet'
-import { CalendarDays, Check, ChevronRight, MapPin, Star, Users, Video, X } from 'lucide-react'
+import { CalendarDays, Check, ChevronRight, MapPin, MessagesSquare, Star, Users, Video, X } from 'lucide-react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import type { KEvent } from '../types'
-import { useKudzu } from '../store/useKudzu'
-import { eventGuests, getUser } from '../services'
+import { useKudzu, useNow } from '../store/useKudzu'
+import { eventChatState, eventGuests, getUser } from '../services'
 import { fmtDateTime } from '../lib/util'
 import { Avatar, BackHeader, Portal } from '../components/ui'
 import { roleLine } from '../components/ProfileView'
@@ -33,6 +33,7 @@ function EventBody({ e, onPerson }: { e: KEvent; onPerson?: (id: string) => void
   const guests = eventGuests(e, me)
   const host = getUser(e.hostId)
   const group = groups.find((g) => g.id === e.groupId)
+  const chat = eventChatState(e, me, useNow())
   const set = (status: 'going' | 'interested') => {
     const next = e.myRsvp === status ? undefined : status
     rsvp(e.id, next)
@@ -65,6 +66,25 @@ function EventBody({ e, onPerson }: { e: KEvent; onPerson?: (id: string) => void
             <Star size={16} /> Interested
           </button>
         </div>
+
+        {/* the chat belongs to the event: for people going, from three days before to a week after */}
+        {chat === 'open' || chat === 'closed' ? (
+          <Link to={`/event-chat/${e.id}`} className="mt-4 flex items-center gap-3 rounded-2xl bg-vine-700 p-3.5 text-cream">
+            <MessagesSquare size={20} className="shrink-0" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold">{chat === 'open' ? 'Event chat' : 'Event chat (closed)'}</span>
+              <span className="block truncate text-xs text-vine-100">{chat === 'open' ? `Say hello to the ${guests.length} people going` : 'Read what was said'}</span>
+            </span>
+            <ChevronRight size={18} className="shrink-0 text-vine-200" />
+          </Link>
+        ) : (
+          <div className="mt-4 flex items-center gap-3 rounded-2xl border border-dashed border-sage-300 p-3.5 text-ink/60">
+            <MessagesSquare size={20} className="shrink-0" />
+            <span className="text-[13px] leading-snug">
+              {chat === 'soon' ? 'A chat for everyone going opens three days before the event.' : chat === 'toobig' ? 'This event is too large for a chat. Tap a guest to message them.' : 'Tap Going to join the chat for this event.'}
+            </span>
+          </div>
+        )}
 
         <h2 className="mb-1.5 mt-6 text-sm font-semibold">About</h2>
         <p className="text-[14.5px] leading-relaxed text-ink/75">{e.description}</p>

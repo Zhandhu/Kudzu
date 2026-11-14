@@ -41,6 +41,7 @@ Demo controls:
 | Receive a request | Someone asks you for a chat. It appears under the tendril on Find |
 | Trigger a post-chat check-in | Opens the private feedback form, which ends with a thank-you note |
 | Receive a thank-you note | Someone you helped thanks you. It appears on your profile and in the chat |
+| Receive a class announcement | A notice to your class arrives. It is counted on the lighter green leaf on Network |
 | Show account-warning notice | Shows the notice a user gets after missed chats |
 | Reset all demo data | Clears everything and returns to onboarding |
 
@@ -49,9 +50,9 @@ Demo controls:
 | Tab | Features |
 | --- | --- |
 | **Find** | "What are you looking for?": tap a need, or describe one in your own words, and the people who can help drop out from under it. Search by name, field, city, level or the help someone offers, results as leaves on branches, each leaf a face, name, class, company and how far away they are (1st, 2nd or 3rd). One tap opens the whole profile as a floating card. Requests for a chat, and people you have connected with but not yet met |
-| **Events** | For You / All feeds, type filters, each event as a floating card with map and guest list, RSVP, host an event, community groups |
-| **Network** | Connection strength shown as leaf states, nudges, searchable list, and a map where vines run from you to each connection. Class and city cohorts, and a way to add people you already know |
-| **Messages** | Chat with mock auto-replies, a coffee button at the bottom right with a first-time hint, coffee-chat proposals that become confirmed chats, with "Suggest other times" and "Talk it over" when none fit, a mocked calendar link that marks times both people are free, post-chat check-in with a thank-you note |
+| **Events** | For You / All feeds, type filters, each event as a floating card with map and guest list, RSVP, a group chat for the people going (open from three days before to a week after), host an event, community groups |
+| **Network** | Connection strength shown as leaf states, nudges, searchable list, and a map where vines run from you to each connection. Announcements to your class and city under the lighter green leaf, class and city cohorts, and a way to add people you already know |
+| **Messages** | Chat with mock auto-replies, event chats for events you are going to, a coffee button at the bottom right with a first-time hint, coffee-chat proposals that become confirmed chats, with "Suggest other times" and "Talk it over" when none fit, a mocked calendar link that marks times both people are free, post-chat check-in with a thank-you note |
 | **Profile** | Edit profile and prompts, career path, hobbies and clubs, thank-you notes you've received, who you want to find, groups, events, settings |
 
 **No one picks a role.** People say what they are looking for and what they can offer, from one shared list of topics. From that and each person's stage, the app works out the relationship for every pairing: **Learn from**, **Give back** or **Trade notes**. The same student learns from an alum, gives back to a first-year and trades notes with a classmate.
@@ -97,6 +98,9 @@ Screens read data through `src/services`, never straight from the seed files, so
 - **Sign-up preferences are weights, not walls.** The fields, cities and levels you pick decide who is shown first. They never hide anyone. Only a chip in the search bar filters.
 - **"Something else" is matched on words.** What you type is cut down to its meaningful words. Each person is read as a short document, and a word found in their role or field counts for more than one found in a prompt answer. People who cover more of what you typed come first. See `suggestForText` in `src/services`. A real product would use a language model or embeddings here.
 - **Grouping follows the search.** Results are grouped by city, field or level. A search narrowed to one city is not grouped by city, since everyone would sit on one branch.
+- **Event chats are small and short-lived.** Only people going to an event are in its chat. It opens three days before, closes a week after, and events with more than 50 people going do not get one. Tapping someone in it opens their profile, which is how it becomes one-to-one. Other guests’ messages and replies are mocked.
+- **Cohorts get announcements, not chats.** A class or a city is too many people for a conversation. Announcements go one way, a few times a year, and a reply goes only to the person who posted it. Some are dated ahead, so fast-forwarding a month brings new ones in.
+- **The Find front door fills itself in.** What you said you are looking for comes first. If that is fewer than four things, the list is topped up with what people at your stage usually want. "Or look around" is built from your own fields, city, what you studied and the career level most useful to you. See `needsFor` and `lookAround` in `src/services`.
 - **Rhythms.** After a good chat you can choose to check in monthly or each semester. A nudge appears when that is due, before the tie has started to fade.
 - **Calendars are mocked.** Linking one sets a flag. Who is busy when is made up from each person's id and the hour, so it is the same every time you look. About two in three people have "linked" theirs. Jordan answers a first coffee proposal with other times, so that case can be shown.
 - **Demo time** is the real clock plus an offset. "Fast-forward one month" adds 30 days to the offset, which is why strengths fade and confirmed chats become due for a check-in.

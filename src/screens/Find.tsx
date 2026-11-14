@@ -7,7 +7,7 @@ import { INDUSTRIES, MODE_META, TOPICS, topicLabel } from '../config/brand'
 import { useKudzu, useNow } from '../store/useKudzu'
 import {
   EMPTY_QUERY, LEVELS, REQUEST_LIMIT, accountStanding, answerRequest, daysLeft, findPeople, getUser, incomingRequests, isEmptyQuery,
-  levelLabel, levelOf, mutualConnections, outgoingRequests, pendingConnections, quietPaused, requestState,
+  levelLabel, levelOf, lookAround, mutualConnections, needsFor, outgoingRequests, pendingConnections, quietPaused, requestState,
   requestTo, spotsLeft, suggestFor, suggestForText, type Found, type Query,
 } from '../services'
 import { CITY_NAMES, ago, firstName } from '../lib/util'
@@ -220,6 +220,11 @@ export default function Find() {
     { key: 'pending', label: 'Not yet met', count: pending.length, onClick: () => setSheet('pending') },
   ]
 
+  // The front door fills itself in from what is known about you, so it never opens on
+  // one lonely option. What you said you want comes first; the rest suits your stage.
+  const needs = needsFor(s.me)
+  const around = lookAround(s.me, s.prefs)
+
   // nothing asked for and nothing to announce: the page holds still
   const still = empty && !ask && accountStanding(s) !== 'warning' && !quietPaused(s, now) && !s.paused
 
@@ -320,7 +325,7 @@ export default function Find() {
             <p className="mt-1 text-[13px] text-ink/50">Tap one and the people who can help drop out below it.</p>
             {/* one need per line, so the people it finds can fall out from right under it */}
             <div className="mt-3 space-y-2" role="group" aria-label="What you’re looking for">
-              {(s.me.asks.length ? s.me.asks : TOPICS.slice(0, 3).map((t) => t.id)).map((t) => (
+              {needs.map((t) => (
                 <div key={t}>
                   <Chip active={ask === t} onClick={() => setAsk(ask === t ? null : t)}>{topicLabel(t)}</Chip>
                   <AnimatePresence initial={false}>{ask === t && dropOut()}</AnimatePresence>
@@ -355,9 +360,7 @@ export default function Find() {
             {/* kept clear of the two leaves in the bottom corner */}
             <h2 className="mb-2 mt-6 text-sm font-semibold">Or look around</h2>
             <div className="flex flex-wrap gap-2 pr-14">
-              {s.prefs.industries.map((i) => <Chip key={i} tone="plain" onClick={() => setQ({ ...EMPTY_QUERY, industries: [i] })}>{i}</Chip>)}
-              {s.prefs.cities.map((c) => <Chip key={c} tone="plain" onClick={() => setQ({ ...EMPTY_QUERY, cities: [c] })}>{c}</Chip>)}
-              <Chip tone="plain" onClick={() => setQ({ ...EMPTY_QUERY, levels: ['senior'] })}>Senior alumni</Chip>
+              {around.map((a) => <Chip key={a.label} tone="plain" onClick={() => setQ({ ...EMPTY_QUERY, ...a.query })}>{a.label}</Chip>)}
               <Chip tone="plain" onClick={() => setAdding(true)}><Plus size={12} /> More</Chip>
             </div>
           </div>
