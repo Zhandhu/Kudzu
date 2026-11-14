@@ -140,9 +140,7 @@ export function trustScore(userId: string, feedback: Feedback[]): number {
     if (f.met === 'noshow') score -= 0.25
     if (f.rating === 'up') score += 0.05
     if (f.rating === 'down') score -= 0.15
-    if (f.tags.includes('Felt like a sales pitch') || f.tags.includes('Not a good fit')) score -= 0.05
-    if (f.tags.includes('Only wanted a referral')) score -= 0.2
-  }
+    if (f.tags.includes('Felt like a sales pitch') || f.tags.includes('Not a good fit')) score -= 0.05  }
   return Math.max(0, Math.min(1, score))
 }
 
@@ -363,22 +361,6 @@ export function receiveThanks(s: KudzuState): string | null {
   s.addMessage(pick.id, { from: pick.id, text, thanks: true })
   s.say(`${firstName(pick.name)} sent you a thank-you note`)
   return pick.id
-}
-
-/* ---------------- referral safeguards ---------------- */
-
-const REFERRAL_PATTERN = /\brefer(ral|rals|red|ring)?\b|\brefer me\b|put in a (good )?word|recommend me|pass (along|on) my resume|get me (a|an) (job|interview)|are you hiring|any openings/i
-
-/** True when a draft message reads as a request for a referral or a job. */
-export const looksLikeReferralAsk = (text: string) => REFERRAL_PATTERN.test(text)
-
-/** The right way round: after a chat, the person who helped offers the introduction. */
-export function offerIntroduction(otherId: string) {
-  useKudzu.getState().addMessage(otherId, {
-    from: 'me',
-    text: 'I’d be glad to introduce you to someone I know who works on this. Send me a short note about yourself and I’ll pass it along.',
-  })
-  replyLater(otherId, 'Thank you, that’s more than I hoped for. I’ll send it over tonight.', 2200)
 }
 
 /** Finds a confirmed chat that has not had its check-in yet (used by the demo panel). */

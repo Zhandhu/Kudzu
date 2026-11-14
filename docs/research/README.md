@@ -84,7 +84,7 @@ This is meant to be added to, not finished.
 | 1 | 2026-11-14 | Mentoring outcomes and matching criteria, weak and dormant ties, help-seeking, mentor motivation, reciprocal recommenders, congestion and choice restriction, signalling, fairness of exposure, marketplace experiments |
 | 2 | 2026-11-14 | Closed three gaps from round 1: how reciprocal scores are combined (RECON), planning prompts and follow-through, alumni platform outcome data |
 
-| 3 | 2026-11-14 | Using a person's existing connections in matching, how this differs from dating apps, and referral-seeking. Added to files 02 and 03, with the first safeguards built |
+| 3 | 2026-11-14 | Using a person's existing connections in matching, how this differs from dating apps, and referral-seeking. Added to files 02 and 03. Connection-based ranking is built. Referral safeguards were built, then shelved |
 
 ### Open questions for the next round
 

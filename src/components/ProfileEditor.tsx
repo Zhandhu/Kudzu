@@ -5,10 +5,10 @@ import { CITY_NAMES } from '../lib/util'
 import { Chip, Field, inputCls } from './ui'
 
 /** Picks help topics from the shared menu. Used twice: for asks and for offers. */
-export function TopicPicker({ value, onChange, tone = 'sage', asking = false }: { value: string[]; onChange: (v: string[]) => void; tone?: 'sage' | 'coffee'; asking?: boolean }) {
+export function TopicPicker({ value, onChange, tone = 'sage' }: { value: string[]; onChange: (v: string[]) => void; tone?: 'sage' | 'coffee' }) {
   return (
     <div className="flex flex-wrap gap-2">
-      {TOPICS.filter((t) => !asking || !t.offerOnly).map((t) => (
+      {TOPICS.map((t) => (
         <Chip key={t.id} tone={tone} active={value.includes(t.id)} onClick={() => onChange(value.includes(t.id) ? value.filter((x) => x !== t.id) : [...value, t.id])}>{t.label}</Chip>
       ))}
     </div>
@@ -22,8 +22,7 @@ export function AsksOffersFields({ value, onChange }: { value: User; onChange: (
       <div>
         <div className="mb-1 text-sm font-semibold">I’m looking for</div>
         <p className="mb-2 text-xs text-ink/55">What would help you right now?</p>
-        <TopicPicker asking value={value.asks} onChange={(asks) => onChange({ asks })} />
-        <p className="mt-2 text-[11px] leading-relaxed text-ink/45">Referrals aren’t on this list. People offer them once they know you, so start with a conversation.</p>
+        <TopicPicker value={value.asks} onChange={(asks) => onChange({ asks })} />
       </div>
       <div>
         <div className="mb-1 text-sm font-semibold">I can offer</div>

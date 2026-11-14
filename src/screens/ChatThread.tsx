@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { CalendarCheck, Check, ChevronLeft, Coffee, HeartHandshake, Lightbulb, MapPin, Send, UserPlus, Video } from 'lucide-react'
+import { CalendarCheck, Check, ChevronLeft, Coffee, HeartHandshake, MapPin, Send, Video } from 'lucide-react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import type { Message, Mode, User } from '../types'
 import { useKudzu, useNow } from '../store/useKudzu'
-import { acceptTheirProposal, getUser, looksLikeReferralAsk, matchInfo, offerIntroduction, promptText, sendProposal, sendText, strengthOf } from '../services'
+import { acceptTheirProposal, getUser, matchInfo, promptText, sendProposal, sendText, strengthOf } from '../services'
 import { DAY, HOUR, firstName, fmtDateTime, fmtTime, startOfDay } from '../lib/util'
 import { LeafIcon, Tendril } from '../components/brand'
 import { Avatar, Button, Chip, Sheet, inputCls } from '../components/ui'
@@ -19,7 +19,7 @@ function openers(mode: Mode, other: User): string[] {
 
 const PLACES = ['Vine & Bean Café, Midtown', 'Student Center coffee bar', 'A spot near your office', 'Video call']
 
-function ProposalCard({ m, other, now, canOfferIntro }: { m: Message; other: User; now: number; canOfferIntro: boolean }) {
+function ProposalCard({ m, other, now }: { m: Message; other: User; now: number }) {
   const set = useKudzu((s) => s.set)
   const p = m.proposal!
   const mine = m.from === 'me'
@@ -37,14 +37,7 @@ function ProposalCard({ m, other, now, canOfferIntro }: { m: Message; other: Use
           <div className="font-display text-lg font-semibold">{fmtDateTime(p.acceptedSlot)}</div>
           <div className="flex items-center gap-1.5 text-ink/70"><Mode size={14} /> {p.place}</div>
           {p.checkedIn ? (
-            <>
-              <div className="flex items-center gap-1.5 pt-1 text-[13px] font-medium text-vine-600"><Check size={14} /> Check-in submitted</div>
-              {canOfferIntro && (
-                <button onClick={() => offerIntroduction(other.id)} className="mt-2 flex w-full items-center justify-center gap-2 rounded-full border border-vine-600 py-2 text-[13px] font-semibold text-vine-700 hover:bg-vine-50">
-                  <UserPlus size={15} /> Offer {name} an introduction
-                </button>
-              )}
-            </>
+            <div className="flex items-center gap-1.5 pt-1 text-[13px] font-medium text-vine-600"><Check size={14} /> Check-in submitted</div>
           ) : past ? (
             <Button variant="coffee" className="mt-2 w-full !py-2.5" onClick={() => set({ checkin: { otherId: other.id, msgId: m.id } })}>How did it go?</Button>
           ) : (
@@ -138,10 +131,6 @@ export default function ChatThread() {
   if (!other) return <div className="p-8 text-center text-sm text-ink/60">This conversation is no longer available.</div>
   const messages = conv?.messages ?? []
   const info = matchInfo(me, other)
-  const completed = messages.filter((m) => m.proposal?.checkedIn)
-  const lastChatId = completed[completed.length - 1]?.id
-  // A referral is something offered after a conversation, so nudge anyone asking for one cold.
-  const referralHint = completed.length === 0 && looksLikeReferralAsk(text)
   const strength = connection ? strengthOf(connection, now).level : null
 
   const send = () => {
@@ -179,7 +168,7 @@ export default function ChatThread() {
           </div>
         )}
         {messages.map((m) => {
-          if (m.proposal) return <ProposalCard key={m.id} m={m} other={other} now={now} canOfferIntro={info.mode !== 'learn' && m.id === lastChatId} />
+          if (m.proposal) return <ProposalCard key={m.id} m={m} other={other} now={now} />
           const mine = m.from === 'me'
           if (m.thanks) {
             return (
@@ -214,15 +203,6 @@ export default function ChatThread() {
         )}
         <div ref={endRef} />
       </div>
-
-      {referralHint && (
-        <div role="status" className="mx-3 mb-2 flex gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-[12.5px] leading-snug text-amber-900">
-          <Lightbulb size={16} className="mt-0.5 shrink-0 text-amber-600" />
-          <span>
-            Asking for a referral before you’ve talked rarely lands well. Try asking about {firstName(other.name)}’s experience first. People offer introductions once they know you.
-          </span>
-        </div>
-      )}
 
       <form onSubmit={(e) => { e.preventDefault(); send() }} className="flex items-center gap-2 border-t border-sage-200 bg-cream px-3 pb-[max(env(safe-area-inset-bottom),10px)] pt-2.5">
         <button type="button" onClick={() => setProposing(true)} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-coffee-100 text-coffee-600" aria-label="Propose a coffee chat"><Coffee size={19} /></button>

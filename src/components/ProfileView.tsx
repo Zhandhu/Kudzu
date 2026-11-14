@@ -7,7 +7,7 @@ import { distanceLabel, inCommon, matchInfo, mutualConnections, networkGap, prom
 import { avatarGradient, firstName, initials } from '../lib/util'
 import { Avatar, Chip, Sheet } from './ui'
 
-const REPORT_REASONS = ['Only wanted a referral or a job', 'Soliciting or spam', 'Inappropriate messages', 'Harassment', 'Fake profile or impersonation', 'Something else']
+const REPORT_REASONS = ['Inappropriate messages', 'Fake profile or impersonation', 'Harassment', 'Soliciting or spam', 'Something else']
 
 /** Report / Block. Separate from private chat feedback; this is for safety issues. */
 export function MoreMenu({ user, light = false, onBlocked }: { user: User; light?: boolean; onBlocked?: () => void }) {

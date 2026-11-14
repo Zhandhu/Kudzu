@@ -24,8 +24,7 @@ function topicsFor(role: Role, gradYear: number, codes: string): { asks: string[
   return {
     asks: pick(
       [true, 'industry'], [has('A'), 'decision'], [has('M'), 'path'], [has('J') || has('C'), 'interview'],
-      // referrals are never an ask: they are something a person offers once they know you
-      [has('C'), 'resume'], [gradYear >= 2028, 'recruiting'], [gradYear >= 2029, 'campus'],
+      [has('C'), 'resume'], [has('J'), 'referral'], [gradYear >= 2028, 'recruiting'], [gradYear >= 2029, 'campus'],
     ),
     offers: pick([gradYear <= 2029, 'campus'], [gradYear <= 2028, 'path'], [gradYear <= 2027, 'recruiting'], [gradYear <= 2027, 'interview']),
   }

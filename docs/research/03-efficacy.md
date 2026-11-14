@@ -173,7 +173,11 @@ No study was found on referral-seeking in a mentoring app specifically. The desi
 
 A referral is something a person **offers** once they know you. It is never something to **ask for** on first contact. The app should make the first easy and the second awkward, without banning any words.
 
-### What is now built
+### A first design, built and then shelved
+
+**Status: not in the app.** These safeguards were built and then set aside because the approach did not feel right yet. The code is kept on the branch `shelved/referral-safeguards`. Referrals are currently an ordinary topic that anyone can ask for or offer, and the app does nothing specific about referral-seeking beyond the general Report and Block options.
+
+The design is recorded here as a starting point for the next attempt.
 
 | Safeguard | How it works |
 | --- | --- |
@@ -184,7 +188,7 @@ A referral is something a person **offers** once they know you. It is never some
 | **A report reason** | "Only wanted a referral or a job" is the first option when reporting someone |
 | **A guideline** | "Don't lead with a referral" in the community guidelines |
 
-### Not built, and worth considering
+### Other ideas, also not built
 
 - **Limits on first messages.** A cap on new requests per week would make each one count. The priority-request idea in [02-matching.md](02-matching.md#step-6-change-who-makes-the-first-move) does part of this.
 - **A mentor setting:** "Not open to referral requests," shown on the profile.
