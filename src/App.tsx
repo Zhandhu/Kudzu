@@ -1,0 +1,116 @@
+import { useState } from 'react'
+import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { CalendarDays, Coffee, MessageCircle, Sprout, UserRound, Wrench } from 'lucide-react'
+import { useKadzu } from './store/useKadzu'
+import { OverlayContext, Toast } from './components/ui'
+import { APP_NAME, TAGLINE } from './config/brand'
+import { inSchool } from './services'
+import Meet from './screens/Meet'
+import MatchCelebration from './components/MatchCelebration'
+import Messages from './screens/Messages'
+import ChatThread from './screens/ChatThread'
+import Network from './screens/Network'
+import ConnectionDetail from './screens/ConnectionDetail'
+import Events from './screens/Events'
+import EventDetail from './screens/EventDetail'
+import GroupDetail from './screens/GroupDetail'
+import Profile from './screens/Profile'
+import UserProfile from './screens/UserProfile'
+import Guidelines from './screens/Guidelines'
+import Onboarding from './screens/Onboarding'
+import CheckInSheet from './components/CheckInSheet'
+import DemoPanel from './components/DemoPanel'
+
+const TABS = [
+  { to: '/meet', label: 'Meet', icon: Coffee },
+  { to: '/events', label: 'Events', icon: CalendarDays },
+  { to: '/network', label: 'Network', icon: Sprout },
+  { to: '/messages', label: 'Messages', icon: MessageCircle },
+  { to: '/profile', label: 'Profile', icon: UserRound },
+]
+
+function TabBar() {
+  const unread = useKadzu((s) => s.conversations.filter((c) => c.unread && inSchool(c.otherId, s.schoolId) && !s.blocked.includes(c.otherId)).length)
+  return (
+    <nav className="flex shrink-0 border-t border-sage-200 bg-cream pb-[max(env(safe-area-inset-bottom),6px)] pt-1.5">
+      {TABS.map(({ to, label, icon: Icon }) => (
+        <NavLink key={to} to={to} className={({ isActive }) => `relative flex flex-1 flex-col items-center gap-0.5 py-1 text-[10.5px] font-semibold ${isActive ? 'text-vine-700' : 'text-ink/40'}`}>
+          {({ isActive }) => (
+            <>
+              <Icon size={22} strokeWidth={isActive ? 2.4 : 1.9} />
+              {label}
+              {to === '/messages' && unread > 0 && (
+                <span className="absolute right-[calc(50%-18px)] top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-coffee-500 px-1 text-[9px] text-white">{unread}</span>
+              )}
+            </>
+          )}
+        </NavLink>
+      ))}
+    </nav>
+  )
+}
+
+export default function App() {
+  const onboarded = useKadzu((s) => s.onboarded)
+  const set = useKadzu((s) => s.set)
+  const [overlay, setOverlay] = useState<HTMLElement | null>(null)
+  const { pathname } = useLocation()
+  const showTabs = onboarded && TABS.some((t) => pathname === t.to)
+
+  return (
+    <div className="flex h-full items-center justify-center gap-14 sm:py-4">
+      <aside className="hidden max-w-xs lg:block">
+        <div className="font-display text-5xl font-semibold text-vine-700">{APP_NAME}</div>
+        <p className="mt-2 font-display text-xl text-coffee-600">{TAGLINE}</p>
+        <p className="mt-4 text-sm leading-relaxed text-ink/60">
+          A clickable demo. Students and alumni of the same school match for coffee chats, meet at events, and keep their network alive.
+        </p>
+        <button onClick={() => set({ demoOpen: true })} className="mt-6 inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2.5 text-sm font-semibold text-cream">
+          <Wrench size={16} /> Open demo controls
+        </button>
+        <p className="mt-2 text-xs text-ink/45">Or tap the {APP_NAME} logo three times.</p>
+      </aside>
+
+      <div className="relative flex h-full w-full flex-col overflow-hidden bg-cream sm:h-[844px] sm:max-h-full sm:w-[390px] sm:rounded-[44px] sm:border-[10px] sm:border-ink sm:shadow-2xl">
+        <OverlayContext.Provider value={overlay}>
+          <main className="relative z-0 min-h-0 flex-1">
+            {!onboarded ? (
+              <Routes>
+                <Route path="*" element={<Onboarding />} />
+              </Routes>
+            ) : (
+              <Routes>
+                <Route path="/meet" element={<Meet />} />
+                <Route path="/events" element={<Events />} />
+                <Route path="/events/:id" element={<EventDetail />} />
+                <Route path="/groups/:id" element={<GroupDetail />} />
+                <Route path="/network" element={<Network />} />
+                <Route path="/network/:id" element={<ConnectionDetail />} />
+                <Route path="/messages" element={<Messages />} />
+                <Route path="/messages/:id" element={<ChatThread />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/u/:id" element={<UserProfile />} />
+                <Route path="/guidelines" element={<Guidelines />} />
+                <Route path="*" element={<Navigate to="/meet" replace />} />
+              </Routes>
+            )}
+          </main>
+          {showTabs && <TabBar />}
+          <div ref={setOverlay} className="pointer-events-none absolute inset-0 z-[1500]" />
+          <MatchCelebration />
+          <CheckInSheet />
+          <DemoPanel />
+          <Toast />
+        </OverlayContext.Provider>
+      </div>
+
+      <button
+        onClick={() => set({ demoOpen: true })}
+        className="fixed bottom-24 right-2 z-[3000] flex h-9 w-9 items-center justify-center rounded-full bg-ink/70 text-cream shadow-lg backdrop-blur sm:bottom-5 sm:right-5 sm:h-11 sm:w-11 sm:bg-ink lg:hidden"
+        aria-label="Demo controls"
+      >
+        <Wrench size={16} />
+      </button>
+    </div>
+  )
+}
