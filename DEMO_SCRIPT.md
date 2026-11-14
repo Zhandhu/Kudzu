@@ -8,7 +8,7 @@ A five-minute walkthrough that shows every feature in order.
 2. Open the demo controls (wrench button, or tap the Kudzu logo three times) and choose **Reset all demo data**.
 3. You should be on the welcome screen.
 
-If you would rather let the app present itself, skip onboarding into **Grow my network** and choose **Quick guide** or **Full walkthrough** on the screen that follows. The script below is for presenting it yourself; after skipping onboarding, choose **Explore on my own**.
+If you would rather let the app present itself, skip onboarding into **Grow my network** and choose **Quick guide** (about two minutes) or **Full walkthrough** (about five) on the screen that follows. The script below is for presenting it yourself; after skipping onboarding, choose **Explore on my own**.
 
 **What to emphasise:** this is for keeping in touch with people you know. Reaching someone new is the second use, not the first. Every member is verified. Avoid the words "match" and "swipe": there is neither.
 

@@ -101,7 +101,7 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
               {title && (
                 <div className="mb-4 flex items-center justify-between">
                   <h2 className="font-display text-xl font-semibold">{title}</h2>
-                  <button onClick={onClose} className="rounded-full p-1.5 text-ink/60 hover:bg-sage-100" aria-label="Close"><X size={20} /></button>
+                  <button data-tour="sheet-close" onClick={onClose} className="rounded-full p-1.5 text-ink/60 hover:bg-sage-100" aria-label="Close"><X size={20} /></button>
                 </div>
               )}
               {children}
@@ -154,7 +154,7 @@ export function BackHeader({ title, right }: { title?: string; right?: ReactNode
   const nav = useNavigate()
   return (
     <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-sage-200 bg-cream/95 px-3 py-3 backdrop-blur">
-      <button onClick={() => nav(-1)} className="rounded-full p-1.5 hover:bg-sage-100" aria-label="Back"><ChevronLeft size={22} /></button>
+      <button data-tour="back" onClick={() => nav(-1)} className="rounded-full p-1.5 hover:bg-sage-100" aria-label="Back"><ChevronLeft size={22} /></button>
       <h1 className="flex-1 truncate font-display text-lg font-semibold">{title}</h1>
       {right}
     </div>

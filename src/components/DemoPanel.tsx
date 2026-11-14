@@ -85,8 +85,8 @@ export default function DemoPanel() {
           <Footprints size={19} className="text-vine-600" />
           <span className="flex-1">Start the walkthrough<span className={sub}>Resets the demo data and shows you round.</span></span>
           <span className="flex shrink-0 gap-1.5">
-            <button onClick={() => { close(); s.startTour('quick') }} className="rounded-full bg-vine-700 px-3 py-1.5 text-xs font-semibold text-cream">Quick</button>
-            <button onClick={() => { close(); s.startTour('full') }} className="rounded-full border border-vine-700 px-3 py-1.5 text-xs font-semibold text-vine-700">Full</button>
+            <button onClick={() => { close(); s.startTour('quick'); nav('/find') }} className="rounded-full bg-vine-700 px-3 py-1.5 text-xs font-semibold text-cream">Quick</button>
+            <button onClick={() => { close(); s.startTour('full'); nav('/find') }} className="rounded-full border border-vine-700 px-3 py-1.5 text-xs font-semibold text-vine-700">Full</button>
           </span>
         </div>
 

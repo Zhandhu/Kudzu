@@ -10,44 +10,68 @@ import { OverlayContext, Portal } from './ui'
 
 /**
  * The walkthrough. It runs over the real app: one thing is lit, a caption says
- * what it is, and the tour moves on when the viewer does the real thing. Nothing
- * is staged, so what people see in the tour is what the app does.
+ * what it is, and the tour moves on when the viewer does the real thing.
  *
- * It is written for someone looking at the project on their own. The order makes
- * the point of the product: keeping in touch comes first, verified membership is
- * what makes it safe, and reaching someone new comes after both.
+ * It is a guide, not a slideshow. The viewer gets from one part of the app to the
+ * next the way a member would: by tapping a tab, opening a person from the list,
+ * going back. So by the end they have seen what the app does and also how to
+ * use it. It is written for someone judging the project on their own.
+ *
+ * The order makes the point of the product: staying in touch with people you
+ * know comes first, verified membership is what makes it safe, and reaching
+ * someone new comes after both.
  */
 
 interface Step {
   chapter: string
-  /** The screen this stop is on. The tour goes there if it is not already. */
-  route?: string
-  /** `data-tour` name of the element to light up. Without one, the caption stands alone. */
+  /** `data-tour` name of the element the viewer acts on. Without one, the caption stands alone. */
   target?: string
+  /** A larger area to light around the target, when what matters is more than the button itself. */
+  lit?: string
   title: string
   body: string
-  /** tap: the viewer taps the lit element. type: they type in it, then Next. next: they read, then Next. */
+  /** tap: the viewer taps the target. type: they type in it, then Next. next: they read, then Next. */
   advance: 'tap' | 'type' | 'next'
   /** Runs once when the stop begins. */
   before?: () => void
+  /** Where this stop lives. Only used to recover if the viewer has ended up somewhere else. */
+  route?: string
+  /** What Skip types into a `type` stop. */
+  sample?: string
 }
 
+const WELCOME: Step = { chapter: 'Welcome', advance: 'next',
+  title: `What ${APP_NAME} is`,
+  body: `${APP_NAME} helps alumni of the same school stay in touch with each other, and lets students reach them. Everyone on it is verified by the school. This guide shows what it does and how you use it. You do the tapping.` }
+
 const NETWORK: Step[] = [
-  { chapter: 'Your network', route: '/network', target: 'map', advance: 'next',
-    title: 'Everyone you know from school, on one map',
-    body: `${APP_NAME} is for keeping in touch with the people you studied with. Each leaf is someone you know. Green means you’re in close touch. Yellow and brown mean it has gone quiet.` },
-  { chapter: 'Your network', target: 'bundle', advance: 'tap',
+  { chapter: 'Your network', target: 'tab-network', advance: 'tap', route: '/find',
+    title: 'Start with the people you know',
+    body: 'Most of what you do here is with people you already know from school. Tap Network.' },
+  { chapter: 'Your network', target: 'map', advance: 'next', route: '/network',
+    title: 'Everyone you know, on one map',
+    body: 'Each leaf is someone you know. Green means you’re in close touch. Yellow and brown mean it has gone quiet. The vines are thicker the closer you are.' },
+  { chapter: 'Your network', target: 'bundle', advance: 'tap', route: '/network',
     title: 'Tap a bundle',
-    body: 'A bundle is several people in one city. The vines from you to them are thicker and greener the closer you are.' },
-  { chapter: 'Your network', target: 'map-close', advance: 'tap',
+    body: 'A bundle is several people in one city. Tap one and the map flies in.' },
+  { chapter: 'Your network', target: 'map-close', lit: 'map-card', advance: 'tap', route: '/network',
     title: 'The people you know there',
-    body: 'From here you can message any of them or suggest a coffee. Tap the X and the map pulls back out.' },
+    body: 'Each has a button to message them and one to suggest a coffee. When you’ve looked, tap the X and the map pulls back out.' },
 ]
 
 const STAYING: Step[] = [
-  { chapter: 'Staying in touch', route: '/network/g7', target: 'strength', advance: 'next',
+  { chapter: 'Staying in touch', target: 'view-list', advance: 'tap', route: '/network',
+    title: 'The same people, as a list',
+    body: 'The map shows where people are. The list shows who needs attention. Tap List.' },
+  { chapter: 'Staying in touch', target: 'person-quiet', advance: 'tap', route: '/network',
+    title: 'Someone who has gone quiet',
+    body: 'A yellow leaf means you haven’t been in touch for a while. Tap this person to open their page.' },
+  { chapter: 'Staying in touch', target: 'strength', advance: 'next',
     title: 'How close you are, and why',
-    body: 'Closeness adds up real contact: a coffee, an event, a message. It fades as time passes, and the app reminds you before a friendship goes quiet.' },
+    body: 'Closeness adds up real contact: a coffee, an event, a message. It fades as time passes, and you get a reminder before a friendship lapses.' },
+]
+
+const CATCH_UP: Step[] = [
   { chapter: 'Staying in touch', target: 'catch-up', advance: 'tap',
     title: 'Most catching up happens off the app',
     body: 'A phone call or a lunch should count too. Tap to record one.' },
@@ -55,64 +79,79 @@ const STAYING: Step[] = [
     title: 'Two taps',
     body: 'Choose how and when if you like, then tap Log it.' },
   { chapter: 'Staying in touch', target: 'strength', advance: 'next',
-    title: 'Up to date again',
-    body: 'The leaf is green again and the reminder is gone. That is the whole habit: a little contact, noted, before it lapses.' },
+    title: 'Back in touch',
+    body: 'The leaf has turned green and the reminder is gone. That is the habit the app is built around: a little contact, noted, before it lapses.' },
 ]
 
+const BACK_TO_NETWORK: Step = { chapter: 'Staying in touch', target: 'back', advance: 'tap',
+  title: 'Back to your network',
+  body: 'Tap the arrow to go back.' }
+
 const SCHOOL: Step[] = [
-  { chapter: 'From your school', route: '/network', target: 'push', advance: 'tap', before: receiveAnnouncement,
+  { chapter: 'From your school', target: 'push', advance: 'tap', before: receiveAnnouncement, route: '/network',
     title: 'News from alumni services',
-    body: 'A class is thousands of people, which is too many for a group chat. So the school’s alumni services send the occasional announcement instead. One just arrived. Tap it.' },
-  { chapter: 'From your school', target: 'announcement', advance: 'next',
+    body: 'A class is thousands of people, which is too many for a group chat. So the school’s alumni services send the occasional announcement instead. One has just arrived. Tap it.' },
+  { chapter: 'From your school', target: 'announcement', advance: 'next', route: '/network',
     title: 'Announcements, not chatter',
     body: 'A reunion, a city meet-up, a few times a year. Nobody can reply to everyone. You can say you’re interested, and that is all.' },
+  { chapter: 'From your school', target: 'sheet-close', advance: 'tap', route: '/network',
+    title: 'Close it',
+    body: 'These live under the green leaf in the corner, whenever you want them again. Tap the X.' },
 ]
 
 const REACH: Step[] = [
-  { chapter: 'Reaching someone new', route: '/find', target: 'need', advance: 'tap',
-    title: 'When you do want to meet someone',
-    body: 'You don’t browse people. You say what you need, and the school’s network answers. Tap one.' },
-  { chapter: 'Reaching someone new', target: 'leaf', advance: 'tap',
+  { chapter: 'Reaching someone new', target: 'tab-find', advance: 'tap', route: '/network',
+    title: 'Now, someone you don’t know yet',
+    body: 'Staying in touch comes first. But sometimes you need help from someone you haven’t met. Tap Find.' },
+  { chapter: 'Reaching someone new', target: 'need', advance: 'tap', route: '/find',
+    title: 'Say what you need',
+    body: 'You don’t browse people here. You say what you’re looking for and the school’s network answers. Tap one.' },
+  { chapter: 'Reaching someone new', target: 'leaf', advance: 'tap', route: '/find',
     title: 'People who can help with that',
     body: 'A few, not a feed. The tag on each picture shows how far away they are: 2nd means someone you know knows them. Tap one.' },
+  { chapter: 'Verified members only', target: 'verified', advance: 'next', route: '/find',
+    title: 'Every account is verified',
+    body: 'Nobody gets in without being confirmed as a student or graduate of the school, by school email or by the alumni office. So you always know who you are talking to.' },
 ]
 
-const VERIFIED: Step = { chapter: 'Verified members only', target: 'verified', advance: 'next',
-  title: 'Every account is verified',
-  body: 'Nobody gets in without being confirmed as a student or graduate of the school, by school email or by the alumni office. That is why people here answer a message from someone they have not met.' }
-
 const ASK: Step[] = [
-  { chapter: 'Reaching someone new', target: 'ask', advance: 'tap',
+  { chapter: 'Reaching someone new', target: 'ask', advance: 'tap', route: '/find',
     title: 'You ask, with a reason',
     body: 'There is no swiping and no matching. You ask one person about one thing, and they say yes, later, or no.' },
-  { chapter: 'Reaching someone new', target: 'note', advance: 'type',
+  { chapter: 'Reaching someone new', target: 'note', advance: 'type', route: '/find', sample: 'I’d love to hear how you got into your field.',
     title: 'Add a line',
     body: 'Type a sentence about what you’d like to ask. A request without a reason can’t be sent.' },
-  { chapter: 'Reaching someone new', target: 'send-request', advance: 'tap',
+  { chapter: 'Reaching someone new', target: 'send-request', advance: 'tap', route: '/find',
     title: 'Send it',
     body: 'Each person takes only a few requests a month, so the ones they get are answered.' },
-  { chapter: 'Reaching someone new', target: 'profile-actions', advance: 'next',
+  { chapter: 'Reaching someone new', target: 'go-message', advance: 'tap', route: '/find',
     title: 'She said yes',
-    body: 'Now you can talk. If someone can’t answer within ten days, you’re told, and shown who else could help. A request never just goes quiet.' },
+    body: 'If someone can’t answer within ten days you’re told, and shown who else could help. A request never just goes quiet. Tap Message to talk to her.' },
 ]
 
 const MEET: Step[] = [
-  { chapter: 'Meeting up', route: '/messages/g1', target: 'coffee', advance: 'tap',
+  { chapter: 'Meeting up', target: 'coffee', advance: 'tap', route: '/messages/g1',
     title: 'From a chat to a coffee',
-    body: 'Talking comes first. When you’re ready, the cup proposes a time to meet. Tap it.' },
-  { chapter: 'Meeting up', target: 'send-proposal', advance: 'tap',
+    body: 'Talking comes first. When you’re ready, the cup suggests a time to meet. Tap it.' },
+  { chapter: 'Meeting up', target: 'send-proposal', advance: 'tap', route: '/messages/g1',
     title: 'Offer a few times',
     body: 'Two are picked for you. With a calendar linked, the app marks the times you’re both free. Tap Send proposal.' },
-  { chapter: 'Meeting up', target: 'confirmed', advance: 'next',
+  { chapter: 'Meeting up', target: 'confirmed', advance: 'next', route: '/messages/g1',
     title: 'It’s arranged',
-    body: 'Afterwards the app asks, privately, how it went, and offers a reminder to stay in touch. That is how a first coffee becomes someone you know.' },
+    body: 'Afterwards the app asks you, privately, how it went, and offers a reminder to stay in touch. That is how a first coffee becomes someone you know.' },
+  { chapter: 'Meeting up', target: 'back', advance: 'tap', route: '/messages/g1',
+    title: 'Back out of the chat',
+    body: 'Tap the arrow.' },
 ]
 
 const EVENTS: Step[] = [
-  { chapter: 'Events', route: '/events', target: 'event', advance: 'tap',
-    title: 'Events for your school',
-    body: 'Meet-ups, panels and reunions. Tap this one.' },
-  { chapter: 'Events', target: 'event-chat', advance: 'tap',
+  { chapter: 'Events', target: 'tab-events', advance: 'tap', route: '/find',
+    title: 'One more place: events',
+    body: 'Meet-ups, panels and reunions for your school. Tap Events.' },
+  { chapter: 'Events', target: 'event', advance: 'tap', route: '/events',
+    title: 'Open one',
+    body: 'You’re already going to this one. Tap it.' },
+  { chapter: 'Events', target: 'event-chat', advance: 'tap', route: '/events',
     title: 'A chat for the people going',
     body: 'Small, and tied to the event. Tap to open it.' },
   { chapter: 'Events', target: 'event-chat-note', advance: 'next',
@@ -121,14 +160,21 @@ const EVENTS: Step[] = [
 ]
 
 export const TOURS: Record<'quick' | 'full', Step[]> = {
-  // about a minute: the map, why it stays alive, and who is allowed in
-  quick: [...NETWORK, STAYING[0], ...REACH, VERIFIED],
-  // about four minutes: every part, in the order that explains the product
-  full: [...NETWORK, ...STAYING, ...SCHOOL, ...REACH, VERIFIED, ...ASK, ...MEET, ...EVENTS],
+  // the short route: the network, one person, then how you reach someone new and who is allowed in
+  quick: [WELCOME, ...NETWORK, ...STAYING, BACK_TO_NETWORK, ...REACH],
+  // every part, in the order a member would come across them
+  full: [WELCOME, ...NETWORK, ...STAYING, ...CATCH_UP, BACK_TO_NETWORK, ...SCHOOL, ...REACH, ...ASK, ...MEET, ...EVENTS],
 }
 
 type Box = { x: number; y: number; w: number; h: number }
 const PAD = 6
+const visible = (name: string) => [...document.querySelectorAll(`[data-tour="${name}"]`)].find((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 })
+/** Puts text into a field the way typing would, so the app notices. */
+function typeInto(field: Element, text: string) {
+  const proto = field instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype
+  Object.getOwnPropertyDescriptor(proto, 'value')?.set?.call(field, text)
+  field.dispatchEvent(new Event('input', { bubbles: true }))
+}
 
 /** The overlay that runs a walkthrough: the lit element, the caption, and the controls. */
 export function Tour() {
@@ -138,25 +184,27 @@ export function Tour() {
   const root = useContext(OverlayContext)
   const nav = useNavigate()
   const { pathname } = useLocation()
-  const [box, setBox] = useState<Box | null>(null)
+  /** The lit area, and the part of it that can be tapped. They are the same unless the stop lights a larger area. */
+  const [lit, setLit] = useState<Box | null>(null)
+  const [hole, setHole] = useState<Box | null>(null)
   const [typed, setTyped] = useState(false)
   const el = useRef<Element | null>(null)
+  const path = useRef(pathname)
+  path.current = pathname
 
   const steps = tour ? TOURS[tour.id] : []
   const step = tour ? steps[tour.step] : undefined
   const ended = !!tour && tour.step >= steps.length
   const stepKey = tour ? `${tour.id}-${tour.step}` : ''
-  const next = () => { if (tour) set({ tour: { ...tour, step: tour.step + 1 } }) }
+  const next = () => { const t = useKudzu.getState().tour; if (t) set({ tour: { ...t, step: t.step + 1 } }) }
   const exit = () => set({ tour: null })
 
-  // a stop begins: do its set-up and go to its screen
+  // a stop begins: do its set-up, once
   const ran = useRef('')
   useEffect(() => {
     if (!step) return
-    // once per stop, even if the effect fires twice
     if (ran.current !== stepKey) { ran.current = stepKey; step.before?.() }
-    if (step.route && pathname !== step.route) nav(step.route)
-    setBox(null); setTyped(false); el.current = null
+    setLit(null); setHole(null); setTyped(false); el.current = null
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepKey])
 
@@ -164,20 +212,28 @@ export function Tour() {
   useEffect(() => {
     if (!step?.target || !root) return
     let scrolled = false
+    const began = Date.now()
+    const same = (a: Box | null, b: Box) => !!a && Math.abs(a.x - b.x) < 0.5 && Math.abs(a.y - b.y) < 0.5 && Math.abs(a.w - b.w) < 0.5 && Math.abs(a.h - b.h) < 0.5
     const tick = () => {
       const frame = root.getBoundingClientRect()
-      const found = [...document.querySelectorAll(`[data-tour="${step.target}"]`)].find((e) => {
-        const r = e.getBoundingClientRect()
-        return r.width > 0 && r.height > 0
-      })
+      const found = visible(step.target!)
       el.current = found ?? null
-      if (!found) { setBox(null); return }
+      if (!found) {
+        setLit(null); setHole(null)
+        // The viewer is normally brought here by their own taps. If they have ended up
+        // somewhere else (they skipped, or tapped away), go to where this stop lives.
+        if (step.route && path.current !== step.route && Date.now() - began > 2500) nav(step.route)
+        return
+      }
       const r = found.getBoundingClientRect()
-      // bring it on screen once, if it sits outside the frame
       if (!scrolled && (r.top < frame.top + 60 || r.bottom > frame.bottom - 60)) { scrolled = true; found.scrollIntoView({ block: 'center' }) }
       if (step.advance === 'type') setTyped(((found as HTMLTextAreaElement).value ?? '').trim().length > 2)
-      const b = { x: r.left - frame.left - PAD, y: r.top - frame.top - PAD, w: r.width + PAD * 2, h: r.height + PAD * 2 }
-      setBox((old) => (old && Math.abs(old.x - b.x) < 0.5 && Math.abs(old.y - b.y) < 0.5 && Math.abs(old.w - b.w) < 0.5 && Math.abs(old.h - b.h) < 0.5 ? old : b))
+      const box = (q: DOMRect): Box => ({ x: q.left - frame.left - PAD, y: q.top - frame.top - PAD, w: q.width + PAD * 2, h: q.height + PAD * 2 })
+      const h = box(r)
+      const area = step.lit ? visible(step.lit) : undefined
+      const l = area ? box(area.getBoundingClientRect()) : h
+      setHole((old) => (same(old, h) ? old : h))
+      setLit((old) => (same(old, l) ? old : l))
     }
     tick()
     const t = setInterval(tick, 120)
@@ -185,23 +241,43 @@ export function Tour() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepKey, root])
 
-  // a tap on the lit element is the step being done
+  // a tap on the target is the step being done
   useEffect(() => {
     if (!step || step.advance !== 'tap') return
     const onClick = (e: MouseEvent) => {
-      if (el.current && e.target instanceof Node && el.current.contains(e.target)) setTimeout(() => { const t = useKudzu.getState().tour; if (t && `${t.id}-${t.step}` === stepKey) useKudzu.getState().set({ tour: { ...t, step: t.step + 1 } }) }, 320)
+      if (el.current && e.target instanceof Node && el.current.contains(e.target)) {
+        setTimeout(() => { const t = useKudzu.getState().tour; if (t && `${t.id}-${t.step}` === stepKey) useKudzu.getState().set({ tour: { ...t, step: t.step + 1 } }) }, 320)
+      }
     }
     document.addEventListener('click', onClick, true)
     return () => document.removeEventListener('click', onClick, true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepKey])
 
-  // arrow key to move on where there is a Next, Escape to leave
+  /**
+   * Skip does the step for the viewer instead of jumping past it. The tap or the
+   * typing still happens, so the app is in the state the next stops expect.
+   */
+  const skip = () => {
+    if (!step) return
+    const target = el.current
+    if (step.advance === 'tap' && target instanceof HTMLElement) {
+      // the target may be a wrapper around the real button, so press the button itself
+      const press = target.matches('button, a') ? target : target.querySelector<HTMLElement>('button, a') ?? target
+      press.click() // the tap listener moves the tour on
+      return
+    }
+    if (step.advance === 'type' && target) typeInto(target, step.sample ?? 'Hello')
+    if (!target && step.route && path.current !== step.route) nav(step.route)
+    next()
+  }
+
+  // arrow key to move on, Escape to leave
   useEffect(() => {
     if (!tour) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') exit()
-      if (e.key === 'ArrowRight' && step && (step.advance === 'next' || (step.advance === 'type' && typed))) next()
+      if (e.key === 'ArrowRight' && step) { if (step.advance === 'next' || (step.advance === 'type' && typed)) next(); else skip() }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -226,8 +302,8 @@ export function Tour() {
             </ul>
             <div className="mt-5 space-y-2">
               <button onClick={exit} className="w-full rounded-full bg-vine-700 py-3 text-sm font-semibold text-cream">Explore on my own</button>
-              {tour.id === 'quick' && <button onClick={() => startTour('full')} className="w-full rounded-full border border-vine-700 py-3 text-sm font-semibold text-vine-700">Take the full walkthrough</button>}
-              <button onClick={() => startTour(tour.id)} className="w-full py-1.5 text-[13px] font-semibold text-ink/55 underline underline-offset-4">Run it again</button>
+              {tour.id === 'quick' && <button onClick={() => { startTour('full'); nav('/find') }} className="w-full rounded-full border border-vine-700 py-3 text-sm font-semibold text-vine-700">Take the full walkthrough</button>}
+              <button onClick={() => { startTour(tour.id); nav('/find') }} className="w-full py-1.5 text-[13px] font-semibold text-ink/55 underline underline-offset-4">Run it again</button>
             </div>
           </motion.div>
         </div>
@@ -236,37 +312,50 @@ export function Tour() {
   }
   if (!step) return null
 
-  const waiting = !!step.target && !box
-  // the caption goes on whichever side of the lit element has room
-  const above = !!box && box.y + box.h / 2 > frameH / 2
-  // something that fills most of the screen (the map) has no side with room, so the caption sits inside it, low down
-  const big = !!box && box.h > frameH * 0.55
-  const captionStyle = !box || big ? { bottom: 96 } : above ? { bottom: Math.min(frameH - 150, frameH - box.y + 12) } : { top: Math.min(frameH - 210, box.y + box.h + 12) }
+  const waiting = !!step.target && !lit
+  // The caption goes on whichever side of the lit area has room, and never over it.
+  // Something that fills most of the screen (the map) has no side with room, so the caption sits inside it, low down.
+  const big = !!lit && lit.h > frameH * 0.55
+  const roomAbove = lit ? lit.y : 0
+  const roomBelow = lit ? frameH - lit.y - lit.h : 0
+  const above = !!lit && roomAbove > roomBelow
+  const captionStyle = !lit ? { top: '50%', transform: 'translateY(-50%)' } : big ? { bottom: 96 } : above ? { bottom: Math.min(frameH - 150, frameH - lit.y + 10) } : { top: Math.min(frameH - 210, lit.y + lit.h + 10) }
   const shade = 'pointer-events-auto absolute bg-black/55'
+  const block = 'pointer-events-auto absolute'
   const canNext = step.advance === 'next' || (step.advance === 'type' && typed)
 
   return (
     <Portal>
-      <div className="absolute inset-0 z-[60]" data-tour-overlay data-step-target={step.target} data-step-advance={step.advance} data-step-ready={box ? "yes" : "no"}>
-        {box ? (
+      <div className="absolute inset-0 z-[60]" data-tour-overlay data-step-target={step.target} data-step-lit={step.lit ?? step.target} data-step-advance={step.advance} data-step-ready={lit || !step.target ? 'yes' : 'no'}>
+        {lit && hole ? (
           <>
-            {/* four panels around the lit element: everything else is dimmed and can't be tapped */}
-            <div className={shade} style={{ left: 0, top: 0, width: frameW, height: Math.max(0, box.y) }} />
-            <div className={shade} style={{ left: 0, top: box.y + box.h, width: frameW, height: Math.max(0, frameH - box.y - box.h) }} />
-            <div className={shade} style={{ left: 0, top: box.y, width: Math.max(0, box.x), height: box.h }} />
-            <div className={shade} style={{ left: box.x + box.w, top: box.y, width: Math.max(0, frameW - box.x - box.w), height: box.h }} />
-            {/* on a read-only stop the lit element is shown but not tappable, so the tour keeps its place */}
-            {step.advance === 'next' && <div className="pointer-events-auto absolute" style={{ left: box.x, top: box.y, width: box.w, height: box.h }} />}
-            <div className="pointer-events-none absolute rounded-2xl ring-2 ring-cream" style={{ left: box.x, top: box.y, width: box.w, height: box.h, boxShadow: '0 0 0 4px rgba(111,165,101,.55)' }} />
+            {/* four panels around the lit area: everything else is dimmed and can't be tapped */}
+            <div className={shade} style={{ left: 0, top: 0, width: frameW, height: Math.max(0, lit.y) }} />
+            <div className={shade} style={{ left: 0, top: lit.y + lit.h, width: frameW, height: Math.max(0, frameH - lit.y - lit.h) }} />
+            <div className={shade} style={{ left: 0, top: lit.y, width: Math.max(0, lit.x), height: lit.h }} />
+            <div className={shade} style={{ left: lit.x + lit.w, top: lit.y, width: Math.max(0, frameW - lit.x - lit.w), height: lit.h }} />
+            {/* Inside the lit area only the target can be tapped, so the tour keeps its place.
+                On a read-only stop nothing can: it is there to be looked at. */}
+            {step.advance === 'next' ? (
+              <div className={block} style={{ left: lit.x, top: lit.y, width: lit.w, height: lit.h }} />
+            ) : hole !== lit && (
+              <>
+                <div className={block} style={{ left: lit.x, top: lit.y, width: lit.w, height: Math.max(0, hole.y - lit.y) }} />
+                <div className={block} style={{ left: lit.x, top: hole.y + hole.h, width: lit.w, height: Math.max(0, lit.y + lit.h - hole.y - hole.h) }} />
+                <div className={block} style={{ left: lit.x, top: hole.y, width: Math.max(0, hole.x - lit.x), height: hole.h }} />
+                <div className={block} style={{ left: hole.x + hole.w, top: hole.y, width: Math.max(0, lit.x + lit.w - hole.x - hole.w), height: hole.h }} />
+              </>
+            )}
+            <div className="pointer-events-none absolute rounded-2xl ring-2 ring-cream" style={{ left: hole.x, top: hole.y, width: hole.w, height: hole.h, boxShadow: '0 0 0 4px rgba(111,165,101,.55)' }} />
           </>
         ) : (
-          <div className="pointer-events-auto absolute inset-0 bg-black/35" />
+          <div className={`pointer-events-auto absolute inset-0 ${step.target ? 'bg-black/35' : 'bg-black/55'}`} />
         )}
 
         <AnimatePresence mode="wait">
           <motion.div
             key={stepKey + (waiting ? 'w' : '')}
-            initial={{ opacity: 0, y: above ? 8 : -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
             className="pointer-events-auto absolute inset-x-3 rounded-2xl bg-cream p-3.5 shadow-2xl ring-1 ring-black/5"
             style={captionStyle}
             role="dialog" aria-label={`Walkthrough: ${step.title}`}
@@ -285,11 +374,12 @@ export function Tour() {
               </>
             )}
             <div className="mt-3 flex items-center gap-2">
-              <div className="flex flex-1 gap-1" aria-hidden>
+              <div className="flex flex-1 gap-[3px]" aria-hidden>
                 {steps.map((_, i) => <span key={i} className={`h-1 flex-1 rounded-full ${i <= tour.step ? 'bg-vine-600' : 'bg-sage-200'}`} />)}
               </div>
-              <button onClick={next} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${canNext && !waiting ? 'hidden' : 'text-ink/50'}`}>Skip</button>
-              {canNext && !waiting && <button onClick={next} className="rounded-full bg-vine-700 px-4 py-1.5 text-xs font-semibold text-cream">Next</button>}
+              {canNext && !waiting
+                ? <button onClick={next} className="rounded-full bg-vine-700 px-4 py-1.5 text-xs font-semibold text-cream">Next</button>
+                : <button onClick={skip} className="rounded-full px-3 py-1.5 text-xs font-semibold text-ink/50" title="Does this step for you">Skip</button>}
             </div>
           </motion.div>
         </AnimatePresence>
@@ -306,9 +396,11 @@ export function TourOffer() {
   const show = useKudzu((s) => s.onboarded && s.experience === 'full' && !s.tourOffered && !s.tour)
   const set = useKudzu((s) => s.set)
   const startTour = useKudzu((s) => s.startTour)
+  const nav = useNavigate()
+  const begin = (id: 'quick' | 'full') => { startTour(id); nav('/find') }
   const options = [
-    { id: 'quick' as const, icon: Rocket, title: 'Quick guide', sub: 'About a minute. The idea, in seven stops.' },
-    { id: 'full' as const, icon: Footprints, title: 'Full walkthrough', sub: 'About four minutes. You try each part yourself.' },
+    { id: 'quick' as const, icon: Rocket, title: 'Quick guide', sub: `About two minutes. ${TOURS.quick.length} short stops.` },
+    { id: 'full' as const, icon: Footprints, title: 'Full walkthrough', sub: `About five minutes. You try every part yourself.` },
   ]
   return (
     <Portal>
@@ -322,7 +414,7 @@ export function TourOffer() {
               <p className="mt-2 flex items-start gap-1.5 text-[13px] leading-snug text-vine-800"><BadgeCheck size={16} className="mt-0.5 shrink-0" /> Every member is a verified student or graduate of the school.</p>
               <div className="mt-4 space-y-2">
                 {options.map(({ id, icon: Icon, title, sub }) => (
-                  <button key={id} onClick={() => startTour(id)} className="flex w-full items-center gap-3 rounded-2xl bg-vine-700 p-3.5 text-left text-cream">
+                  <button key={id} onClick={() => begin(id)} className="flex w-full items-center gap-3 rounded-2xl bg-vine-700 p-3.5 text-left text-cream">
                     <Icon size={20} className="shrink-0" />
                     <span><span className="block text-[15px] font-semibold leading-tight">{title}</span><span className="block text-xs text-vine-100">{sub}</span></span>
                   </button>

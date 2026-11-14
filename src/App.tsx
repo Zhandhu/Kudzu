@@ -47,7 +47,7 @@ function TabBar({ tabs }: { tabs: typeof TABS }) {
   return (
     <nav className="flex shrink-0 border-t border-sage-200 bg-cream pb-[max(env(safe-area-inset-bottom),6px)] pt-1.5">
       {tabs.map(({ to, label, icon: Icon }) => (
-        <NavLink key={to} to={to} className={({ isActive }) => `relative flex flex-1 flex-col items-center gap-0.5 py-1 ${tabs.length < 5 ? 'text-[12.5px]' : 'text-[10.5px]'} font-semibold ${isActive ? 'text-vine-700' : 'text-ink/40'}`}>
+        <NavLink key={to} to={to} data-tour={`tab-${label.toLowerCase()}`} className={({ isActive }) => `relative flex flex-1 flex-col items-center gap-0.5 py-1 ${tabs.length < 5 ? 'text-[12.5px]' : 'text-[10.5px]'} font-semibold ${isActive ? 'text-vine-700' : 'text-ink/40'}`}>
           {({ isActive }) => (
             <>
               <Icon size={22} strokeWidth={isActive ? 2.4 : 1.9} />

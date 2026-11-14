@@ -41,7 +41,7 @@ export function ProfileBody({ user, onDone }: { user: User; onDone: () => void }
       <div className={isMe ? 'hidden' : 'border-t border-sage-200 bg-cream px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-3'}>
         {state === 'connected' ? (
           <div className="flex gap-2.5" data-tour="profile-actions">
-            <Link to={`/messages/${id}`} className="flex flex-1 items-center justify-center gap-2 rounded-full bg-vine-700 py-3 text-sm font-semibold text-cream"><MessageCircle size={17} /> Message</Link>
+            <Link to={`/messages/${id}`} data-tour="go-message" className="flex flex-1 items-center justify-center gap-2 rounded-full bg-vine-700 py-3 text-sm font-semibold text-cream"><MessageCircle size={17} /> Message</Link>
             <Link to={`/messages/${id}?coffee=1`} className="flex flex-1 items-center justify-center gap-2 rounded-full bg-coffee-500 py-3 text-sm font-semibold text-cream"><Coffee size={17} /> Propose coffee</Link>
           </div>
         ) : theirs ? (

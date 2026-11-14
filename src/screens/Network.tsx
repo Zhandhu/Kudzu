@@ -104,7 +104,7 @@ export default function Network() {
   const sorted = [...filtered].sort((a, b) => (sort === 'name' ? a.user.name.localeCompare(b.user.name) : a.days - b.days))
 
   const row = (p: Person) => (
-    <Link key={p.user.id} to={`/network/${p.user.id}`} className="flex items-center gap-3 rounded-2xl px-2 py-2.5 hover:bg-sage-50">
+    <Link key={p.user.id} to={`/network/${p.user.id}`} data-tour={p.level === "fading" ? "person-quiet" : undefined} className="flex items-center gap-3 rounded-2xl px-2 py-2.5 hover:bg-sage-50">
       <Avatar user={p.user} size={46} />
       <div className="min-w-0 flex-1">
         <div className="truncate font-semibold">{p.user.name}</div>
@@ -130,7 +130,7 @@ export default function Network() {
             <SchoolChip />
             <div className="flex rounded-full bg-sage-100 p-0.5">
               {([['map', MapIcon], ['list', List]] as const).map(([v, Icon]) => (
-                <button key={v} onClick={() => setView(v)} className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold capitalize ${view === v ? 'bg-white text-vine-700 shadow-sm' : 'text-ink/50'}`} aria-pressed={view === v}>
+                <button key={v} onClick={() => setView(v)} data-tour={`view-${v}`} className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold capitalize ${view === v ? 'bg-white text-vine-700 shadow-sm' : 'text-ink/50'}`} aria-pressed={view === v}>
                   <Icon size={14} /> {v}
                 </button>
               ))}

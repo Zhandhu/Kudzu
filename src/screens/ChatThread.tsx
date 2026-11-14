@@ -139,7 +139,7 @@ export default function ChatThread() {
   return (
     <div className="flex h-full flex-col">
       <header className="flex items-center gap-2 border-b border-sage-200 bg-cream px-2 py-2.5">
-        <button onClick={() => nav(-1)} className="rounded-full p-1.5 hover:bg-sage-100" aria-label="Back"><ChevronLeft size={22} /></button>
+        <button data-tour="back" onClick={() => nav(-1)} className="rounded-full p-1.5 hover:bg-sage-100" aria-label="Back"><ChevronLeft size={22} /></button>
         <Link to={`/u/${other.id}`} className="flex min-w-0 flex-1 items-center gap-2.5">
           <Avatar user={other} size={38} />
           <div className="min-w-0">
