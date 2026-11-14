@@ -83,10 +83,11 @@ export default function DemoPanel() {
         {/* either walkthrough starts from fresh data, as the student in the full app */}
         <div className={item}>
           <Footprints size={19} className="text-vine-600" />
-          <span className="flex-1">Start the walkthrough<span className={sub}>Resets the demo data and shows you round.</span></span>
+          <span className="flex-1">Start the walkthrough<span className={sub}>Resets the demo data and shows you round. Quick and Full are for the main app, Simple for Keep in touch.</span></span>
           <span className="flex shrink-0 gap-1.5">
             <button onClick={() => { close(); s.startTour('quick'); nav('/find') }} className="rounded-full bg-vine-700 px-3 py-1.5 text-xs font-semibold text-cream">Quick</button>
             <button onClick={() => { close(); s.startTour('full'); nav('/find') }} className="rounded-full border border-vine-700 px-3 py-1.5 text-xs font-semibold text-vine-700">Full</button>
+            <button onClick={() => { close(); s.startTour('simple'); nav('/home') }} className="rounded-full border border-vine-700 px-3 py-1.5 text-xs font-semibold text-vine-700">Simple</button>
           </span>
         </div>
 

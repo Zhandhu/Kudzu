@@ -5,6 +5,9 @@ import { ALUM_PERSONA, DEFAULT_PREFS, SEED_GROUPS, STUDENT_PERSONA, seedAnnounce
 import { SCHOOLS } from '../data/schools'
 import { CITIES, DAY, uid } from '../lib/util'
 
+/** The walkthroughs: two for the full app, one for the keep-in-touch app. */
+export type TourId = 'quick' | 'full' | 'simple'
+
 interface Data {
   onboarded: boolean
   me: User
@@ -68,12 +71,12 @@ interface Data {
   /** Set to open the announcements as soon as the Network screen shows. */
   openNews: boolean
   /** The walkthrough in progress, if any, and which stop it is on. */
-  tour: { id: 'quick' | 'full'; step: number } | null
+  tour: { id: TourId; step: number } | null
 }
 
 interface Actions {
   reset: () => void
-  startTour: (id: 'quick' | 'full') => void
+  startTour: (id: TourId) => void
   finishOnboarding: (me: User, prefs: Prefs) => void
   skipOnboarding: (experience?: 'full' | 'simple', openToHelp?: boolean) => void
   signOut: () => void
@@ -197,14 +200,17 @@ export const useKudzu = create<KudzuState>()(
       reset: () => set({ ...fresh() }),
       // A walkthrough always starts from the same fresh data, as the student in the full app,
       // so every step finds what it expects.
-      startTour: (id) => set({ ...fresh(), onboarded: true, experience: 'full', tourOffered: true, tour: { id, step: 0 } }),
+      startTour: (id) =>
+        set(id === 'simple'
+          ? { ...fresh(), onboarded: true, experience: 'simple', me: ALUM_PERSONA, persona: 'alum', tourOffered: true, tour: { id, step: 0 } }
+          : { ...fresh(), onboarded: true, experience: 'full', tourOffered: true, tour: { id, step: 0 } }),
       // the default school comes first in `schoolIds`
       finishOnboarding: (me, prefs) => set({ me, prefs, schoolId: me.schoolIds[0], homeSchoolId: me.schoolIds[0], persona: 'custom', onboarded: true }),
       // The demo shortcut. Each app loads the person it suits: the student for growing
       // a network, the alum fifteen years out for keeping one.
       skipOnboarding: (experience = 'full', openToHelp = true) =>
         set(experience === 'simple'
-          ? { onboarded: true, experience, openToHelp, me: ALUM_PERSONA, persona: 'alum', tourOffered: true }
+          ? { onboarded: true, experience, openToHelp, me: ALUM_PERSONA, persona: 'alum' }
           : { onboarded: true, experience, openToHelp, me: STUDENT_PERSONA, persona: 'student' }),
       signOut: () => set({ onboarded: false }),
       updateMe: (patch) =>

@@ -84,7 +84,7 @@ export default function Home() {
             // itself. Turning it on opens the list, so you see what you switched on.
             if (id === 'help' && !s.openToHelp) {
               return (
-                <button key={id} role="switch" aria-checked={false} aria-label="Turn on helping" onClick={() => { s.set({ openToHelp: true }); setPanel('help') }} className="relative rounded-2xl border-2 border-dashed border-sage-300 bg-white/60 p-3.5 text-left">
+                <button key={id} data-tour="home-help" role="switch" aria-checked={false} aria-label="Turn on helping" onClick={() => { s.set({ openToHelp: true }); setPanel('help') }} className="relative rounded-2xl border-2 border-dashed border-sage-300 bg-white/60 p-3.5 text-left">
                   <span className="flex items-center justify-between">
                     <Icon size={22} className="text-ink/35" />
                     <span className="relative h-7 w-12 shrink-0 rounded-full bg-sage-300" aria-hidden><span className="absolute left-0.5 top-0.5 h-6 w-6 rounded-full bg-white shadow" /></span>
@@ -95,7 +95,7 @@ export default function Home() {
               )
             }
             return (
-              <button key={id} onClick={() => setPanel(on ? null : id)} aria-expanded={on} aria-label={`${label}, ${sub}`} className={`relative rounded-2xl border-2 p-3.5 text-left transition-colors ${on ? 'border-vine-700 bg-vine-700 text-cream' : 'border-sage-200 bg-white'}`}>
+              <button key={id} data-tour={`home-${id}`} onClick={() => setPanel(on ? null : id)} aria-expanded={on} aria-label={`${label}, ${sub}`} className={`relative rounded-2xl border-2 p-3.5 text-left transition-colors ${on ? 'border-vine-700 bg-vine-700 text-cream' : 'border-sage-200 bg-white'}`}>
                 <span className="flex items-center justify-between">
                   <Icon size={22} className={on ? 'text-cream' : 'text-vine-700'} />
                   <span className="flex items-center gap-1.5">
@@ -123,7 +123,7 @@ export default function Home() {
                 const u = getUser(n.otherId)
                 if (!u) return null
                 return (
-                  <div key={n.id} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-sage-200">
+                  <div key={n.id} data-tour="home-nudge" className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-sage-200">
                     <div className="flex items-center gap-3">
                       <Face user={u} size={48} />
                       <p className="flex-1 text-[15px] leading-snug">{n.text}</p>
@@ -135,7 +135,7 @@ export default function Home() {
                       <button onClick={() => s.dismissNudge(n.id)} className="rounded-full px-4 py-3 text-[15px] font-semibold text-ink/50">Not now</button>
                     </div>
                     {/* already spoke, by phone or over lunch: say so and the reminder goes away */}
-                    <button onClick={() => setCaught({ id: u.id, nudge: n.id })} className="mt-2 flex w-full items-center justify-center gap-2 rounded-full border border-vine-200 bg-vine-50 py-2.5 text-[14px] font-semibold text-vine-800">
+                    <button data-tour="home-caught" onClick={() => setCaught({ id: u.id, nudge: n.id })} className="mt-2 flex w-full items-center justify-center gap-2 rounded-full border border-vine-200 bg-vine-50 py-2.5 text-[14px] font-semibold text-vine-800">
                       <CheckCheck size={17} /> We already caught up
                     </button>
                   </div>
@@ -148,7 +148,7 @@ export default function Home() {
 
         {/* 3. people you could help: shown only if the user wants it */}
         {panel === 'help' && (
-        <motion.section key="help" className="overflow-hidden" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.28, ease: 'easeOut' }}>
+        <motion.section key="help" data-tour="home-help-list" className="overflow-hidden" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.28, ease: 'easeOut' }}>
           <div className="mb-2 mt-3 flex items-center justify-between gap-3 rounded-2xl bg-sage-100 px-3.5 py-2.5">
             <span className="text-[14px] font-medium">Show people I could help</span>
             <Toggle on={s.openToHelp} onChange={(openToHelp) => { s.set({ openToHelp }); if (!openToHelp) setPanel(null) }} label="Show people I could help" />
@@ -208,7 +208,7 @@ export default function Home() {
           ) : (
             <div className="divide-y divide-sage-200 rounded-2xl bg-white ring-1 ring-sage-200">
               {shown.map((p) => (
-                <Link key={p.user.id} to={`/network/${p.user.id}`} className="flex items-center gap-3 px-3.5 py-3.5">
+                <Link key={p.user.id} data-tour="home-person" to={`/network/${p.user.id}`} className="flex items-center gap-3 px-3.5 py-3.5">
                   <Face user={p.user} size={48} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[16px] font-semibold">{p.user.name}</span>

@@ -30,7 +30,7 @@ Open the URL Vite prints (usually http://localhost:5173). On a laptop the app re
 ## Presenting the demo
 
 - On the welcome screen, tap **Skip onboarding (demo)**, pick one of the two apps, then **Skip the rest**. "Grow my network" loads a prefilled Georgia Tech student. "Keep in touch" loads an alum.
-- **The app can show itself.** The full app opens on a choice: a **Quick guide** (about two minutes, 13 stops), a **Full walkthrough** (about five minutes, 31 stops), or exploring alone. Both run over the real app: one element is lit, a caption explains it, and it moves on when you tap the real thing. They move through the app the way a member would, by tapping tabs and opening people, not by jumping between screens. **Skip** does the step for you, so nothing later breaks. Leave at any point with the X or Escape. Either can be started again from the demo controls.
+- **The app can show itself.** The full app opens on a choice: a **Quick guide** (about two minutes, 13 stops), a **Full walkthrough** (about five minutes, 31 stops), or exploring alone. Both run over the real app: one element is lit, a caption explains it, and it moves on when you tap the real thing. They move through the app the way a member would, by tapping tabs and opening people, not by jumping between screens. **Skip** does the step for you, so nothing later breaks. Leave at any point with the X or Escape. The keep-in-touch app has its own walkthrough of 15 stops, offered when you enter it. All three can be started again from the demo controls. If a stop cannot find what it points at, it says so and lets you move on.
 - Open the **demo controls** by tapping the Kudzu logo three times, or with the wrench button.
 - [`DEMO_SCRIPT.md`](DEMO_SCRIPT.md) is a five-minute script for presenting it yourself, feature by feature.
 
@@ -46,7 +46,7 @@ Demo controls:
 | Receive a thank-you note | Someone you helped thanks you. It appears on your profile and in the chat |
 | Receive a class announcement | Alumni services send a notice to your class. It arrives as a phone-style notification at the top of the screen; tapping it opens the announcement |
 | Show account-warning notice | Shows the notice a user gets after missed chats |
-| Start the walkthrough | Quick or Full. Resets the demo data and runs the guided tour over the real app |
+| Start the walkthrough | Quick or Full for the main app, Simple for Keep in touch. Resets the demo data and runs the guided tour over the real app |
 | Reset all demo data | Clears everything and returns to onboarding |
 
 ## What's in the app

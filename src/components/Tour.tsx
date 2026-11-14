@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { BadgeCheck, Compass, Footprints, Rocket, X } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { APP_NAME } from '../config/brand'
-import { useKudzu } from '../store/useKudzu'
+import { useKudzu, type TourId } from '../store/useKudzu'
 import { receiveAnnouncement } from '../services'
 import { Logo } from './brand'
 import { OverlayContext, Portal } from './ui'
@@ -36,6 +36,8 @@ interface Step {
   before?: () => void
   /** Where this stop lives. Only used to recover if the viewer has ended up somewhere else. */
   route?: string
+  /** A second element to use if the target is not on screen, so the stop never has nothing to point at. */
+  fallback?: string
   /** What Skip types into a `type` stop. */
   sample?: string
 }
@@ -63,7 +65,7 @@ const STAYING: Step[] = [
   { chapter: 'Staying in touch', target: 'view-list', advance: 'tap', route: '/network',
     title: 'The same people, as a list',
     body: 'The map shows where people are. The list shows who needs attention. Tap List.' },
-  { chapter: 'Staying in touch', target: 'person-quiet', advance: 'tap', route: '/network',
+  { chapter: 'Staying in touch', target: 'person-quiet', fallback: 'person', advance: 'tap', route: '/network',
     title: 'Someone who has gone quiet',
     body: 'A yellow leaf means you haven’t been in touch for a while. Tap this person to open their page.' },
   { chapter: 'Staying in touch', target: 'strength', advance: 'next',
@@ -159,12 +161,66 @@ const EVENTS: Step[] = [
     body: 'So it never turns into a noisy standing group. To keep talking with someone, you tap their picture and message them directly.' },
 ]
 
-export const TOURS: Record<'quick' | 'full', Step[]> = {
+/* ---- the keep-in-touch app: one home screen, the map, and nothing about meeting strangers ---- */
+
+const SIMPLE: Step[] = [
+  { chapter: 'Welcome', advance: 'next',
+    title: 'The simpler way to use it',
+    body: `This version of ${APP_NAME} is for people who are not looking for new connections. It does one thing: it helps you stay in touch with the people you already know from school. You do the tapping.` },
+  { chapter: 'Your people', target: 'home-person', advance: 'next', route: '/home',
+    title: 'Everyone you know, in one list',
+    body: 'The people you have gone longest without talking to come first. A grey bud means resting: not lost, and ready to pick up again.' },
+  { chapter: 'Catching up', target: 'home-catch', advance: 'tap', route: '/home',
+    title: 'Who to write to',
+    body: 'The app picks a few people and gives you a reason for each. Tap Catch up.' },
+  { chapter: 'Catching up', target: 'home-nudge', advance: 'next', route: '/home',
+    title: 'A reason, and one button',
+    body: 'Someone is in town, or has news, or it has simply been a while. One tap opens a message with the first line written for you.' },
+  { chapter: 'Catching up', target: 'home-caught', advance: 'tap', route: '/home',
+    title: 'Already spoke to them?',
+    body: 'Most catching up happens by phone or over lunch. That should count too. Tap “We already caught up”.' },
+  { chapter: 'Catching up', target: 'log-it', advance: 'tap', route: '/home',
+    title: 'Two taps',
+    body: 'Choose how and when if you like, then tap Log it. The reminder goes away.' },
+  { chapter: 'Helping, if you want to', target: 'home-help', advance: 'tap', route: '/home',
+    title: 'Help someone out',
+    body: 'Students and recent graduates can ask you for a conversation. This is optional. Tap Help out.' },
+  { chapter: 'Helping, if you want to', target: 'home-help-list', advance: 'next', route: '/home',
+    title: 'Yes, later, or no',
+    body: 'Each request is answered in one tap, and saying no needs no reason. The switch at the top hides this list if you would rather not see it.' },
+  { chapter: 'One person', target: 'home-person', advance: 'tap', route: '/home',
+    title: 'Open someone',
+    body: 'Tap the first person on your list.' },
+  { chapter: 'One person', target: 'strength', advance: 'next',
+    title: 'How close you are, and why',
+    body: 'Closeness adds up real contact, and fades at a pace set by how often you mean to be in touch. Below this you can choose monthly, each semester, or once a year.' },
+  { chapter: 'One person', target: 'back', advance: 'tap',
+    title: 'Back to your list',
+    body: 'Tap the arrow.' },
+  { chapter: 'Where everyone is', target: 'tab-map', advance: 'tap', route: '/home',
+    title: 'One more thing: the map',
+    body: 'The same people, by where they live. Tap Map.' },
+  { chapter: 'Where everyone is', target: 'map', advance: 'next', route: '/network',
+    title: 'Your network, on a map',
+    body: 'Each leaf is someone you know. Green means you’re in close touch, yellow means it has been a while, and a grey bud is resting.' },
+  { chapter: 'Where everyone is', target: 'bundle', advance: 'tap', route: '/network',
+    title: 'Tap a bundle',
+    body: 'A bundle is several people in one city. Useful before a trip.' },
+  { chapter: 'Where everyone is', target: 'map-close', lit: 'map-card', advance: 'tap', route: '/network',
+    title: 'The people you know there',
+    body: 'Message any of them, or suggest a coffee. Tap the X when you’ve looked.' },
+]
+
+export const TOURS: Record<TourId, Step[]> = {
   // the short route: the network, one person, then how you reach someone new and who is allowed in
   quick: [WELCOME, ...NETWORK, ...STAYING, BACK_TO_NETWORK, ...REACH],
   // every part, in the order a member would come across them
   full: [WELCOME, ...NETWORK, ...STAYING, ...CATCH_UP, BACK_TO_NETWORK, ...SCHOOL, ...REACH, ...ASK, ...MEET, ...EVENTS],
+  // the keep-in-touch app
+  simple: SIMPLE,
 }
+/** Where each walkthrough begins. */
+export const TOUR_START: Record<TourId, string> = { quick: '/find', full: '/find', simple: '/home' }
 
 type Box = { x: number; y: number; w: number; h: number }
 const PAD = 6
@@ -188,6 +244,8 @@ export function Tour() {
   const [lit, setLit] = useState<Box | null>(null)
   const [hole, setHole] = useState<Box | null>(null)
   const [typed, setTyped] = useState(false)
+  /** Set when a stop has waited several seconds without finding what it points at. */
+  const [slow, setSlow] = useState(false)
   const el = useRef<Element | null>(null)
   const path = useRef(pathname)
   path.current = pathname
@@ -204,7 +262,7 @@ export function Tour() {
   useEffect(() => {
     if (!step) return
     if (ran.current !== stepKey) { ran.current = stepKey; step.before?.() }
-    setLit(null); setHole(null); setTyped(false); el.current = null
+    setLit(null); setHole(null); setTyped(false); setSlow(false); el.current = null
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepKey])
 
@@ -216,10 +274,12 @@ export function Tour() {
     const same = (a: Box | null, b: Box) => !!a && Math.abs(a.x - b.x) < 0.5 && Math.abs(a.y - b.y) < 0.5 && Math.abs(a.w - b.w) < 0.5 && Math.abs(a.h - b.h) < 0.5
     const tick = () => {
       const frame = root.getBoundingClientRect()
-      const found = visible(step.target!)
+      const found = visible(step.target!) ?? (step.fallback ? visible(step.fallback) : undefined)
       el.current = found ?? null
       if (!found) {
         setLit(null); setHole(null)
+        // after a few seconds, say so, so nobody is left looking at "One moment"
+        if (Date.now() - began > 5000) setSlow(true)
         // The viewer is normally brought here by their own taps. If they have ended up
         // somewhere else (they skipped, or tapped away), go to where this stop lives.
         if (step.route && path.current !== step.route && Date.now() - began > 2500) nav(step.route)
@@ -302,8 +362,8 @@ export function Tour() {
             </ul>
             <div className="mt-5 space-y-2">
               <button onClick={exit} className="w-full rounded-full bg-vine-700 py-3 text-sm font-semibold text-cream">Explore on my own</button>
-              {tour.id === 'quick' && <button onClick={() => { startTour('full'); nav('/find') }} className="w-full rounded-full border border-vine-700 py-3 text-sm font-semibold text-vine-700">Take the full walkthrough</button>}
-              <button onClick={() => { startTour(tour.id); nav('/find') }} className="w-full py-1.5 text-[13px] font-semibold text-ink/55 underline underline-offset-4">Run it again</button>
+              {tour.id !== 'full' && <button onClick={() => { startTour('full'); nav('/find') }} className="w-full rounded-full border border-vine-700 py-3 text-sm font-semibold text-vine-700">{tour.id === 'simple' ? 'See the full app' : 'Take the full walkthrough'}</button>}
+              <button onClick={() => { startTour(tour.id); nav(TOUR_START[tour.id]) }} className="w-full py-1.5 text-[13px] font-semibold text-ink/55 underline underline-offset-4">Run it again</button>
             </div>
           </motion.div>
         </div>
@@ -366,7 +426,7 @@ export function Tour() {
               <button onClick={exit} className="-mr-1 rounded-full p-1 text-ink/45 hover:bg-sage-100" aria-label="Leave the walkthrough"><X size={15} /></button>
             </div>
             {waiting ? (
-              <p className="mt-1.5 text-[14px] leading-snug text-ink/70">One moment…</p>
+              <p className="mt-1.5 text-[14px] leading-snug text-ink/70">{slow ? 'This step can’t find what it is looking for. Tap Skip to move on.' : 'One moment…'}</p>
             ) : (
               <>
                 <h3 className="mt-1 font-display text-[18px] font-semibold leading-snug">{step.title}</h3>
@@ -393,15 +453,19 @@ export function Tour() {
  * and looking for themselves. Offered once. The demo controls can start a tour later.
  */
 export function TourOffer() {
-  const show = useKudzu((s) => s.onboarded && s.experience === 'full' && !s.tourOffered && !s.tour)
+  const show = useKudzu((s) => s.onboarded && !s.tourOffered && !s.tour)
+  const simple = useKudzu((s) => s.experience === 'simple')
   const set = useKudzu((s) => s.set)
   const startTour = useKudzu((s) => s.startTour)
   const nav = useNavigate()
-  const begin = (id: 'quick' | 'full') => { startTour(id); nav('/find') }
-  const options = [
-    { id: 'quick' as const, icon: Rocket, title: 'Quick guide', sub: `About two minutes. ${TOURS.quick.length} short stops.` },
-    { id: 'full' as const, icon: Footprints, title: 'Full walkthrough', sub: `About five minutes. You try every part yourself.` },
-  ]
+  const begin = (id: TourId) => { startTour(id); nav(TOUR_START[id]) }
+  // each app is shown round in its own way
+  const options: { id: TourId; icon: typeof Rocket; title: string; sub: string }[] = simple
+    ? [{ id: 'simple', icon: Footprints, title: 'Show me round', sub: `About two minutes. ${TOURS.simple.length} short stops, and you do the tapping.` }]
+    : [
+        { id: 'quick', icon: Rocket, title: 'Quick guide', sub: `About two minutes. ${TOURS.quick.length} short stops.` },
+        { id: 'full', icon: Footprints, title: 'Full walkthrough', sub: `About five minutes. You try every part yourself.` },
+      ]
   return (
     <Portal>
       <AnimatePresence>
@@ -410,7 +474,7 @@ export function TourOffer() {
             <motion.div initial={{ scale: 0.9, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0 }} className="w-full rounded-3xl bg-cream p-5 shadow-2xl" role="dialog" aria-label={`Welcome to ${APP_NAME}`}>
               <Logo size={28} />
               <h2 className="mt-3 font-display text-[24px] font-semibold leading-tight">Welcome to {APP_NAME}</h2>
-              <p className="mt-1.5 text-[14px] leading-snug text-ink/70">A way for alumni to stay in touch with each other, and for students to reach them.</p>
+              <p className="mt-1.5 text-[14px] leading-snug text-ink/70">{simple ? 'A way to stay in touch with the people you know from school. This is the simpler version of the app.' : 'A way for alumni to stay in touch with each other, and for students to reach them.'}</p>
               <p className="mt-2 flex items-start gap-1.5 text-[13px] leading-snug text-vine-800"><BadgeCheck size={16} className="mt-0.5 shrink-0" /> Every member is a verified student or graduate of the school.</p>
               <div className="mt-4 space-y-2">
                 {options.map(({ id, icon: Icon, title, sub }) => (

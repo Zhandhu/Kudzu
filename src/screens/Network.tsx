@@ -104,7 +104,7 @@ export default function Network() {
   const sorted = [...filtered].sort((a, b) => (sort === 'name' ? a.user.name.localeCompare(b.user.name) : a.days - b.days))
 
   const row = (p: Person) => (
-    <Link key={p.user.id} to={`/network/${p.user.id}`} data-tour={p.level === "fading" ? "person-quiet" : undefined} className="flex items-center gap-3 rounded-2xl px-2 py-2.5 hover:bg-sage-50">
+    <Link key={p.user.id} to={`/network/${p.user.id}`} data-tour={p.level === "fading" ? "person-quiet" : "person"} className="flex items-center gap-3 rounded-2xl px-2 py-2.5 hover:bg-sage-50">
       <Avatar user={p.user} size={46} />
       <div className="min-w-0 flex-1">
         <div className="truncate font-semibold">{p.user.name}</div>
