@@ -187,7 +187,8 @@ export default function Onboarding() {
       },
     ]
     return (
-      <div className="flex h-full flex-col">
+      // each sign-up page has its own key, so it is a fresh container and opens at the top
+      <div key="choose" className="flex h-full flex-col">
         <header className="px-5 pt-4">
           <button onClick={() => setStage('welcome')} className="-ml-1.5 rounded-full p-1.5 hover:bg-sage-100" aria-label="Back"><ChevronLeft size={22} /></button>
           <h1 className="mt-2 font-display text-[28px] font-semibold leading-tight">What brings you to Kudzu?</h1>
@@ -246,7 +247,7 @@ export default function Onboarding() {
       </button>
     )
     return (
-      <div className="flex h-full flex-col">
+      <div key="menu" className="flex h-full flex-col">
         <header className="px-5 pt-4">
           <div className="flex items-center justify-between">
             <button onClick={() => setStage('choose')} className="-ml-1.5 rounded-full p-1.5 hover:bg-sage-100" aria-label="Back"><ChevronLeft size={22} /></button>
@@ -469,7 +470,7 @@ export default function Onboarding() {
   const canClose = open !== 'here' || hereEmpty || hereFull
 
   return (
-    <div className="flex h-full flex-col">
+    <div key={open} className="flex h-full flex-col">
       <header className="flex items-center gap-2 px-4 pt-4">
         <button onClick={() => setOpen(null)} className="-ml-1 rounded-full p-1.5 hover:bg-sage-100" aria-label="Back"><ChevronLeft size={22} /></button>
         <h1 className="flex-1 font-display text-[22px] font-semibold leading-tight">{section.title}</h1>
