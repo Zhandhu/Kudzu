@@ -76,6 +76,12 @@ const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v
  */
 const MAX_STRANDS = 6
 
+/** A repeatable number between 0 and 1 for a pair of inputs. Not random: same in, same out. */
+const rnd = (a: number, b: number) => {
+  const v = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453
+  return v - Math.floor(v)
+}
+
 /** Smooth step from 0 to 1, flat at both ends. */
 const smooth = (v: number) => { const c = clamp(v, 0, 1); return c * c * (3 - 2 * c) }
 
@@ -102,23 +108,43 @@ function strandPath(origin: LatLng, hub: LatLng, seed: number, index: number, co
   const nx = -dy / len
   const ny = dx / len
   const bend = (seed % 2 === 0 ? 1 : -1) * (0.09 + (seed % 5) * 0.015) * len
+  const TAU = 2 * Math.PI
 
-  // The rope: a few pixels wide, with one full twist about every 190 km.
-  const radius = count > 1 ? (1.6 + 0.45 * count) * radPerPx : 0
-  const twists = clamp(len / 0.03, 2, 40)
-  const phase = (2 * Math.PI * index) / count
+  // Fixed "random" numbers: the same every time for a given city and strand, so
+  // the vine never changes shape between visits, but no two strands match.
+  const own = (i: number) => rnd(seed * 31 + index * 7 + 1, i)
+  const shared = (i: number) => rnd(seed + 0.5, i)
+
+  // When zoomed far out a twist is only a few pixels long, and a full-width wrap
+  // would turn into a heavy scribble. So the wrap calms down as twists get short.
+  const twistLength = 0.045 // about 290 km of map per twist
+  const calm = clamp((twistLength / radPerPx - 4) / 14, 0.55, 1)
+  const radius = (count > 1 ? 2 + 0.45 * count : 0.9) * radPerPx * calm
+
+  // Each strand has its own pitch, so strands drift in and out of step...
+  const twists = clamp(len / twistLength, 1.5, 28) * (0.75 + 0.5 * own(1))
+  const phase = (TAU * index) / count + own(2) * 1.2
+  // ...its twists bunch up and stretch out along the way...
+  const bunch = { rate: 1.5 + 2.5 * own(3), shift: own(4) * TAU, depth: 0.9 + 0.8 * own(5) }
+  // ...it hugs the centre line closely in some places and loosely in others...
+  const hug = { rate: 2 + 3 * own(6), shift: own(7) * TAU }
+  // ...and once or twice it throws out a loose loop.
+  const loop = { rate: 1 + 2 * own(8), shift: own(9) * TAU, size: 0.8 + 0.8 * own(10) }
+  // The centre line itself meanders, the same way for every strand in the city.
+  const wander = { r1: 2 + 2 * shared(1), s1: shared(2) * TAU, r2: 4.5 + 3 * shared(3), s2: shared(4) * TAU }
   const gather = 0.07 // the share of the route over which strands join at each end
 
   const pts: LatLng[] = []
-  const n = Math.round(clamp(twists * 12, 72, 420))
+  const n = Math.round(clamp(twists * 14, 90, 420))
   for (let i = 0; i <= n; i++) {
     const t = i / n
-    const axis = Math.sin(Math.PI * t) ** 2 * (bend + Math.sin(t * Math.PI * 6) * len * 0.012)
+    const axis = Math.sin(Math.PI * t) ** 2 * (bend + len * 0.01 * Math.sin(TAU * wander.r1 * t + wander.s1) + len * 0.005 * Math.sin(TAU * wander.r2 * t + wander.s2))
     // strands start as one, wrap around the centre line, and come back together at the city
     const open = smooth(t / gather) * smooth((1 - t) / gather)
-    // a little unevenness, so it looks grown and not machined
-    const wobble = 0.8 + 0.2 * Math.sin(2 * Math.PI * (1.7 * t + index * 0.37))
-    const wrap = radius * open * wobble * Math.sin(2 * Math.PI * twists * t + phase)
+    const angle = TAU * twists * t + phase + bunch.depth * Math.sin(TAU * bunch.rate * t + bunch.shift)
+    const closeness = 0.5 + 0.25 * (1 + Math.sin(TAU * hug.rate * t + hug.shift))
+    const stray = loop.size * Math.max(0, Math.sin(TAU * loop.rate * t + loop.shift)) ** 8
+    const wrap = radius * open * (closeness * Math.sin(angle) + stray * Math.sin(angle * 0.5 + 1))
     pts.push(unproject(p.x + dx * t + nx * (axis + wrap), p.y + dy * t + ny * (axis + wrap)))
   }
   return pts
@@ -264,13 +290,15 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
   // The size of one screen pixel in map units at this zoom. The centre lines never
   // move when you zoom. Only the thickness of the rope is kept constant on screen.
   const radPerPx = (2 * Math.PI) / (256 * 2 ** zoom)
+  // Lines are drawn lighter the further out you are, so a whole continent of vines does not look heavy.
+  const thin = clamp(0.35 + 0.115 * zoom, 0.5, 1)
 
   // One strand per person. The strands to a city twist together into one vine,
   // then branch to each leaf. The shapes are the same at every zoom level, so
   // nothing jumps when you zoom.
   const strands = useMemo(() => {
     // `id` is set when a line belongs to one person, so it can be picked out when they are selected
-    const out: { key: string; id?: string; city: string; level: Strength; pts: LatLng[] }[] = []
+    const out: { key: string; id?: string; city: string; level: Strength; pts: LatLng[]; inRope?: boolean }[] = []
     for (const c of cities) {
       if (c.city === me.city) {
         // your own city: a short vine straight from you to each person
@@ -280,7 +308,7 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
       const shown = strandPeople(c.list)
       const capped = shown.length < c.list.length
       shown.forEach((p, index) =>
-        out.push({ key: `${c.city}-strand-${index}`, id: capped ? undefined : p.user.id, city: c.city, level: p.level, pts: strandPath(origin, c.center, hash(c.city) % 10, index, shown.length, radPerPx) }),
+        out.push({ key: `${c.city}-strand-${index}`, id: capped ? undefined : p.user.id, city: c.city, level: p.level, inRope: shown.length > 1, pts: strandPath(origin, c.center, hash(c.city) % 997, index, shown.length, radPerPx) }),
       )
       for (const p of c.list) {
         const pts = branchPath(origin, c.center, p.user.coords)
@@ -313,9 +341,12 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
               smoothFactor={0}
               pathOptions={{
                 color: STRENGTH_META[v.level].color,
-                weight: style.weight,
-                opacity: active ? style.opacity : 0.12,
-                dashArray: style.dash,
+                // Thinner when zoomed out. Inside a rope every strand is solid and a similar
+                // weight, so each colour shows in the tangle. The dashed, faint styling that
+                // marks a fading or dormant tie is kept for the branch to that person's leaf.
+                weight: (v.inRope ? clamp(style.weight, 1.9, 2.6) * 0.8 : style.weight) * thin,
+                opacity: active ? (v.inRope ? Math.max(style.opacity, 0.8) : style.opacity) : 0.12,
+                dashArray: v.inRope ? undefined : style.dash,
                 lineCap: 'round',
               }}
             />
