@@ -5,7 +5,7 @@ export type LeafKey = 'reach' | 'pending' | 'grow'
 export interface LeafItem {
   key: LeafKey
   label: string
-  /** Shown in the berry. Zero hides it. */
+  /** Shown in the blossom. Zero hides it. */
   count: number
   onClick: () => void
 }
@@ -31,18 +31,37 @@ function place(turn: number, distance = REACH) {
   return { x: ORIGIN + Math.sin(a) * distance, y: ORIGIN - Math.cos(a) * distance }
 }
 
+/** The count at which the blossom reaches its darkest purple. */
+const FULL_BLOOM = 8
+
+/** Five petals around the centre, the first pointing straight up. */
+const PETALS = [0, 1, 2, 3, 4].map((k) => {
+  const a = ((-90 + k * 72) * Math.PI) / 180
+  return { cx: 12 + Math.cos(a) * 6.4, cy: 12 + Math.sin(a) * 6.4 }
+})
+
 /**
- * The notification bubble, drawn as a berry: a small round fruit with a green
- * calyx on top, holding the count.
+ * The notification bubble, drawn as a kudzu blossom with the count in its centre.
+ * Kudzu flowers are purple, and this one deepens as the count rises: pale lilac
+ * for one, dark purple for eight or more. The number is always shown as well, so
+ * the shade adds to the count and never replaces it.
  */
-export function Berry({ n, className = '' }: { n: number; className?: string }) {
+export function Blossom({ n, className = '' }: { n: number; className?: string }) {
   if (n <= 0) return null
+  const depth = Math.min(1, (n - 1) / (FULL_BLOOM - 1))
+  const petal = 84 - depth * 46 // lightness: 84% down to 38%
+  const centre = Math.max(22, petal - 16)
   return (
-    <span className={`pointer-events-none absolute flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold leading-none text-white ring-2 ring-cream ${className}`} style={{ background: 'radial-gradient(circle at 35% 30%, #c0563f, #96341f)' }} aria-hidden>
-      <svg className="absolute -top-[6px] left-1/2 -translate-x-1/2" width="10" height="7" viewBox="0 0 10 7" fill="none">
-        <path d="M5 7V3M5 4C3 4 1.5 3 1 1M5 4c2 0 3.5-1 4-3" stroke="#356433" strokeWidth="1.4" strokeLinecap="round" />
+    <span className={`pointer-events-none absolute block h-[26px] w-[26px] ${className}`} aria-hidden>
+      <svg width="26" height="26" viewBox="0 0 24 24">
+        {PETALS.map((p, k) => (
+          <circle key={k} cx={p.cx} cy={p.cy} r="5.2" fill={`hsl(276 58% ${petal}%)`} stroke="#faf6ee" strokeWidth="1" />
+        ))}
+        <circle cx="12" cy="12" r="5.6" fill={`hsl(276 62% ${centre}%)`} />
       </svg>
-      {n > 9 ? '9+' : n}
+      <span className="absolute inset-0 flex items-center justify-center text-[9.5px] font-bold leading-none" style={{ color: centre < 58 ? '#fff' : '#3b1560' }}>
+        {n > 9 ? '9+' : n}
+      </span>
     </span>
   )
 }
@@ -86,7 +105,7 @@ export function LeafSprig({ items }: { items: LeafItem[] }) {
               </svg>
               <span className="absolute inset-0 flex items-center justify-center text-white"><look.icon size={16} /></span>
             </span>
-            <Berry n={i.count} className="-left-1 -top-1" />
+            <Blossom n={i.count} className="-left-2 -top-2" />
           </button>
         )
       })}
