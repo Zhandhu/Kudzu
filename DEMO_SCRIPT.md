@@ -25,12 +25,12 @@ The demo controls are referred to below as **Demo**.
 
 "This is where you find people. You say what you need, and the school's network answers."
 
-1. The tab opens on **What are you looking for?** with Riley's own asks ready to tap. Under it are a few people who can help, each drawn as a **leaf**. The line beneath shows who Riley already knows that knows them.
+1. The tab opens on **What are you looking for?** with Riley's own asks ready to tap. Tap **An inside look at an industry**. A stem grows and a few people who can help open out from it, each drawn as a **leaf**. The line beneath shows who Riley already knows that knows them. Mention **Something else**: type a need in your own words, such as "someone in consulting in New York", and the app finds people for it.
 2. Tap **Maya O.** once. A summary appears: her role, why she is shown, people in common, how many spots she has left and how quickly she replies. Tap **Open full profile**.
 3. On her profile, point to the green **Learn from** box and her three prompts. Tap **Ask Maya for a chat**. Pick what it is about, type one line and tap **Send request**. "No swiping, and no waiting for a mutual match. You ask, with a reason."
 4. After a moment the bar changes to **Message** and **Propose coffee**: Maya has accepted. (Maya always accepts. Others accept about 60% of the time, and some never answer, so that case can be shown.)
-5. Go back to Find. Type **consult** in the search bar and tap the **Consulting** chip it offers. Results **grow on branches**, grouped by city. Tap **Level** to regroup them. Leaves are coloured by relationship: learn from, trade notes, give back. Outlined leaves are people already in Riley's network.
-6. Tap the **+** in the search bar to show the other ways to narrow: field, city, level and **Can help with**. Close it and tap **Clear all**.
+5. Go back to Find. Type **consult** in the search bar and tap the **Consulting** chip it offers. Results **grow on branches**, grouped by city. Tap **Level** to regroup them. (Search for one city and the app stops grouping by city on its own.) Leaves are coloured by relationship: learn from, trade notes, give back. Outlined leaves are people already in Riley's network.
+6. Tap the **+** in the search bar to show the other ways to narrow: field, city, level and **Can help with**. Tap one: it applies and the sheet closes by itself. Tap the chip to remove it.
 7. Tap **Simple** (top right) to show the same results as a plain list. Tap **Leaves** to go back.
 8. Point to the two leaves in the bottom-right corner. Tap the **tendril**, which is **Requests**:
    - **Asked of you** are requests from others. Each can be answered in one tap: **Accept**, **Later on** or **Not right now**.

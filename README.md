@@ -48,7 +48,7 @@ Demo controls:
 
 | Tab | Features |
 | --- | --- |
-| **Find** | "What are you looking for?" with suggested people, search by name, field, city, level or the help someone offers, results as leaves on branches (or a plain list), a summary on first tap and the full profile on the next, requests for a chat, and people you have connected with but not yet met |
+| **Find** | "What are you looking for?": tap a need, or describe one in your own words, and the people who can help grow out. Search by name, field, city, level or the help someone offers, results as leaves on branches (or a plain list), a summary on first tap and the full profile on the next, requests for a chat, and people you have connected with but not yet met |
 | **Events** | For You / All feeds, type filters, event detail with map and guest list, RSVP, host an event, community groups |
 | **Network** | Connection strength shown as leaf states, nudges, searchable list, and a map where vines run from you to each connection. Class and city cohorts, and a way to add people you already know |
 | **Messages** | Chat with mock auto-replies, coffee-chat proposals that become confirmed chats, post-chat check-in with a thank-you note |
@@ -89,6 +89,8 @@ Screens read data through `src/services`, never straight from the seed files, so
 - **Requests are kept from going unanswered.** People who are full this month cannot be asked. Each person can have five requests open. A request lapses after ten days, and the sender is told and shown who else can help. Someone who lets two requests lapse is paused for new ones until they return. See the request functions in `src/services`.
 - **An accepted request is not yet a connection.** Someone joins your web only after a real exchange: a coffee chat, an event together, or marking them as someone you already know. Until then they sit under "Not yet met" on Find.
 - **Sign-up preferences are weights, not walls.** The fields, cities and levels you pick decide who is shown first. They never hide anyone. Only a chip in the search bar filters.
+- **"Something else" is matched on words.** What you type is cut down to its meaningful words. Each person is read as a short document, and a word found in their role or field counts for more than one found in a prompt answer. People who cover more of what you typed come first. See `suggestForText` in `src/services`. A real product would use a language model or embeddings here.
+- **Grouping follows the search.** Results are grouped by city, field or level. A search narrowed to one city is not grouped by city, since everyone would sit on one branch.
 - **Rhythms.** After a good chat you can choose to check in monthly or each semester. A nudge appears when that is due, before the tie has started to fade.
 - **Demo time** is the real clock plus an offset. "Fast-forward one month" adds 30 days to the offset, which is why strengths fade and confirmed chats become due for a check-in.
 - **Replies are mocked.** About 60% of people accept a request after a moment. The rest never answer, so that a lapsed request can be shown. Maya, the first suggestion at Georgia Tech, always accepts so the demo is repeatable.

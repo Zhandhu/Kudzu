@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronRight, Coffee, LayoutList, Leaf, Plus, Search, X } from 'lucide-react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import type { Level, Request, User } from '../types'
 import { INDUSTRIES, MODE_META, TOPICS, topicLabel } from '../config/brand'
 import { useKudzu, useNow } from '../store/useKudzu'
 import {
   EMPTY_QUERY, LEVELS, REQUEST_LIMIT, accountStanding, answerRequest, daysLeft, findPeople, getUser, incomingRequests, isEmptyQuery,
   levelLabel, levelOf, mutualConnections, openRequestCount, outgoingRequests, pendingConnections, quietPaused, replyLine, requestState,
-  requestTo, spotsLeft, suggestFor, type Found, type Query,
+  requestTo, spotsLeft, suggestFor, suggestForText, type Found, type Query,
 } from '../services'
 import { CITY_NAMES, ago, firstName } from '../lib/util'
 import { Logo, TendrilIcon } from '../components/brand'
@@ -27,8 +28,7 @@ function PersonLeaf({ f, index, selected, requested, onPick }: { f: Found; index
   return (
     <button
       onClick={onPick}
-      onMouseEnter={(e) => { if (window.matchMedia('(hover: hover)').matches) { e.currentTarget.focus(); onPick() } }}
-      className={`relative flex h-10 items-center gap-1.5 px-4 text-[13px] font-semibold shadow-sm transition-transform hover:scale-[1.04] ${selected ? 'ring-2 ring-ink/70 ring-offset-2 ring-offset-cream' : ''} ${full ? 'opacity-55' : ''}`}
+      className={`relative flex h-10 items-center gap-1.5 px-4 text-[13px] font-semibold shadow-sm ${selected ? 'ring-2 ring-ink/70 ring-offset-2 ring-offset-cream' : ''} ${full ? 'opacity-55' : ''}`}
       style={{
         background: f.connected ? '#fff' : m.color,
         color: f.connected ? m.color : '#faf6ee',
@@ -46,7 +46,7 @@ function PersonLeaf({ f, index, selected, requested, onPick }: { f: Found; index
   )
 }
 
-/** The synopsis shown when a leaf is hovered or tapped once. Tapping it opens the full profile. */
+/** The synopsis shown when a leaf is tapped once. Tapping the leaf again, or the card, opens the full profile. */
 function Synopsis({ f, requested, onClose }: { f: Found; requested: boolean; onClose: () => void }) {
   const s = useKudzu()
   const nav = useNavigate()
@@ -155,11 +155,18 @@ export default function Find() {
   const [params, setParams] = useSearchParams()
   const startTopic = params.get('topic')
   const [q, setQ] = useState<Query>(startTopic ? { ...EMPTY_QUERY, topics: [startTopic] } : EMPTY_QUERY)
-  const [groupBy, setGroupBy] = useState<GroupBy>('city')
+  const [groupChoice, setGroupBy] = useState<GroupBy>('city')
   const [picked, setPicked] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
   const [sheet, setSheet] = useState<'requests' | 'pending' | null>(null)
-  const [ask, setAsk] = useState(s.me.asks[0] ?? TOPICS[0].id)
+  // nothing is shown until you say what you are looking for: a topic, or your own words
+  // both live in the link, so coming back from a profile shows the same people again
+  const OTHER = 'other'
+  const ask = params.get('for')
+  const needSent = params.get('q') ?? ''
+  const [need, setNeed] = useState(needSent)
+  const setAsk = (v: string | null) => setParams(v ? { for: v } : {}, { replace: true })
+  const setNeedSent = (v: string) => setParams(v ? { for: OTHER, q: v } : { for: OTHER }, { replace: true })
   const leaves = s.findView !== 'rows'
   const empty = isEmptyQuery(q)
 
@@ -180,7 +187,14 @@ export default function Find() {
   const pending = pendingConnections(s).map((c) => getUser(c.otherId)).filter((u): u is User => !!u)
   const lapsed = outgoing.filter((r) => requestState(r, now) === 'expired').length
   const isRequested = (id: string) => !!requestTo(s, id, now)
-  const pickedFound = picked ? results.find((f) => f.user.id === picked) ?? suggestFor(s, ask).find((f) => f.user.id === picked) : undefined
+  const suggested: (Found & { via?: User; matched?: string[] })[] = useMemo(
+    () => (!ask ? [] : ask === OTHER ? suggestForText(s, needSent) : suggestFor(s, ask)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [s.me, s.prefs, s.schoolId, s.connections, s.blocked, s.feedback, s.groups, ask, needSent],
+  )
+  const pickedFound = picked ? results.find((f) => f.user.id === picked) ?? suggested.find((f) => f.user.id === picked) : undefined
+
+  const applyFilter = (next: Query) => { setQ(next); setAdding(false); setPicked(null) }
 
   // typing "new" offers the New York chip, and so on
   const term = q.text.trim().toLowerCase()
@@ -197,6 +211,13 @@ export default function Find() {
     ...q.levels.map((v) => ({ label: levelLabel(v), remove: () => setQ({ ...q, levels: q.levels.filter((x) => x !== v) }) })),
     ...q.topics.map((v) => ({ label: `Can help with: ${topicLabel(v).toLowerCase()}`, remove: () => setQ({ ...q, topics: q.topics.filter((x) => x !== v) }) })),
   ]
+
+  // A search narrowed to one city (or field, or level) would put everyone on a single branch
+  // if grouped by that same thing, so that grouping is skipped and the next one is used.
+  const groupOptions = (['city', 'industry', 'level'] as GroupBy[]).filter(
+    (g) => (g === 'city' ? q.cities : g === 'industry' ? q.industries : q.levels).length !== 1,
+  )
+  const groupBy = groupOptions.includes(groupChoice) ? groupChoice : groupOptions[0] ?? groupChoice
 
   // results gathered onto branches
   const keyOf = (f: Found) => (groupBy === 'city' ? f.user.city : groupBy === 'industry' ? f.user.industry : levelLabel(levelOf(f.user)))
@@ -271,38 +292,73 @@ export default function Find() {
         {empty ? (
           <div className="px-1">
             <h1 className="mt-1 font-display text-2xl font-semibold">What are you looking for?</h1>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="What you’re looking for">
               {(s.me.asks.length ? s.me.asks : TOPICS.slice(0, 3).map((t) => t.id)).map((t) => (
-                <Chip key={t} active={ask === t} onClick={() => { setAsk(t); setPicked(null) }}>{topicLabel(t)}</Chip>
+                <Chip key={t} active={ask === t} onClick={() => { setAsk(ask === t ? null : t); setPicked(null) }}>{topicLabel(t)}</Chip>
               ))}
+              <Chip tone="plain" active={ask === OTHER} onClick={() => { setAsk(ask === OTHER ? null : OTHER); setPicked(null) }}><Plus size={12} /> Something else</Chip>
             </div>
-            {(() => {
-              const people = suggestFor(s, ask)
-              return (
-                <>
-                  <div className="mb-1 mt-5 flex items-baseline justify-between">
-                    <h2 className="text-sm font-semibold">People who can help</h2>
-                    <button onClick={() => setQ({ ...EMPTY_QUERY, topics: [ask] })} className="text-xs font-semibold text-vine-700">See everyone</button>
-                  </div>
-                  {people.length === 0 ? (
-                    <p className="rounded-2xl border border-dashed border-sage-300 p-4 text-center text-sm text-ink/55">Nobody with room right now. Try another topic, or search above.</p>
-                  ) : leaves ? (
-                    <div className="mt-2 border-l-2 border-vine-200 pl-3">
-                      <div className="flex flex-wrap gap-x-2.5 gap-y-3 py-1">
-                        {people.map((f, i) => <PersonLeaf key={f.user.id} f={f} index={i} selected={picked === f.user.id} requested={isRequested(f.user.id)} onPick={() => (picked === f.user.id ? nav(`/u/${f.user.id}`) : setPicked(f.user.id))} />)}
-                      </div>
+
+            {!ask && <p className="mt-3 text-[13px] text-ink/50">Tap one and the people who can help will grow out.</p>}
+
+            {ask === OTHER && (
+              <form className="mt-3" onSubmit={(e) => { e.preventDefault(); setNeedSent(need.trim()); setPicked(null) }}>
+                <textarea
+                  className={`${inputCls} min-h-[72px] resize-none`}
+                  placeholder="In your own words. For example: someone who moved from finance into design"
+                  value={need}
+                  onChange={(e) => setNeed(e.target.value)}
+                  aria-label="Describe what you’re looking for"
+                  maxLength={160}
+                />
+                <Button type="submit" className="mt-2 w-full !py-2.5" disabled={!need.trim()}>Find someone</Button>
+              </form>
+            )}
+
+            {ask && (ask !== OTHER || needSent) && (
+              <div key={ask + needSent}>
+                <div className="mb-1 mt-5 flex items-baseline justify-between">
+                  <h2 className="text-sm font-semibold">People who can help</h2>
+                  {ask !== OTHER && <button onClick={() => setQ({ ...EMPTY_QUERY, topics: [ask] })} className="text-xs font-semibold text-vine-700">See everyone</button>}
+                </div>
+                {ask === OTHER && suggested.length > 0 && (
+                  <p className="mb-2 text-xs text-ink/55">Matched on {[...new Set(suggested.flatMap((f) => f.matched ?? []))].join(', ')}</p>
+                )}
+                {suggested.length === 0 ? (
+                  <p className="rounded-2xl border border-dashed border-sage-300 p-4 text-center text-sm text-ink/55">
+                    {ask === OTHER ? 'Nobody fits those words yet. Try a field, a company or a city.' : 'Nobody with room right now. Try another topic, or search above.'}
+                  </p>
+                ) : leaves ? (
+                  // the stem grows down first, then each leaf opens out from it in turn
+                  <div className="relative mt-2 pl-3.5">
+                    <motion.span
+                      className="absolute bottom-0 left-0 top-0 w-0.5 origin-top rounded-full bg-vine-300"
+                      initial={{ scaleY: 0 }} animate={{ scaleY: 1 }} transition={{ duration: 0.45, ease: 'easeOut' }} aria-hidden
+                    />
+                    <div className="flex flex-wrap gap-x-2.5 gap-y-3 py-1">
+                      {suggested.map((f, i) => (
+                        <motion.div
+                          key={f.user.id}
+                          style={{ transformOrigin: 'left center' }}
+                          initial={{ scale: 0, opacity: 0, x: -14 }}
+                          animate={{ scale: 1, opacity: 1, x: 0 }}
+                          transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 0.25 + i * 0.12 }}
+                        >
+                          <PersonLeaf f={f} index={i} selected={picked === f.user.id} requested={isRequested(f.user.id)} onPick={() => (picked === f.user.id ? nav(`/u/${f.user.id}`) : setPicked(f.user.id))} />
+                        </motion.div>
+                      ))}
                     </div>
-                  ) : (
-                    <div>{people.map((f) => row(f, f.via))}</div>
-                  )}
-                  {leaves && people.some((f) => f.via) && (
-                    <p className="mt-3 text-xs text-ink/55">
-                      {people.filter((f) => f.via).slice(0, 2).map((f) => `${firstName(f.via!.name)} knows ${firstName(f.user.name)}`).join(' · ')}
-                    </p>
-                  )}
-                </>
-              )
-            })()}
+                  </div>
+                ) : (
+                  <div>{suggested.map((f) => row(f, f.via))}</div>
+                )}
+                {leaves && suggested.some((f) => f.via) && (
+                  <p className="mt-3 text-xs text-ink/55">
+                    {suggested.filter((f) => f.via).slice(0, 2).map((f) => `${firstName(f.via!.name)} knows ${firstName(f.user.name)}`).join(' · ')}
+                  </p>
+                )}
+              </div>
+            )}
 
             <h2 className="mb-2 mt-6 text-sm font-semibold">Or look around</h2>
             <div className="flex flex-wrap gap-2">
@@ -321,8 +377,8 @@ export default function Find() {
             <div className="mb-3 flex items-center justify-between">
               <span className="text-xs text-ink/55">{results.length} {results.length === 1 ? 'person' : 'people'}</span>
               <div className="flex items-center gap-1 text-xs">
-                <span className="text-ink/45">Group by</span>
-                {(['city', 'industry', 'level'] as GroupBy[]).map((g) => (
+                {groupOptions.length > 1 && <span className="text-ink/45">Group by</span>}
+                {groupOptions.length > 1 && groupOptions.map((g) => (
                   <button key={g} onClick={() => setGroupBy(g)} className={`rounded-full px-2.5 py-1 font-semibold capitalize ${groupBy === g ? 'bg-vine-700 text-cream' : 'text-ink/55'}`} aria-pressed={groupBy === g}>{g}</button>
                 ))}
               </div>
@@ -356,25 +412,25 @@ export default function Find() {
 
       {pickedFound && leaves ? <Synopsis f={pickedFound} requested={isRequested(pickedFound.user.id)} onClose={() => setPicked(null)} /> : <LeafSprig items={sprig} />}
 
+      {/* picking a filter applies it and closes the sheet: one tap, nothing to dismiss */}
       <Sheet open={adding} onClose={() => setAdding(false)} title="Narrow it down">
         <div className="space-y-5">
           <div>
             <div className="mb-2 text-sm font-semibold">Field</div>
-            <div className="flex flex-wrap gap-2">{INDUSTRIES.map((i) => <Chip key={i} active={q.industries.includes(i)} onClick={() => setQ({ ...q, industries: toggle(q.industries, i) })}>{i}</Chip>)}</div>
+            <div className="flex flex-wrap gap-2">{INDUSTRIES.map((i) => <Chip key={i} active={q.industries.includes(i)} onClick={() => applyFilter({ ...q, industries: toggle(q.industries, i) })}>{i}</Chip>)}</div>
           </div>
           <div>
             <div className="mb-2 text-sm font-semibold">City</div>
-            <div className="flex flex-wrap gap-2">{CITY_NAMES.map((c) => <Chip key={c} tone="coffee" active={q.cities.includes(c)} onClick={() => setQ({ ...q, cities: toggle(q.cities, c) })}>{c}</Chip>)}</div>
+            <div className="flex flex-wrap gap-2">{CITY_NAMES.map((c) => <Chip key={c} tone="coffee" active={q.cities.includes(c)} onClick={() => applyFilter({ ...q, cities: toggle(q.cities, c) })}>{c}</Chip>)}</div>
           </div>
           <div>
             <div className="mb-2 text-sm font-semibold">Level</div>
-            <div className="flex flex-wrap gap-2">{LEVELS.map((l) => <Chip key={l.id} active={q.levels.includes(l.id)} onClick={() => setQ({ ...q, levels: toggle<Level>(q.levels, l.id) })}>{l.label}</Chip>)}</div>
+            <div className="flex flex-wrap gap-2">{LEVELS.map((l) => <Chip key={l.id} active={q.levels.includes(l.id)} onClick={() => applyFilter({ ...q, levels: toggle<Level>(q.levels, l.id) })}>{l.label}</Chip>)}</div>
           </div>
           <div>
             <div className="mb-2 text-sm font-semibold">Can help with</div>
-            <div className="flex flex-wrap gap-2">{TOPICS.map((t) => <Chip key={t.id} tone="coffee" active={q.topics.includes(t.id)} onClick={() => setQ({ ...q, topics: toggle(q.topics, t.id) })}>{t.label}</Chip>)}</div>
+            <div className="flex flex-wrap gap-2">{TOPICS.map((t) => <Chip key={t.id} tone="coffee" active={q.topics.includes(t.id)} onClick={() => applyFilter({ ...q, topics: toggle(q.topics, t.id) })}>{t.label}</Chip>)}</div>
           </div>
-          <Button className="w-full" onClick={() => setAdding(false)}>Show {results.length} {results.length === 1 ? 'person' : 'people'}</Button>
         </div>
       </Sheet>
 

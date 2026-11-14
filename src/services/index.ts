@@ -8,7 +8,7 @@ import { USERS, USERS_BY_ID, knows } from '../data/users'
 import { SCHOOLS, PROMPTS } from '../data/schools'
 import { ALWAYS_ACCEPT, SEED_NUDGES } from '../data/seed'
 import { useKudzu, nowOf, type KudzuState } from '../store/useKudzu'
-import { DAY, firstName, hash, miles } from '../lib/util'
+import { CITY_NAMES, DAY, firstName, hash, miles } from '../lib/util'
 
 /* ---------------- lookups ---------------- */
 
@@ -247,6 +247,64 @@ export function suggestFor(s: FindState, topic: string): (Found & { via?: User }
     .filter((f) => !f.connected && spotsLeft(f.user) > 0)
     .slice(0, 4)
     .map((f) => ({ ...f, via: mutualConnections(s, f.user)[0] }))
+}
+
+const STOP_WORDS = new Set(
+  'a an and the or of to in on at for from with about into who whom that this is are be been was were can could would should will do does did has have had i im me my we you your they them their it its some someone somebody anyone people person help helping advice want wants wanted need needs looking look find get getting how what where when why know knows more most like just really also not no so if as by work works working worked job career moved move went go going been there here'.split(' '),
+)
+/** Words people type that mean a field, so "pm" still finds product people. */
+const ALIASES: Record<string, string[]> = {
+  pm: ['product'], swe: ['software', 'engineer'], dev: ['software', 'engineer'], coding: ['software'], programming: ['software'],
+  ux: ['design'], ui: ['design'], founder: ['startup', 'founder'], vc: ['venture', 'startup'], banking: ['finance', 'bank'],
+  ib: ['finance', 'bank'], med: ['health', 'medic'], doctor: ['health', 'medic'], ml: ['machine', 'data'], ai: ['machine', 'data'],
+  phd: ['research', 'grad'], nyc: ['new york'], sf: ['san francisco'], atl: ['atlanta'], abroad: ['international', 'london'],
+}
+/** "consulting", "consultant" and "consultants" should all meet: keep the stem. */
+const stem = (w: string) => (w.length > 5 ? w.replace(/(ing|ants?|ers?|ies|s)$/, '') : w.length > 3 ? w.replace(/s$/, '') : w)
+
+/** The meaningful words in something a person typed. */
+export function keywords(text: string): string[] {
+  let rest = text.toLowerCase().replace(/[^a-z0-9\s]/g, ' ')
+  // a city is one idea, so "New York" is not split into "new" and "york"
+  const cities = CITY_NAMES.map((c) => c.toLowerCase()).filter((c) => rest.includes(c))
+  for (const c of cities) rest = rest.replace(c, ' ')
+  const raw = rest.split(/\s+/).filter((w) => w.length > 1 && !STOP_WORDS.has(w))
+  return [...new Set([...cities, ...raw.flatMap((w) => ALIASES[w] ?? [stem(w)])])]
+}
+
+/**
+ * The front door, in your own words: "someone who moved from finance into design".
+ * Each person is read as a short document (role, company, field, city, what they
+ * offer, their prompt answers). A word found in their role or field counts most,
+ * one found in a prompt answer least. The usual ranking then breaks ties, so of two
+ * people who fit the words equally, the one with room who tends to answer comes first.
+ */
+export function suggestForText(s: FindState, text: string): (Found & { via?: User; matched: string[] })[] {
+  const words = keywords(text)
+  if (!words.length) return []
+  return findPeople(s, EMPTY_QUERY)
+    .filter((f) => !f.connected && spotsLeft(f.user) > 0)
+    .map((f) => {
+      const u = f.user
+      const fields: [string, number][] = [
+        [[u.title, u.company, u.industry, u.major].filter(Boolean).join(' '), 3],
+        [u.city, 2],
+        [u.offers.map(topicLabel).join(' '), 2],
+        [u.prompts.map((p) => p.answer).join(' '), 1],
+      ]
+      let relevance = 0
+      const matched: string[] = []
+      for (const w of words) {
+        const best = Math.max(0, ...fields.filter(([hay]) => hay.toLowerCase().includes(w)).map(([, weight]) => weight))
+        if (best) { relevance += best; matched.push(w) }
+      }
+      return { ...f, relevance, matched }
+    })
+    .filter((f) => f.relevance > 0)
+    // covering more of what was typed matters most, then how strongly, then the usual order
+    .sort((a, b) => b.matched.length - a.matched.length || b.relevance - a.relevance || b.score - a.score)
+    .slice(0, 4)
+    .map(({ relevance: _r, ...f }) => ({ ...f, via: mutualConnections(s, f.user)[0] }))
 }
 
 /* ---------------- requests ---------------- */
