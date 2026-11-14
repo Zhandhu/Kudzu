@@ -30,24 +30,39 @@ const VINE: Record<Strength, { weight: number; opacity: number; dash?: string }>
   dormant: { weight: 1.3, opacity: 0.45, dash: '2 8' },
 }
 
-/** A gently curving, slightly wavy line between two points, like a vine. */
-function vinePath(a: LatLng, b: LatLng, seed: number, n = 44): LatLng[] {
-  const [y1, x1] = a
-  const [y2, x2] = b
-  const dx = x2 - x1
-  const dy = y2 - y1
-  const bend = (seed % 2 === 0 ? 1 : -1) * (0.14 + (seed % 5) * 0.02)
-  const cx = (x1 + x2) / 2 - dy * bend
-  const cy = (y1 + y2) / 2 + dx * bend
+const RAD = Math.PI / 180
+
+/** Latitude and longitude to the flat coordinates the map is drawn in (Web Mercator). */
+const project = ([lat, lng]: LatLng) => ({ x: lng * RAD, y: Math.log(Math.tan(Math.PI / 4 + (lat * RAD) / 2)) })
+const unproject = (x: number, y: number): LatLng => [(2 * Math.atan(Math.exp(y)) - Math.PI / 2) / RAD, x / RAD]
+
+/**
+ * A gently curving, slightly wavy line between two points, like a vine.
+ *
+ * Two things keep it honest at any zoom:
+ *  - It is worked out in the map's own flat coordinates, so what is straight
+ *    here is straight on screen.
+ *  - The bend and the wave both fade to nothing at each end, with no sideways
+ *    slope there. So the line leaves you heading straight for the other person
+ *    and arrives at their leaf pointing straight back at you. All of the curve
+ *    happens in the middle.
+ */
+function vinePath(a: LatLng, b: LatLng, seed: number, n = 72): LatLng[] {
+  const p = project(a)
+  const q = project(b)
+  const dx = q.x - p.x
+  const dy = q.y - p.y
   const len = Math.hypot(dx, dy) || 1
+  // unit vector at right angles to the straight line
   const nx = -dy / len
   const ny = dx / len
+  const bend = (seed % 2 === 0 ? 1 : -1) * (0.09 + (seed % 5) * 0.015) * len
   const pts: LatLng[] = []
   for (let i = 0; i <= n; i++) {
     const t = i / n
-    const u = 1 - t
-    const wave = Math.sin(t * Math.PI * 4) * len * 0.02 * Math.sin(t * Math.PI)
-    pts.push([u * u * y1 + 2 * u * t * cy + t * t * y2 + ny * wave, u * u * x1 + 2 * u * t * cx + t * t * x2 + nx * wave])
+    const ease = Math.sin(Math.PI * t) ** 2 // 0 at both ends, and flat there
+    const off = ease * (bend + Math.sin(t * Math.PI * 6) * len * 0.012)
+    pts.push(unproject(p.x + dx * t + nx * off, p.y + dy * t + ny * off))
   }
   return pts
 }
@@ -178,6 +193,8 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
               key={`${v.key}-${v.level}-${v.active}`}
               positions={shown}
               interactive={false}
+              // keep every point: the default simplification turns short curves into visible corners
+              smoothFactor={0}
               pathOptions={{
                 color: STRENGTH_META[v.level].color,
                 weight: style.weight,
