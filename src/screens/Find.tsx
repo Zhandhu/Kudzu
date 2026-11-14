@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronRight, Coffee, Plus, Search, X } from 'lucide-react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import type { Level, Request, User } from '../types'
 import { INDUSTRIES, MODE_META, TOPICS, topicLabel } from '../config/brand'
 import { useKudzu, useNow } from '../store/useKudzu'
@@ -234,9 +234,18 @@ export default function Find() {
   const dropOut = () => {
     if (!ask || (ask === OTHER && !needSent)) return null
     return (
-      <div key={ask + needSent} className="relative ml-3 mt-1 pb-1 pl-2.5">
+      // Closing mirrors opening: the leaves pull back up into the need, the stem draws in,
+      // and the space they took folds shut, so whatever is below slides up instead of jumping.
+      <motion.div
+        key={ask + needSent}
+        className="overflow-hidden"
+        initial={{ height: 0 }} animate={{ height: 'auto' }}
+        exit={{ height: 0, transition: { duration: 0.28, ease: 'easeIn', delay: 0.12 } }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
+      >
+      <div className="relative ml-3 mt-1 pb-1 pl-2.5 pr-1">
         {/* a stem runs down from the need, and the leaves fall off it one by one */}
-        <motion.span className="absolute bottom-2 left-0 top-0 w-0.5 origin-top rounded-full bg-vine-300" initial={{ scaleY: 0 }} animate={{ scaleY: 1 }} transition={{ duration: 0.35, ease: 'easeOut' }} aria-hidden />
+        <motion.span className="absolute bottom-2 left-0 top-0 w-0.5 origin-top rounded-full bg-vine-300" initial={{ scaleY: 0 }} animate={{ scaleY: 1 }} exit={{ scaleY: 0, transition: { duration: 0.25, delay: 0.1 } }} transition={{ duration: 0.35, ease: 'easeOut' }} aria-hidden />
         {ask === OTHER && suggested.length > 0 && (
           <p className="pb-1 pt-2 text-xs text-ink/55">Matched on {[...new Set(suggested.flatMap((f) => f.matched ?? []))].join(', ')}</p>
         )}
@@ -252,6 +261,8 @@ export default function Find() {
                 style={{ transformOrigin: 'top left' }}
                 initial={{ y: -46 - Math.floor(i / 2) * 60, scale: 0.4, opacity: 0, rotate: i % 2 ? 8 : -8 }}
                 animate={{ y: 0, scale: 1, opacity: 1, rotate: 0 }}
+                // the last leaf out is the first back in
+                exit={{ y: -30 - Math.floor(i / 2) * 50, scale: 0.4, opacity: 0, rotate: i % 2 ? 8 : -8, transition: { duration: 0.2, ease: 'easeIn', delay: (suggested.length - 1 - i) * 0.04 } }}
                 transition={{ type: 'spring', stiffness: 210, damping: 17, delay: 0.12 + i * 0.1 }}
               >
                 {leaf(f, i)}
@@ -263,6 +274,7 @@ export default function Find() {
           <button onClick={() => setQ({ ...EMPTY_QUERY, topics: [ask] })} className="mt-2 text-xs font-semibold text-vine-700">See everyone who can help</button>
         )}
       </div>
+      </motion.div>
     )
   }
 
@@ -291,9 +303,10 @@ export default function Find() {
         )}
       </header>
 
-      {/* The front door is one still page: everything on it fits, so there is nothing to scroll.
-          It becomes a scrolling page once it has something to show: a need was tapped, or a search ran. */}
-      <div data-find-body className={`app-scroll min-h-0 flex-1 px-3 ${still ? 'overflow-hidden pb-3' : 'overflow-y-auto pb-36'}`}>
+      {/* The front door has no spare room below it, so on most phones it fits and holds still,
+          and on a small one it scrolls only as far as its content goes. The long padding that
+          keeps results clear of the corner leaves is added once there are results to show. */}
+      <div data-find-body className={`app-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 ${still ? 'pb-4' : 'pb-36'}`}>
         {accountStanding(s) === 'warning' && <div className="mb-3 px-1"><AccountNotice compact /></div>}
         {quietPaused(s, now) && (
           <div className="mx-1 mb-3 rounded-2xl border border-amber-200 bg-amber-50 p-3.5 text-[13px] leading-relaxed text-amber-900">
@@ -313,13 +326,19 @@ export default function Find() {
               {(s.me.asks.length ? s.me.asks : TOPICS.slice(0, 3).map((t) => t.id)).map((t) => (
                 <div key={t}>
                   <Chip active={ask === t} onClick={() => setAsk(ask === t ? null : t)}>{topicLabel(t)}</Chip>
-                  {ask === t && dropOut()}
+                  <AnimatePresence initial={false}>{ask === t && dropOut()}</AnimatePresence>
                 </div>
               ))}
               <div>
                 <Chip tone="plain" active={ask === OTHER} onClick={() => setAsk(ask === OTHER ? null : OTHER)}><Plus size={12} /> Something else</Chip>
+                <AnimatePresence initial={false}>
                 {ask === OTHER && (
-                  <form className="ml-4 mt-2" onSubmit={(e) => { e.preventDefault(); setNeedSent(need.trim()) }}>
+                  <motion.form
+                    key="own-words" className="ml-4 overflow-hidden"
+                    initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25, ease: 'easeOut' }}
+                    onSubmit={(e) => { e.preventDefault(); setNeedSent(need.trim()) }}
+                  >
+                    <div className="h-2" />
                     <textarea
                       className={`${inputCls} min-h-[72px] resize-none`}
                       placeholder="In your own words. For example: someone who moved from finance into design"
@@ -329,15 +348,16 @@ export default function Find() {
                       maxLength={160}
                     />
                     <Button type="submit" className="mt-2 w-full !py-2.5" disabled={!need.trim()}>Find someone</Button>
-                  </form>
+                  </motion.form>
                 )}
-                {ask === OTHER && dropOut()}
+                </AnimatePresence>
+                <AnimatePresence initial={false}>{ask === OTHER && dropOut()}</AnimatePresence>
               </div>
             </div>
 
-            {/* one row that slides sideways, so it takes the same height however many there are */}
+            {/* kept clear of the two leaves in the bottom corner */}
             <h2 className="mb-2 mt-6 text-sm font-semibold">Or look around</h2>
-            <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto pl-4 pr-24">
+            <div className="flex flex-wrap gap-2 pr-14">
               {s.prefs.industries.map((i) => <Chip key={i} tone="plain" onClick={() => setQ({ ...EMPTY_QUERY, industries: [i] })}>{i}</Chip>)}
               {s.prefs.cities.map((c) => <Chip key={c} tone="plain" onClick={() => setQ({ ...EMPTY_QUERY, cities: [c] })}>{c}</Chip>)}
               <Chip tone="plain" onClick={() => setQ({ ...EMPTY_QUERY, levels: ['senior'] })}>Senior alumni</Chip>
