@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { CheckCheck, ChevronRight, HandHeart, MessageCircle, Search } from 'lucide-react'
+import { CheckCheck, ChevronDown, ChevronRight, HandHeart, MessageCircle, Search } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
 import { STRENGTH_META, topicLabel } from '../config/brand'
 import { useKudzu, useNow } from '../store/useKudzu'
@@ -28,6 +29,8 @@ export default function Home() {
   const nav = useNavigate()
   const [q, setQ] = useState('')
   const [picked, setPicked] = useState<string | null>(null)
+  // which of the two top buttons is open, if either
+  const [panel, setPanel] = useState<'catch' | 'help' | null>(null)
   // the person a catch-up is being logged for, and the reminder it answers
   const [caught, setCaught] = useState<{ id: string; nudge: string } | null>(null)
   const [lastCaught, setLastCaught] = useState<string | null>(null)
@@ -69,9 +72,49 @@ export default function Home() {
           {people.length} {people.length === 1 ? 'person' : 'people'} in your network. <Link to="/network" className="font-semibold text-vine-700 underline underline-offset-4">See them on the map</Link>
         </p>
 
+        {/* Two buttons side by side. Each opens its list below the pair, and closes again,
+            so the people you know are on screen as soon as the app opens. */}
+        <div className="mt-5 grid grid-cols-2 gap-2.5">
+          {([
+            ['catch', 'Catch up', nudges.length, nudges.length === 0 ? 'All up to date' : `${nudges.length} to write to`, MessageCircle],
+            ['help', 'Help out', s.openToHelp ? asking.length + couldHelp.length : 0, !s.openToHelp ? 'Switched off' : asking.length ? `${asking.length} asked you` : couldHelp.length ? `${couldHelp.length} you could help` : 'Nobody asking', HandHeart],
+          ] as const).map(([id, label, count, sub, Icon]) => {
+            const on = panel === id
+            // With helping switched off there is nothing to open, so the tile is the switch
+            // itself. Turning it on opens the list, so you see what you switched on.
+            if (id === 'help' && !s.openToHelp) {
+              return (
+                <button key={id} role="switch" aria-checked={false} aria-label="Turn on helping" onClick={() => { s.set({ openToHelp: true }); setPanel('help') }} className="relative rounded-2xl border-2 border-dashed border-sage-300 bg-white/60 p-3.5 text-left">
+                  <span className="flex items-center justify-between">
+                    <Icon size={22} className="text-ink/35" />
+                    <span className="relative h-7 w-12 shrink-0 rounded-full bg-sage-300" aria-hidden><span className="absolute left-0.5 top-0.5 h-6 w-6 rounded-full bg-white shadow" /></span>
+                  </span>
+                  <span className="mt-2 block font-display text-[19px] font-semibold leading-tight text-ink/60">{label}</span>
+                  <span className="block text-[13px] text-ink/50">Off. Tap to turn on</span>
+                </button>
+              )
+            }
+            return (
+              <button key={id} onClick={() => setPanel(on ? null : id)} aria-expanded={on} aria-label={`${label}, ${sub}`} className={`relative rounded-2xl border-2 p-3.5 text-left transition-colors ${on ? 'border-vine-700 bg-vine-700 text-cream' : 'border-sage-200 bg-white'}`}>
+                <span className="flex items-center justify-between">
+                  <Icon size={22} className={on ? 'text-cream' : 'text-vine-700'} />
+                  <span className="flex items-center gap-1.5">
+                    {count > 0 && <span className={`flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-[13px] font-bold ${on ? 'bg-cream text-vine-800' : 'bg-coffee-500 text-cream'}`}>{count}</span>}
+                    <ChevronDown size={18} className={`transition-transform ${on ? 'rotate-180' : 'text-ink/35'}`} />
+                  </span>
+                </span>
+                <span className="mt-2 block font-display text-[19px] font-semibold leading-tight">{label}</span>
+                <span className={`block text-[13px] ${on ? 'text-vine-100' : 'text-ink/55'}`}>{sub}</span>
+              </button>
+            )
+          })}
+        </div>
+
         {/* 1. who to catch up with */}
-        <section className="mt-6">
-          <h2 className={h2}>Catch up with</h2>
+        <AnimatePresence initial={false}>
+        {panel === 'catch' && (
+        <motion.section key="catch" className="overflow-hidden" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.28, ease: 'easeOut' }}>
+          <div className="h-3" />
           {nudges.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-sage-300 p-4 text-center text-[15px] text-ink/55">You’re up to date with everyone.</p>
           ) : (
@@ -100,13 +143,15 @@ export default function Home() {
               })}
             </div>
           )}
-        </section>
+        </motion.section>
+        )}
 
         {/* 3. people you could help: shown only if the user wants it */}
-        <section className="mt-7">
-          <div className="mb-2 flex items-center justify-between">
-            <h2 className="font-display text-xl font-semibold">Help someone out</h2>
-            <Toggle on={s.openToHelp} onChange={(openToHelp) => s.set({ openToHelp })} label="Show people I could help" />
+        {panel === 'help' && (
+        <motion.section key="help" className="overflow-hidden" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.28, ease: 'easeOut' }}>
+          <div className="mb-2 mt-3 flex items-center justify-between gap-3 rounded-2xl bg-sage-100 px-3.5 py-2.5">
+            <span className="text-[14px] font-medium">Show people I could help</span>
+            <Toggle on={s.openToHelp} onChange={(openToHelp) => { s.set({ openToHelp }); if (!openToHelp) setPanel(null) }} label="Show people I could help" />
           </div>
           {!s.openToHelp ? (
             <p className="text-[15px] text-ink/55">Off. Switch it on to see students and recent graduates you could help.</p>
@@ -147,10 +192,12 @@ export default function Home() {
               {asking.length + couldHelp.length === 0 && <p className="rounded-2xl border border-dashed border-sage-300 p-4 text-center text-[15px] text-ink/55">Nobody is asking right now.</p>}
             </div>
           )}
-        </section>
+        </motion.section>
+        )}
+        </AnimatePresence>
 
         {/* 2. everyone you know */}
-        <section className="mt-7">
+        <section className="mt-6">
           <h2 className={h2}>Your people</h2>
           <div className="relative mb-2">
             <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/40" />

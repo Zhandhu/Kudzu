@@ -33,7 +33,7 @@ function EditSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
       <div className="space-y-6">
         <div className="flex items-center gap-4">
           <Avatar user={draft} size={64} />
-          <p className="text-xs text-ink/55">Your avatar is generated from your initials. Photo upload comes later.</p>
+          <p className="text-xs text-ink/55">This face stands in for your photo. Photo upload comes later.</p>
         </div>
         <BasicsFields value={draft} onChange={up} />
         <AsksOffersFields value={draft} onChange={up} />

@@ -4,8 +4,8 @@ import type { Mode, User } from '../types'
 import { MODE_META, topicLabel } from '../config/brand'
 import { useKudzu } from '../store/useKudzu'
 import { distanceLabel, inCommon, matchInfo, mutualConnections, networkGap, promptText, spotsLeft } from '../services'
-import { avatarGradient, firstName, initials } from '../lib/util'
-import { Avatar, Chip, Sheet } from './ui'
+import { avatarGradient, firstName } from '../lib/util'
+import { Avatar, Chip, Sheet, faceFor } from './ui'
 
 const REPORT_REASONS = ['Inappropriate messages', 'Fake profile or impersonation', 'Harassment', 'Soliciting or spam', 'Something else']
 
@@ -143,7 +143,10 @@ export function ProfileView({ user, onLikePrompt, showMenu = true, onBlocked }: 
         <svg className="absolute -right-6 -top-6 opacity-20" width="200" height="200" viewBox="0 0 24 24" aria-hidden>
           <path d="M12 2.500C6.500 6 4 10.500 5 15.500c.800 4 3.800 6 7 6s6.200-2 7-6c1-5-1.500-9.500-7-13z" fill="#fff" />
         </svg>
-        <div className="absolute inset-0 flex items-center justify-center pb-8 font-display text-[88px] font-semibold text-white/90">{initials(user.name)}</div>
+        {/* the same face the person has everywhere else, large, where a photo will go */}
+        <div className="absolute inset-0 flex items-center justify-center pb-10" aria-hidden>
+          <span className="flex h-36 w-36 items-center justify-center rounded-full bg-white/25 text-[92px] leading-none">{faceFor(user)}</span>
+        </div>
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-5 pb-4 pt-12 text-white">
           <div className="flex items-end justify-between gap-2">
             <div>
