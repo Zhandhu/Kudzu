@@ -76,17 +76,24 @@ const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v
  */
 const MAX_STRANDS = 6
 
+/** Smooth step from 0 to 1, flat at both ends. */
+const smooth = (v: number) => { const c = clamp(v, 0, 1); return c * c * (3 - 2 * c) }
+
 /**
  * One strand of the vine that runs from you to a city.
  *
- * Every strand to a city shares the same route to the middle of that city.
- * Each one weaves from side to side around that route, out of step with the
- * others, so together they twist into a single tangled vine. More strands and a
- * slightly wider weave make the vine to a busy city denser, up to MAX_STRANDS.
+ * Think of a twisted rope. There is one centre line from you to the middle of
+ * the city, which is never drawn. Every strand wraps around it, each a step out
+ * of phase with the next, crossing over and over. They stay within a few pixels
+ * of the centre line, so from any distance they read as one tangled vine and
+ * not as separate lines.
  *
- * `index` and `count` are this strand's place among the city's strands.
+ * `index` and `count` are this strand's place among the city's strands. More
+ * strands make a slightly fatter rope, up to MAX_STRANDS. `radPerPx` is the size
+ * of one screen pixel at the current zoom, so the rope keeps the same thickness
+ * on screen however far in you are.
  */
-function strandPath(origin: LatLng, hub: LatLng, seed: number, index: number, count: number): LatLng[] {
+function strandPath(origin: LatLng, hub: LatLng, seed: number, index: number, count: number, radPerPx: number): LatLng[] {
   const p = project(origin)
   const q = project(hub)
   const dx = q.x - p.x
@@ -95,18 +102,24 @@ function strandPath(origin: LatLng, hub: LatLng, seed: number, index: number, co
   const nx = -dy / len
   const ny = dx / len
   const bend = (seed % 2 === 0 ? 1 : -1) * (0.09 + (seed % 5) * 0.015) * len
-  // how far a strand swings from the shared route, and how many times it crosses over
-  const swing = count > 1 ? clamp(len * 0.012, 0.004, 0.009) * (0.7 + 0.15 * count) : 0
-  const twists = clamp(len * 8, 1.5, 6)
+
+  // The rope: a few pixels wide, with one full twist about every 190 km.
+  const radius = count > 1 ? (1.6 + 0.45 * count) * radPerPx : 0
+  const twists = clamp(len / 0.03, 2, 40)
   const phase = (2 * Math.PI * index) / count
+  const gather = 0.07 // the share of the route over which strands join at each end
 
   const pts: LatLng[] = []
-  const n = 84
+  const n = Math.round(clamp(twists * 12, 72, 420))
   for (let i = 0; i <= n; i++) {
     const t = i / n
-    const ease = Math.sin(Math.PI * t) ** 2 // strands start together and gather again at the city
-    const off = ease * (bend + Math.sin(t * Math.PI * 6) * len * 0.012 + swing * Math.sin(2 * Math.PI * twists * t + phase))
-    pts.push(unproject(p.x + dx * t + nx * off, p.y + dy * t + ny * off))
+    const axis = Math.sin(Math.PI * t) ** 2 * (bend + Math.sin(t * Math.PI * 6) * len * 0.012)
+    // strands start as one, wrap around the centre line, and come back together at the city
+    const open = smooth(t / gather) * smooth((1 - t) / gather)
+    // a little unevenness, so it looks grown and not machined
+    const wobble = 0.8 + 0.2 * Math.sin(2 * Math.PI * (1.7 * t + index * 0.37))
+    const wrap = radius * open * wobble * Math.sin(2 * Math.PI * twists * t + phase)
+    pts.push(unproject(p.x + dx * t + nx * (axis + wrap), p.y + dy * t + ny * (axis + wrap)))
   }
   return pts
 }
@@ -248,6 +261,10 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
   const selPeople = selCity ? cities.find((c) => c.city === selCity)?.list ?? [] : selId ? people.filter((p) => p.user.id === selId) : []
   const allPoints = useMemo<LatLng[]>(() => [origin, ...people.map((p) => p.user.coords)], [origin, people])
 
+  // The size of one screen pixel in map units at this zoom. The centre lines never
+  // move when you zoom. Only the thickness of the rope is kept constant on screen.
+  const radPerPx = (2 * Math.PI) / (256 * 2 ** zoom)
+
   // One strand per person. The strands to a city twist together into one vine,
   // then branch to each leaf. The shapes are the same at every zoom level, so
   // nothing jumps when you zoom.
@@ -263,7 +280,7 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
       const shown = strandPeople(c.list)
       const capped = shown.length < c.list.length
       shown.forEach((p, index) =>
-        out.push({ key: `${c.city}-strand-${index}`, id: capped ? undefined : p.user.id, city: c.city, level: p.level, pts: strandPath(origin, c.center, hash(c.city) % 10, index, shown.length) }),
+        out.push({ key: `${c.city}-strand-${index}`, id: capped ? undefined : p.user.id, city: c.city, level: p.level, pts: strandPath(origin, c.center, hash(c.city) % 10, index, shown.length, radPerPx) }),
       )
       for (const p of c.list) {
         const pts = branchPath(origin, c.center, p.user.coords)
@@ -271,7 +288,7 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
       }
     }
     return out.sort((a, b) => STRENGTH_ORDER.indexOf(b.level) - STRENGTH_ORDER.indexOf(a.level)) // strongest drawn last, on top
-  }, [cities, origin, me.city])
+  }, [cities, origin, me.city, radPerPx])
 
   return (
     <div className="relative z-0 h-full w-full overflow-hidden">
