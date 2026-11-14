@@ -1,6 +1,8 @@
 # 5. From swiping to finding: redesigning Meet
 
-The Meet tab is the part of Kudzu that still feels like a dating app. This file sets out why, four ways to replace it, a recommendation, and what else has to change with it. Nothing here is built.
+The Meet tab was the part of Kudzu that still felt like a dating app. This file sets out why, four ways to replace it, a recommendation, and what else had to change with it.
+
+**Status: built.** The recommendation below is now the Find tab. The section [What was built](#what-was-built) at the end lists what went in, what differs from the proposal, and what was left out.
 
 ## Why change it
 
@@ -217,3 +219,69 @@ Steps 1 and 2 remove the dating-app feel by themselves. Steps 3 and 4 are what m
 3. **Should alumni see who has looked at their profile?** It could prompt them to reach out. It could also feel like being watched.
 4. **Is "Find" the right name?** Alternatives: Explore, Directory, Grow.
 5. **Leaves or rows by default?**
+
+## Keeping requests from going unanswered
+
+A request that meets silence is the worst outcome of this design. It cannot be ruled out, but it can be made rare, and painless when it happens. The work falls at three points.
+
+### Before a request is sent
+
+Most unanswered requests go to people who were never going to reply.
+
+- **Only people with room can be asked.** Someone at their monthly limit shows as full, with an option to be told when they have a spot.
+- **A reply record on each profile:** "Usually replies in 2 days."
+- **Results are ordered by likelihood of a reply** as well as fit. Room for another chat and speed of reply both count.
+- **A cap on open requests,** five per person. Fewer, more considered requests get more answers.
+
+### While it waits
+
+Silence is often "I'll deal with it later," not "no."
+
+- **Three one-tap answers:** Accept, Later on, Not right now. None needs typing.
+- **Declining is guilt-free.** "Not right now" sends a kind note for the person and never asks for a reason. People avoid answering when the only way to say no feels rude.
+
+### After it goes quiet
+
+- **Requests lapse after ten days.** The sender is told plainly, never left wondering.
+- **The next step is offered at once:** who else can help with the same thing.
+- **Lapsed requests do not count against the cap.**
+- **No "seen" marker.** Knowing someone read it and did not reply is worse than not knowing.
+- **People who stop answering are paused.** After two requests lapse, new ones stop reaching them until they say they are back. This protects senders and punishes nobody.
+
+### How sure we are
+
+The capacity rules rest on evidence: a field experiment on a dating platform found that sending everyone to the same few people left most ignored, and spreading recommendations produced more matches (Chen, Hsieh and Lin, 2023 **[A]**). The rest is design judgement: the ten days, the cap of five, the kind decline, hiding "seen" and the pause after two. All of it should be tested. **[H]**
+
+There is a trade-off underneath. Every protection for senders asks something of the people being asked. If answering ever feels like a chore, alumni leave, and then nothing gets answered. Where the two pull against each other, favour whatever keeps it easy for the person being asked.
+
+## What was built
+
+| Proposed | Built |
+| --- | --- |
+| Find tab opening on "What are you looking for?" | Yes. Your asks are ready to tap, with up to four people who can help under each |
+| Search with chips for text, field, city, level and "can help with" | Yes. Typing offers a matching chip. The + button lists them all |
+| Results as leaves on branches, grouped by city, field or level | Yes. This is the default view |
+| A plain list as an option | Yes. The Simple button switches to rows, and the choice is remembered |
+| A summary on hover or first tap, the full profile on the next | Yes. Hover on a computer, first tap on a phone |
+| Requests in place of matches | Yes. Swiping, the mutual match and the celebration screen are removed |
+| Rules against unanswered requests | Capacity gate, reply record, cap of five, one-tap answers, ten-day lapse with a suggestion, and the pause after two lapses |
+| Sign-up questions in place of the filter form | Yes. Fields, cities and levels, used to order results and never to hide anyone |
+| Paths through people you both know | Partly. The front door names who knows whom. There is no way to ask for an introduction |
+
+### How requests are shown
+
+A request is drawn as a **tendril**: the curl a vine sends out before it takes hold, with a bud on the end. It appears on a person's leaf when you have asked them, beside each request you are waiting on, and as one of two leaves in the corner of the Find tab. The other corner leaf, brown, is **Not yet met**: people who have accepted and whom you have not yet had a chat with. So a relationship runs tendril, then leaf, then vine.
+
+### Different from the proposal
+
+- **Requests and Not yet met live on Find,** behind the two corner leaves, not in Messages or Network.
+- **Not yet met is simpler.** Tapping a person opens the chat. A cup icon proposes coffee.
+- **The Messages tab has no requests section.** An accepted request becomes an ordinary conversation, with the line from the request as its first message.
+
+### Left out
+
+- **Bring a friend** is gone. The proposal was to make it an option on a request.
+- **"Tell me when there's a spot"** shows a confirmation and does nothing else.
+- **A weekly digest and a reminder** for people with requests waiting.
+- **Spreading requests** away from people who already have several waiting. Results are ordered by room and reply speed, but nothing counts requests in flight.
+- **The reply record is made up** in the demo. A real one needs real response times.

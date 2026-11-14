@@ -14,7 +14,7 @@ import { roleLine } from '../components/ProfileView'
 import { PrefsForm } from '../components/PrefsForm'
 import { AsksOffersFields, BasicsFields, PromptEditor } from '../components/ProfileEditor'
 
-const STEPS = ['Join your school', 'About you', 'The basics', 'People you already know', 'What you’re here for', 'Your prompts', 'Who you’ll meet']
+const STEPS = ['Join your school', 'About you', 'The basics', 'People you already know', 'What you’re here for', 'Your prompts', 'Who you want to find']
 
 const blank: User = {
   id: 'me', schoolIds: [], role: 'student', gradYear: 2028, name: '', major: '', title: '', company: undefined,
@@ -55,7 +55,7 @@ export default function Onboarding() {
     true,
   ][step]
 
-  const skip = () => { skipOnboarding(); nav('/meet') }
+  const skip = () => { skipOnboarding(); nav('/find') }
   const finish = () => {
     finishOnboarding(
       {
@@ -70,7 +70,7 @@ export default function Onboarding() {
     )
     for (const id of known) addKnown(id, 'unsure', true)
     say(`Welcome to ${school!.name} on Kudzu`)
-    nav('/meet')
+    nav('/find')
   }
 
   if (step === -1) {
@@ -229,7 +229,7 @@ export default function Onboarding() {
 
       <div className="border-t border-sage-200 bg-cream px-5 pb-[max(env(safe-area-inset-bottom),14px)] pt-3">
         <Button className="w-full" disabled={!canNext} onClick={() => (step === STEPS.length - 1 ? finish() : setStep(step + 1))}>
-          {step === STEPS.length - 1 ? 'Start meeting people' : 'Continue'}
+          {step === STEPS.length - 1 ? 'Start finding people' : 'Continue'}
         </Button>
       </div>
 

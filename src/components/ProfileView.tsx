@@ -90,10 +90,9 @@ export function roleLine(u: User) {
   return u.title ?? (u.role === 'student' ? 'Student' : 'Alum')
 }
 
-/** Full profile body. Used in the swipe card, the profile page and guest lists. */
+/** Full profile body. Used on the profile page, reached from Find, guest lists and the network. */
 export function ProfileView({ user, onLikePrompt, showMenu = true, onBlocked }: { user: User; onLikePrompt?: (promptId: string) => void; showMenu?: boolean; onBlocked?: () => void }) {
   const me = useKudzu((s) => s.me)
-  const prefs = useKudzu((s) => s.prefs)
   const groups = useKudzu((s) => s.groups)
   const isMe = user.id === 'me'
   const common = isMe ? [] : inCommon(me, user, groups)
@@ -133,7 +132,7 @@ export function ProfileView({ user, onLikePrompt, showMenu = true, onBlocked }: 
           <div className="flex items-center gap-2"><GraduationCap size={15} className="text-coffee-500" /> {user.major}</div>
           <div className="flex items-center gap-2">
             <MapPin size={15} className="text-coffee-500" /> {user.city}
-            {!isMe && <span className="text-ink/50">· {distanceLabel(me, prefs, user)}</span>}
+            {!isMe && <span className="text-ink/50">· {distanceLabel(me, user)}</span>}
           </div>
         </div>
 

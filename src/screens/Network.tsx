@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import type { Mode, Nudge, Strength, User } from '../types'
 import { MODES, MODE_META, STRENGTH_META, STRENGTH_ORDER } from '../config/brand'
 import { useKudzu, useNow } from '../store/useKudzu'
-import { cityCohort, classCohort, classLabel, computeNudges, getSchool, getUser, matchInfo, pendingConnections, rhythmLabel, strengthOf, suggestKnown, webConnections } from '../services'
+import { cityCohort, classCohort, classLabel, computeNudges, getSchool, getUser, matchInfo, rhythmLabel, strengthOf, suggestKnown, webConnections } from '../services'
 import { LeafIcon } from '../components/brand'
 import { Avatar, Chip, EmptyState, SchoolChip, Sheet, inputCls } from '../components/ui'
 import { ModeIcon, ModeTag, roleLine } from '../components/ProfileView'
@@ -73,8 +73,6 @@ export default function Network() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [s.connections, s.schoolId, s.blocked, s.timeOffsetDays],
   )
-  // matched, but no real exchange yet
-  const pending = pendingConnections(s).map((c) => getUser(c.otherId)).filter((u): u is User => !!u)
   const nudges = computeNudges(s, now)
   const connectedIds = new Set(people.map((p) => p.user.id))
   const classmates = classCohort(s)
@@ -82,10 +80,10 @@ export default function Network() {
   const suggestionCount = suggestKnown(s).length
   const counts = STRENGTH_ORDER.map((l) => [l, people.filter((p) => p.level === l).length] as [Strength, number])
 
-  // The page opens on the network. Everything else sits behind three leaves.
+  // The page opens on the network. Everything else sits behind two leaves.
+  // (People you have connected with but not yet met live on the Find tab.)
   const leaves: LeafItem[] = [
     { key: 'reach', label: 'Reach out', count: nudges.length, onClick: () => setOpen('reach') },
-    { key: 'pending', label: 'Not yet met', count: pending.length, onClick: () => setOpen('pending') },
     { key: 'grow', label: 'Grow', count: 0, onClick: () => setOpen('grow') },
   ]
 
@@ -112,7 +110,7 @@ export default function Network() {
     </Link>
   )
 
-  const empty = people.length === 0 && pending.length === 0
+  const empty = people.length === 0
 
   return (
     <div className="relative flex h-full flex-col">
@@ -141,7 +139,7 @@ export default function Network() {
         <EmptyState title="Your network starts here" body="Add the people you already know, and meet new ones. Each connection grows the more you keep in touch.">
           <div className="flex flex-col gap-2">
             <Link to="/known" className="inline-flex justify-center rounded-full bg-vine-700 px-5 py-3 text-sm font-semibold text-cream">Add people you know</Link>
-            <Link to="/meet" className="inline-flex justify-center rounded-full border border-sage-200 bg-white px-5 py-3 text-sm font-semibold text-vine-800">Meet new people</Link>
+            <Link to="/find" className="inline-flex justify-center rounded-full border border-sage-200 bg-white px-5 py-3 text-sm font-semibold text-vine-800">Find new people</Link>
           </div>
         </EmptyState>
       ) : view === 'map' ? (
@@ -211,28 +209,6 @@ export default function Network() {
         )}
       </Sheet>
 
-      <Sheet open={open === 'pending'} onClose={() => setOpen(null)} title="Not yet met">
-        <p className="mb-3 text-[13px] leading-relaxed text-ink/60">You’ve matched with these people, but a match isn’t a relationship. They join your web after your first coffee chat.</p>
-        {pending.length === 0 ? (
-          <p className="py-6 text-center text-sm text-ink/55">No one is waiting. Everyone you’ve matched with is in your web.</p>
-        ) : (
-          <div className="divide-y divide-sage-200 rounded-2xl border border-dashed border-sage-300 bg-white">
-            {pending.map((u) => (
-              <div key={u.id} className="flex items-center gap-3 px-3 py-2.5">
-                <Link to={`/u/${u.id}`} className="flex min-w-0 flex-1 items-center gap-3">
-                  <Avatar user={u} size={38} />
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-semibold">{u.name}</span>
-                    <span className="block truncate text-xs text-ink/55">{roleLine(u)}</span>
-                  </span>
-                </Link>
-                <Link to={`/messages/${u.id}?propose=1`} className="inline-flex shrink-0 items-center gap-1 rounded-full bg-coffee-500 px-3 py-1.5 text-xs font-semibold text-cream"><Coffee size={13} /> Propose coffee</Link>
-              </div>
-            ))}
-          </div>
-        )}
-      </Sheet>
-
       <Sheet open={open === 'grow'} onClose={() => setOpen(null)} title="Grow your network">
         <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink/50">Your cohorts</div>
         <div className="grid grid-cols-2 gap-2">
@@ -247,11 +223,11 @@ export default function Network() {
           </span>
           <ChevronRight size={18} className="text-ink/30" />
         </Link>
-        <Link to="/meet" className="mt-2 flex items-center gap-3 rounded-2xl border border-sage-200 bg-white px-3.5 py-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-coffee-100 text-coffee-600"><Coffee size={17} /></span>
+        <Link to="/find" className="mt-2 flex items-center gap-3 rounded-2xl border border-sage-200 bg-white px-3.5 py-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-coffee-100 text-coffee-600"><Search size={17} /></span>
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold">Meet someone new</span>
-            <span className="block truncate text-xs text-ink/55">People matched to what you’re looking for</span>
+            <span className="block text-sm font-semibold">Find someone new</span>
+            <span className="block truncate text-xs text-ink/55">Search by field, city, level or name</span>
           </span>
           <ChevronRight size={18} className="text-ink/30" />
         </Link>

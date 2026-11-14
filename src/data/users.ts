@@ -173,7 +173,7 @@ export const USERS: User[] = [
     [['p5', 'Portfolio reviews. I will tell you which three projects to cut.'],
      ['p6', 'How to give design feedback to engineers without starting a war.'],
      ['p10', 'Thrifting chairs I have no room for.']],
-    ['grp-wie'], 5, 3),
+    ['grp-wie'], 5, 5),
   gt('g21', 'Raj Malhotra', 'alum', 2009, 'Electrical Engineering', 'Managing Director', 'Goldman Sachs', 'Finance', 'New York', 'MA',
     [['p1', 'Why I left engineering for finance, and what I miss.'],
      ['p2', 'Take the harder class. Nobody remembers the grade.'],

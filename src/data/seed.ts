@@ -1,4 +1,4 @@
-import type { Connection, Conversation, Group, Interaction, InteractionType, KEvent, Message, Nudge, Prefs, User } from '../types'
+import type { Connection, Conversation, Group, Interaction, InteractionType, KEvent, Message, Nudge, Prefs, Request, User } from '../types'
 import { CITIES, DAY, HOUR, coordsFor, startOfDay } from '../lib/util'
 
 /* ---------------- demo personas (the signed-in user is always id "me") ---------------- */
@@ -54,16 +54,13 @@ export const ALUM_PERSONA: User = {
 }
 
 export const DEFAULT_PREFS: Prefs = {
-  gradRange: [2005, 2030],
-  industries: [],
-  maxDistance: 3000,
-  travelingTo: null,
-  modes: [],
-  show: 'both',
+  industries: ['Consulting', 'Tech'],
+  cities: ['Atlanta', 'New York'],
+  levels: [],
 }
 
-/** A right swipe on these people always matches, so the demo is repeatable. */
-export const ALWAYS_MATCH = ['g1']
+/** A request to these people is always accepted, so the demo is repeatable. */
+export const ALWAYS_ACCEPT = ['g1']
 
 /* ---------------- groups ---------------- */
 
@@ -244,6 +241,23 @@ export function seedConversations(now: number): Conversation[] {
     conv('e1', false, t('e1', 40, 'Good luck with the application. Let me know how it goes!')),
     conv('u1', false, t('u1', 10, 'Charlotte is great for banking. Happy to introduce you to a few people.')),
     conv('s1', true, t('s1', 5, 'Want to grab coffee downtown next week?')),
+  ]
+}
+
+/* ---------------- requests ---------------- */
+
+export function seedRequests(now: number): Request[] {
+  const r = (id: string, fromId: string, toId: string, daysAgo: number, topic: string, note: string): Request => ({ id, fromId, toId, topic, note, at: now - daysAgo * DAY, status: 'pending' })
+  return [
+    // asked of the demo user
+    r('rq1', 'g32', 'me', 1, 'path', 'Hi! I’m a sophomore in CS trying to pick a thread. You were where I am a year ago. Could I ask how you chose?'),
+    r('rq2', 'g18', 'me', 3, 'campus', 'I’m looking for a research lab to join and heard you know which clubs and labs are worth the time.'),
+    // sent by the demo user: one still waiting, one that went unanswered
+    r('rq3', 'me', 'g6', 2, 'industry', 'I’d love to hear what moving from R&D into product looked like for you.'),
+    r('rq4', 'me', 'g26', 11, 'decision', 'I’m weighing consulting against operations roles and would value your view.'),
+
+    r('rq5', 'e3', 'me', 2, 'path', 'Could I ask you about switching tracks in second year?'),
+    r('rq6', 's3', 'me', 1, 'campus', 'Any advice on balancing work and classes?'),
   ]
 }
 

@@ -20,7 +20,7 @@ export default function Cohort() {
   const now = useNow()
   const isClass = kind === 'class'
   const school = getSchool(s.schoolId)
-  const [city, setCity] = useState<string | null>(isClass ? null : s.prefs.travelingTo ?? s.me.city)
+  const [city, setCity] = useState<string | null>(isClass ? null : s.me.city)
 
   // for the city view, everyone at the school is counted so the switcher can show each city's size
   const everyone = isClass ? classCohort(s) : schoolUsers(s.schoolId).filter((u) => !s.blocked.includes(u.id))

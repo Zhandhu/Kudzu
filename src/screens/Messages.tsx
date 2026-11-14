@@ -52,7 +52,7 @@ export default function Messages() {
 
       {fresh.length > 0 && (
         <section className="pb-2">
-          <div className="px-4 pb-2 text-xs font-semibold uppercase tracking-wide text-ink/50">New matches</div>
+          <div className="px-4 pb-2 text-xs font-semibold uppercase tracking-wide text-ink/50">Say hello</div>
           <div className="no-scrollbar flex gap-4 overflow-x-auto px-4 pb-2">
             {fresh.map((c) => {
               const u = getUser(c.otherId)
@@ -69,8 +69,8 @@ export default function Messages() {
       )}
 
       {threads.length === 0 && fresh.length === 0 ? (
-        <EmptyState title="No conversations yet" body="When you match with someone, your chat shows up here.">
-          <Link to="/meet" className="inline-flex items-center gap-2 rounded-full bg-vine-700 px-5 py-3 text-sm font-semibold text-cream"><Coffee size={16} /> Meet people</Link>
+        <EmptyState title="No conversations yet" body="When someone accepts your request, or you accept theirs, the chat shows up here.">
+          <Link to="/find" className="inline-flex items-center gap-2 rounded-full bg-vine-700 px-5 py-3 text-sm font-semibold text-cream"><Coffee size={16} /> Find people</Link>
         </EmptyState>
       ) : (
         <ul className="px-2">

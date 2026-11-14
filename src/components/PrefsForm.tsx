@@ -1,84 +1,62 @@
 import type { Prefs } from '../types'
-import { INDUSTRIES, MODES, MODE_META } from '../config/brand'
+import { INDUSTRIES } from '../config/brand'
+import { LEVELS } from '../services'
 import { CITY_NAMES } from '../lib/util'
-import { Chip, DualRange } from './ui'
+import { Chip } from './ui'
 
 const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v])
 
-/** Matching preferences. Shared by the Meet filter sheet, Profile and onboarding. */
+/**
+ * "Who do you want to find?" Asked once at sign-up and editable from Profile.
+ * These answers decide who is shown first. They never hide anyone: a search
+ * still finds everybody.
+ */
 export function PrefsForm({ prefs, onChange, homeCity }: { prefs: Prefs; onChange: (patch: Partial<Prefs>) => void; homeCity: string }) {
-  const h = 'mb-2 text-xs font-semibold uppercase tracking-wide text-ink/50'
+  const h = 'mb-1 text-sm font-semibold'
+  const sub = 'mb-2 text-xs text-ink/55'
   return (
     <div className="space-y-6">
       <section>
-        <div className={h}>Show me</div>
-        <div className="flex gap-2">
-          {(['both', 'student', 'alum'] as const).map((v) => (
-            <Chip key={v} active={prefs.show === v} onClick={() => onChange({ show: v })}>
-              {v === 'both' ? 'Both' : v === 'student' ? 'Students' : 'Alumni'}
+        <div className={h}>Which fields interest you?</div>
+        <p className={sub}>Pick any that you work in or are curious about.</p>
+        <div className="flex flex-wrap gap-2">
+          {INDUSTRIES.map((i) => (
+            <Chip key={i} active={prefs.industries.includes(i)} onClick={() => onChange({ industries: toggle(prefs.industries, i) })}>{i}</Chip>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <div className={h}>Which cities matter to you?</div>
+        <p className={sub}>Where you live, where you’re from, or where you might move.</p>
+        <div className="flex flex-wrap gap-2">
+          {CITY_NAMES.map((c) => (
+            <Chip key={c} tone="coffee" active={prefs.cities.includes(c)} onClick={() => onChange({ cities: toggle(prefs.cities, c) })}>
+              {c}{c === homeCity ? ' · home' : ''}
             </Chip>
           ))}
         </div>
       </section>
 
       <section>
-        <div className="flex items-baseline justify-between">
-          <div className={h}>Grad year</div>
-          <div className="text-sm font-semibold text-vine-700">{prefs.gradRange[0]} – {prefs.gradRange[1]}</div>
-        </div>
-        <DualRange min={2005} max={2030} value={prefs.gradRange} onChange={(gradRange) => onChange({ gradRange })} />
-        <div className="flex justify-between text-[11px] text-ink/45"><span>More experienced</span><span>Current students</span></div>
-      </section>
-
-      <section>
-        <div className={h}>Industries</div>
-        <div className="flex flex-wrap gap-2">
-          {INDUSTRIES.map((i) => (
-            <Chip key={i} active={prefs.industries.includes(i)} onClick={() => onChange({ industries: toggle(prefs.industries, i) })}>{i}</Chip>
-          ))}
-        </div>
-        <p className="mt-1.5 text-[11px] text-ink/45">Leave empty to see every industry.</p>
-      </section>
-
-      <section>
-        <div className="flex items-baseline justify-between">
-          <div className={h}>Distance</div>
-          <div className="text-sm font-semibold text-vine-700">{prefs.maxDistance >= 3000 ? 'Anywhere' : `Within ${prefs.maxDistance} mi`}</div>
-        </div>
-        <input
-          type="range" min={0} max={7} step={1} className="w-full"
-          value={DIST_STEPS.indexOf(prefs.maxDistance) === -1 ? 7 : DIST_STEPS.indexOf(prefs.maxDistance)}
-          onChange={(e) => onChange({ maxDistance: DIST_STEPS[+e.target.value] })}
-          aria-label="Maximum distance"
-        />
-      </section>
-
-      <section>
-        <div className={h}>Location</div>
-        <div className="flex flex-wrap gap-2">
-          <Chip active={!prefs.travelingTo} onClick={() => onChange({ travelingTo: null })}>Current city · {homeCity}</Chip>
-        </div>
-        <div className="mt-3 text-[13px] font-medium text-ink/70">Traveling to…</div>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {CITY_NAMES.filter((c) => c !== homeCity).map((c) => (
-            <Chip key={c} tone="coffee" active={prefs.travelingTo === c} onClick={() => onChange({ travelingTo: prefs.travelingTo === c ? null : c })}>{c}</Chip>
-          ))}
+        <div className={h}>Who would you most like to hear from?</div>
+        <p className={sub}>Leave empty for everyone.</p>
+        <div className="space-y-2">
+          {LEVELS.map((l) => {
+            const on = prefs.levels.includes(l.id)
+            return (
+              <button key={l.id} onClick={() => onChange({ levels: toggle(prefs.levels, l.id) })} className={`flex w-full items-center justify-between rounded-xl border px-3.5 py-2.5 text-left ${on ? 'border-vine-700 bg-vine-700 text-cream' : 'border-sage-200 bg-white'}`} aria-pressed={on}>
+                <span className="text-sm font-semibold">{l.label}</span>
+                <span className={`text-xs ${on ? 'text-vine-100' : 'text-ink/50'}`}>{l.hint}</span>
+              </button>
+            )
+          })}
         </div>
       </section>
 
-      <section>
-        <div className={h}>Kind of match</div>
-        <div className="flex flex-wrap gap-2">
-          {MODES.map((m) => (
-            <Chip key={m} active={prefs.modes.includes(m)} onClick={() => onChange({ modes: toggle(prefs.modes, m) })}>{MODE_META[m].label}</Chip>
-          ))}
-        </div>
-        <p className="mt-1.5 text-[11px] text-ink/45">
-          We work this out from what you and they are looking for. Leave empty to see all three.
-        </p>
-      </section>
+      <p className="rounded-xl bg-sage-100 px-3.5 py-2.5 text-xs leading-relaxed text-ink/65">
+        These choices put the right people first. They don’t hide anyone, so you can always search for someone outside them.
+      </p>
     </div>
   )
 }
-
-const DIST_STEPS = [10, 25, 50, 100, 250, 500, 1000, 3000]

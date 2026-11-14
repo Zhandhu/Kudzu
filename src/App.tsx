@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { CalendarDays, Coffee, MessageCircle, Sprout, UserRound, Wrench } from 'lucide-react'
+import { CalendarDays, MessageCircle, Search, Sprout, UserRound, Wrench } from 'lucide-react'
 import { useKudzu } from './store/useKudzu'
 import { OverlayContext, Toast } from './components/ui'
 import { APP_NAME, TAGLINE } from './config/brand'
 import { inSchool } from './services'
-import Meet from './screens/Meet'
-import MatchCelebration from './components/MatchCelebration'
+import Find from './screens/Find'
 import Messages from './screens/Messages'
 import ChatThread from './screens/ChatThread'
 import Network from './screens/Network'
@@ -24,7 +23,7 @@ import CheckInSheet from './components/CheckInSheet'
 import DemoPanel from './components/DemoPanel'
 
 const TABS = [
-  { to: '/meet', label: 'Meet', icon: Coffee },
+  { to: '/find', label: 'Find', icon: Search },
   { to: '/events', label: 'Events', icon: CalendarDays },
   { to: '/network', label: 'Network', icon: Sprout },
   { to: '/messages', label: 'Messages', icon: MessageCircle },
@@ -82,7 +81,7 @@ export default function App() {
               </Routes>
             ) : (
               <Routes>
-                <Route path="/meet" element={<Meet />} />
+                <Route path="/find" element={<Find />} />
                 <Route path="/events" element={<Events />} />
                 <Route path="/events/:id" element={<EventDetail />} />
                 <Route path="/groups/:id" element={<GroupDetail />} />
@@ -95,13 +94,12 @@ export default function App() {
                 <Route path="/guidelines" element={<Guidelines />} />
                 <Route path="/cohorts/:kind" element={<Cohort />} />
                 <Route path="/known" element={<Known />} />
-                <Route path="*" element={<Navigate to="/meet" replace />} />
+                <Route path="*" element={<Navigate to="/find" replace />} />
               </Routes>
             )}
           </main>
           {showTabs && <TabBar />}
           <div ref={setOverlay} className="pointer-events-none absolute inset-0 z-[1500]" />
-          <MatchCelebration />
           <CheckInSheet />
           <DemoPanel />
           <Toast />

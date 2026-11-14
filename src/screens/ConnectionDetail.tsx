@@ -11,7 +11,7 @@ import { Avatar, BackHeader, Chip, inputCls } from '../components/ui'
 import { ModeTag, MoreMenu, roleLine } from '../components/ProfileView'
 
 const KIND: Record<InteractionType, { label: string; icon: typeof Coffee }> = {
-  matched: { label: 'Matched on Kudzu', icon: Handshake },
+  matched: { label: 'Connected on Kudzu', icon: Handshake },
   messaged: { label: 'Exchanged messages', icon: MessageCircle },
   coffee: { label: 'Had a coffee chat', icon: Coffee },
   event: { label: 'Attended an event together', icon: CalendarDays },

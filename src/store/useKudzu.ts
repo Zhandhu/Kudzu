@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Connection, Conversation, Feedback, Group, InteractionType, KEvent, LastTalked, Message, Prefs, Proposal, User } from '../types'
-import { ALUM_PERSONA, ALWAYS_MATCH, DEFAULT_PREFS, SEED_GROUPS, STUDENT_PERSONA, seedConnections, seedConversations, seedEvents } from '../data/seed'
+import type { Connection, Conversation, Feedback, Group, InteractionType, KEvent, LastTalked, Message, Prefs, Proposal, Request, User } from '../types'
+import { ALUM_PERSONA, DEFAULT_PREFS, SEED_GROUPS, STUDENT_PERSONA, seedConnections, seedConversations, seedEvents, seedRequests } from '../data/seed'
 import { SCHOOLS } from '../data/schools'
 import { CITIES, DAY, uid } from '../lib/util'
 
@@ -13,7 +13,10 @@ interface Data {
   /** Demo clock: "now" is the real time plus this many days. */
   timeOffsetDays: number
   prefs: Prefs
-  swiped: Record<string, 'like' | 'pass'>
+  /** Requests for a chat, both the ones the user sent and the ones sent to them. */
+  requests: Request[]
+  /** How many requests the user let lapse that they have already been told about. */
+  quietCleared: number
   connections: Connection[]
   conversations: Conversation[]
   events: KEvent[]
@@ -24,10 +27,10 @@ interface Data {
   reports: { userId: string; reason: string }[]
   showWarning: boolean
   paused: boolean
-  bringFriend: boolean
+  /** Whether Find shows results as leaves on branches or as plain rows. */
+  findView: 'leaves' | 'rows'
   settings: { notifications: boolean; privateMode: boolean }
   // transient UI state (not persisted)
-  matchWith: string | null
   checkin: { otherId: string; msgId: string } | null
   toast: { id: string; text: string } | null
   demoOpen: boolean
@@ -45,8 +48,9 @@ interface Actions {
   switchPersona: () => void
   switchSchool: (id: string) => void
   fastForward: (days: number) => void
-  swipe: (id: string, dir: 'like' | 'pass', like?: { promptId: string; comment: string }, force?: boolean) => boolean
-  resetPasses: () => void
+  addRequest: (r: Omit<Request, 'id' | 'at' | 'status'>) => void
+  resolveRequest: (id: string, status: 'accepted' | 'declined') => void
+  dismissRequest: (id: string) => void
   ensureConversation: (otherId: string) => void
   addMessage: (otherId: string, msg: Omit<Message, 'id' | 'at'>) => void
   acceptProposal: (otherId: string, msgId: string, slot: number) => void
@@ -77,7 +81,8 @@ const fresh = (): Data => {
     schoolId: 'gt',
     timeOffsetDays: 0,
     prefs: DEFAULT_PREFS,
-    swiped: {},
+    requests: seedRequests(now),
+    quietCleared: 0,
     connections: seedConnections(now),
     conversations: seedConversations(now),
     events: seedEvents(now),
@@ -88,9 +93,8 @@ const fresh = (): Data => {
     reports: [],
     showWarning: false,
     paused: false,
-    bringFriend: false,
+    findView: 'leaves',
     settings: { notifications: true, privateMode: false },
-    matchWith: null,
     checkin: null,
     toast: null,
     demoOpen: false,
@@ -177,33 +181,32 @@ export const useKudzu = create<KudzuState>()(
           toast: { id: uid(), text: `Skipped ahead ${days} days` },
         })),
 
-      swipe: (id, dir, like, force) => {
-        const s = get()
-        if (dir === 'pass') {
-          set({ swiped: { ...s.swiped, [id]: 'pass' } })
-          return false
-        }
-        const matched = force || ALWAYS_MATCH.includes(id) || Math.random() < 0.4
-        if (!matched) {
-          set({ swiped: { ...s.swiped, [id]: 'like' } })
-          return false
-        }
-        const now = nowOf(s)
-        const messages: Message[] = like?.comment
-          ? [{ id: uid(), from: 'me', at: now, text: like.comment, promptId: like.promptId }]
-          : like
-            ? [{ id: uid(), from: 'me', at: now, text: 'Liked your answer', promptId: like.promptId }]
-            : []
-        set({
-          swiped: { ...s.swiped, [id]: 'like' },
-          connections: [...s.connections.filter((c) => c.otherId !== id), { otherId: id, note: '', interactions: [{ type: 'matched', at: now }] }],
-          conversations: [{ id: `c-${id}`, otherId: id, messages, unread: false }, ...s.conversations.filter((c) => c.otherId !== id)],
-          matchWith: id,
-        })
-        return true
-      },
+      addRequest: (r) => set((s) => ({ requests: [{ ...r, id: uid(), at: nowOf(s), status: 'pending' }, ...s.requests] })),
 
-      resetPasses: () => set({ swiped: {} }),
+      // Accepting a request is what connects two people. The note that came with it
+      // becomes the first message, so the conversation starts with a reason.
+      resolveRequest: (id, status) =>
+        set((s) => {
+          const r = s.requests.find((x) => x.id === id)
+          if (!r || r.status !== 'pending') return {}
+          const now = nowOf(s)
+          const requests = s.requests.map((x) => (x.id === id ? { ...x, status, respondedAt: now } : x))
+          if (status !== 'accepted') return { requests }
+          const otherId = r.fromId === 'me' ? r.toId : r.fromId
+          const first: Message = { id: uid(), from: r.fromId, at: now, text: r.note || 'I’d love to find a time to talk.', promptId: r.promptId }
+          const existing = s.conversations.find((c) => c.otherId === otherId)
+          return {
+            requests,
+            connections: s.connections.some((c) => c.otherId === otherId)
+              ? s.connections
+              : [...s.connections, { otherId, note: '', interactions: [{ type: 'matched', at: now }] }],
+            conversations: existing
+              ? mapConv(s.conversations, otherId, (c) => ({ ...c, messages: [...c.messages, first], unread: r.fromId !== 'me' }))
+              : [{ id: `c-${otherId}`, otherId, messages: [first], unread: r.fromId !== 'me' }, ...s.conversations],
+          }
+        }),
+
+      dismissRequest: (id) => set((s) => ({ requests: s.requests.filter((x) => x.id !== id) })),
 
       ensureConversation: (otherId) => {
         const s = get()
@@ -288,7 +291,6 @@ export const useKudzu = create<KudzuState>()(
             connections: existing
               ? s.connections.map((c) => (c.otherId === otherId ? { ...c, interactions: [...c.interactions, known] } : c))
               : [...s.connections, { otherId, note: '', interactions: [known] }],
-            swiped: { ...s.swiped, [otherId]: 'like' },
             ...(quiet ? {} : { toast: { id: uid(), text: 'Added to your network' } }),
           }
         }),
@@ -317,10 +319,10 @@ export const useKudzu = create<KudzuState>()(
     }),
     {
       // bump this when the saved shape changes, so old browsers start from fresh seed data
-      name: 'kudzu-demo-v4',
+      name: 'kudzu-demo-v5',
       partialize: (s) => {
-        const { matchWith, checkin, toast, demoOpen, typing, ...rest } = s
-        void matchWith, checkin, toast, demoOpen, typing
+        const { checkin, toast, demoOpen, typing, ...rest } = s
+        void checkin, toast, demoOpen, typing
         return rest as KudzuState
       },
     },

@@ -46,14 +46,35 @@ export interface User {
   verified: 'verified' | 'pending'
 }
 
+/** Where someone is in their career, worked out from their class year. */
+export type Level = 'student' | 'early' | 'mid' | 'senior'
+
+/**
+ * What the user said they want to find, asked once at sign-up.
+ * These never hide anyone. They only decide who is shown first.
+ */
 export interface Prefs {
-  gradRange: [number, number]
   industries: string[]
-  maxDistance: number
-  travelingTo: string | null
-  /** Optional narrowing by soft role. Empty means show everyone. */
-  modes: Mode[]
-  show: 'student' | 'alum' | 'both'
+  cities: string[]
+  levels: Level[]
+}
+
+/**
+ * A request for a chat. It replaces the two-sided match: one person asks, about
+ * a topic and with a line of their own, and the other accepts or declines.
+ */
+export interface Request {
+  id: string
+  fromId: string
+  toId: string
+  /** The help topic it is about, if one was chosen. */
+  topic?: string
+  note: string
+  /** Set when the note is a reply to one of the other person's prompts. */
+  promptId?: string
+  at: number
+  status: 'pending' | 'accepted' | 'declined'
+  respondedAt?: number
 }
 
 export type EventType = 'Networking' | 'Social' | 'Industry'

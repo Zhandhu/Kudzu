@@ -98,3 +98,16 @@ export function VineDivider() {
     </div>
   )
 }
+
+/**
+ * A request, drawn as a tendril: the curl a vine sends out before it takes
+ * hold, with a bud on the end. It becomes a leaf once the request is accepted.
+ */
+export function TendrilIcon({ size = 18, color = '#356433' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M12 22.5C12 16 7.5 13 7.5 8.6a5 5 0 0 1 10 0c0 2.9-2.2 4.7-4.4 4.7-1.7 0-2.9-1.3-2.7-3.5" stroke={color} strokeWidth="2.2" strokeLinecap="round" />
+      <circle cx="10.4" cy="9.8" r="2.4" fill="#94b98d" stroke={color} strokeWidth="1.1" />
+    </svg>
+  )
+}

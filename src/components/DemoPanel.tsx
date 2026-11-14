@@ -1,7 +1,8 @@
-import { AlertTriangle, ClipboardCheck, FastForward, GraduationCap, Heart, HeartHandshake, RotateCcw, UserRoundCog } from 'lucide-react'
+import { AlertTriangle, ClipboardCheck, FastForward, GraduationCap, HeartHandshake, RotateCcw, UserRoundCog } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { useKudzu } from '../store/useKudzu'
-import { buildDeck, findCheckinTarget, listSchools, receiveThanks } from '../services'
+import { nowOf, useKudzu } from '../store/useKudzu'
+import { findCheckinTarget, listSchools, receiveRequest, receiveThanks } from '../services'
+import { TendrilIcon } from './brand'
 import { Chip, Sheet, Toggle } from './ui'
 
 /** Presenter controls. Open by tapping the logo three times or the wrench button. */
@@ -10,11 +11,10 @@ export default function DemoPanel() {
   const nav = useNavigate()
   const close = () => s.set({ demoOpen: false })
 
-  const triggerMatch = () => {
-    const next = buildDeck(s)[0]
+  const triggerRequest = () => {
     close()
-    if (!next) return s.say('No one left in the deck. Reset passes or widen filters.')
-    s.swipe(next.id, 'like', undefined, true)
+    if (receiveRequest(s, nowOf(s))) nav('/find')
+    else s.say('Nobody left who could send you a request.')
   }
 
   const triggerCheckin = () => {
@@ -44,12 +44,12 @@ export default function DemoPanel() {
 
         <button className={item} onClick={() => { s.fastForward(30); close(); nav('/network') }}>
           <FastForward size={19} className="text-coffee-500" />
-          <span className="flex-1">Fast-forward one month<span className={sub}>Connections fade and new nudges appear.{s.timeOffsetDays > 0 ? ` Currently +${s.timeOffsetDays} days.` : ''}</span></span>
+          <span className="flex-1">Fast-forward one month<span className={sub}>Connections fade, nudges appear, and unanswered requests lapse.{s.timeOffsetDays > 0 ? ` Currently +${s.timeOffsetDays} days.` : ''}</span></span>
         </button>
 
-        <button className={item} onClick={triggerMatch}>
-          <Heart size={19} className="text-coffee-500" />
-          <span className="flex-1">Trigger a new match<span className={sub}>Matches you with the next person in Meet.</span></span>
+        <button className={item} onClick={triggerRequest}>
+          <TendrilIcon size={20} color="#8b5e3c" />
+          <span className="flex-1">Receive a request<span className={sub}>Someone asks you for a chat. It appears under the tendril on Find.</span></span>
         </button>
 
         <button className={item} onClick={triggerCheckin}>
@@ -71,7 +71,7 @@ export default function DemoPanel() {
 
         <div className={item}>
           <AlertTriangle size={19} className="text-amber-600" />
-          <span className="flex-1">Show account-warning notice<span className={sub}>Appears on Meet and Profile.</span></span>
+          <span className="flex-1">Show account-warning notice<span className={sub}>Appears on Find and Profile.</span></span>
           <Toggle on={s.showWarning} onChange={(showWarning) => s.set({ showWarning })} label="Show account warning" />
         </div>
 

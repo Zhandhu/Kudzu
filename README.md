@@ -2,7 +2,7 @@
 
 **Coffee chats, matched.**
 
-Kudzu is a mobile-first app that matches current students and alumni of the same college for coffee chats, networking events and lasting professional connections. Think "Hinge for networking": profiles you swipe on, conversation-starter prompts, clear intentions, plus events and a living map of your network.
+Kudzu is a mobile-first app that helps current students and alumni of the same college find each other, meet for coffee chats, and stay connected. You search your school's network by field, city, career level, name, or the kind of help you need, ask someone for a chat with a line of your own, and keep the relationships that follow alive on a living map of your network.
 
 This repository is a **clickable demo** of the full product vision. Every screen is interactive, but there is no backend: all data is mocked and saved in your browser's localStorage.
 
@@ -37,8 +37,8 @@ Demo controls:
 | --- | --- |
 | Switch user | Flip between the student view and the alum view |
 | Switch school | Georgia Tech, Emory, UGA or Georgia State. Every tab is scoped to the selected school |
-| Fast-forward one month | Connection strengths fade and new nudges appear |
-| Trigger a new match | Matches you with the next person in Meet |
+| Fast-forward one month | Connection strengths fade, new nudges appear, and unanswered requests lapse |
+| Receive a request | Someone asks you for a chat. It appears under the tendril on Find |
 | Trigger a post-chat check-in | Opens the private feedback form, which ends with a thank-you note |
 | Receive a thank-you note | Someone you helped thanks you. It appears on your profile and in the chat |
 | Show account-warning notice | Shows the notice a user gets after missed chats |
@@ -48,11 +48,11 @@ Demo controls:
 
 | Tab | Features |
 | --- | --- |
-| **Meet** | Swipeable profile cards that say why each person is shown, likes on a specific prompt with a comment, match celebration, filters, monthly chat capacity, "bring a friend" group chats |
+| **Find** | "What are you looking for?" with suggested people, search by name, field, city, level or the help someone offers, results as leaves on branches (or a plain list), a summary on first tap and the full profile on the next, requests for a chat, and people you have connected with but not yet met |
 | **Events** | For You / All feeds, type filters, event detail with map and guest list, RSVP, host an event, community groups |
 | **Network** | Connection strength shown as leaf states, nudges, searchable list, and a map where vines run from you to each connection. Class and city cohorts, and a way to add people you already know |
-| **Messages** | New-match row, chat with mock auto-replies, coffee-chat proposals that become confirmed chats, post-chat check-in with a thank-you note |
-| **Profile** | Edit profile and prompts, thank-you notes you've received, matching preferences, groups, events, settings |
+| **Messages** | Chat with mock auto-replies, coffee-chat proposals that become confirmed chats, post-chat check-in with a thank-you note |
+| **Profile** | Edit profile and prompts, thank-you notes you've received, who you want to find, groups, events, settings |
 
 **No one picks a role.** People say what they are looking for and what they can offer, from one shared list of topics. From that and each person's stage, the app works out the relationship for every pairing: **Learn from**, **Give back** or **Trade notes**. The same student learns from an alum, gives back to a first-year and trades notes with a classmate.
 
@@ -73,7 +73,7 @@ src/
   config/brand.ts     App name, tagline and shared constants (rename the product here)
   types.ts            Data model
   data/               Seed data: schools, prompts, profiles, events, groups, connections, chats
-  services/           The only data-access layer. Matching, strength, nudges, events, chat replies
+  services/           The only data-access layer. Search, requests, closeness, nudges, events, chat replies
   store/useKudzu.ts   Zustand store: all app state and actions
   lib/util.ts         Time, geo and avatar helpers
   components/         Shared UI, brand marks, profile view, map, sheets, demo panel
@@ -85,11 +85,14 @@ Screens read data through `src/services`, never straight from the seed files, so
 ### How a few things work
 
 - **Closeness is a score, not a rule.** Every interaction adds to it according to what kind it was (a coffee chat counts most, a message least) and how it went (a chat rated well counts for more). Each contribution halves about every 60 days. The four leaf states are bands of that score. See `closeness` in `src/services`.
-- **A match is not yet a connection.** Someone joins your web only after a real exchange: a coffee chat, an event together, or marking them as someone you already know. Until then they sit under "Not in your web yet."
+- **Requests, not matches.** You ask someone for a chat, about a topic and with a line of your own. They accept, suggest a later time, or decline, each in one tap. There is no swiping and no two-sided match.
+- **Requests are kept from going unanswered.** People who are full this month cannot be asked. Each person can have five requests open. A request lapses after ten days, and the sender is told and shown who else can help. Someone who lets two requests lapse is paused for new ones until they return. See the request functions in `src/services`.
+- **An accepted request is not yet a connection.** Someone joins your web only after a real exchange: a coffee chat, an event together, or marking them as someone you already know. Until then they sit under "Not yet met" on Find.
+- **Sign-up preferences are weights, not walls.** The fields, cities and levels you pick decide who is shown first. They never hide anyone. Only a chip in the search bar filters.
 - **Rhythms.** After a good chat you can choose to check in monthly or each semester. A nudge appears when that is due, before the tie has started to fade.
 - **Demo time** is the real clock plus an offset. "Fast-forward one month" adds 30 days to the offset, which is why strengths fade and confirmed chats become due for a check-in.
-- **Matching** is mocked: about 40% of right swipes match instantly. The first profile in the Georgia Tech deck always matches so the demo is repeatable.
-- **Feedback is private, with one exception.** Check-in answers feed a hidden score used only to rank the Meet deck and are never shown to anyone. The thank-you note at the end is the one part the other person sees, and only if you write one.
+- **Replies are mocked.** About 60% of people accept a request after a moment. The rest never answer, so that a lapsed request can be shown. Maya, the first suggestion at Georgia Tech, always accepts so the demo is repeatable.
+- **Feedback is private, with one exception.** Check-in answers feed a hidden score used only to order search results and are never shown to anyone. The thank-you note at the end is the one part the other person sees, and only if you write one.
 - **Soft roles** come from `matchInfo` in `src/services`. Someone further along is someone to learn from by default; what each person asks for and offers supplies the reason and can tip the result.
 
 ## Research

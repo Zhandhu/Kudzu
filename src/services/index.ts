@@ -2,13 +2,13 @@
  * Service layer. Screens read data through these functions rather than importing
  * seed files, so a real API can replace this file later without touching the UI.
  */
-import type { Connection, Feedback, InteractionType, KEvent, Mode, Nudge, Prefs, Proposal, Strength, User } from '../types'
+import type { Connection, Feedback, InteractionType, KEvent, Level, Mode, Nudge, Prefs, Proposal, Request, Strength, User } from '../types'
 import { MODE_META, topicLabel } from '../config/brand'
 import { USERS, USERS_BY_ID, knows } from '../data/users'
 import { SCHOOLS, PROMPTS } from '../data/schools'
-import { SEED_NUDGES } from '../data/seed'
+import { ALWAYS_ACCEPT, SEED_NUDGES } from '../data/seed'
 import { useKudzu, nowOf, type KudzuState } from '../store/useKudzu'
-import { CITIES, DAY, firstName, hash, miles } from '../lib/util'
+import { DAY, firstName, hash, miles } from '../lib/util'
 
 /* ---------------- lookups ---------------- */
 
@@ -144,42 +144,210 @@ export function trustScore(userId: string, feedback: Feedback[]): number {
   return Math.max(0, Math.min(1, score))
 }
 
-export function originCoords(me: User, prefs: Prefs): [number, number] {
-  return prefs.travelingTo ? CITIES[prefs.travelingTo] ?? me.coords : me.coords
-}
-
-export function buildDeck(s: Pick<KudzuState, 'me' | 'prefs' | 'schoolId' | 'swiped' | 'connections' | 'blocked' | 'feedback' | 'groups'>): User[] {
-  const { me, prefs } = s
-  const connected = new Set(s.connections.map((c) => c.otherId))
-  const origin = originCoords(me, prefs)
-  return schoolUsers(s.schoolId)
-    .filter((u) => !connected.has(u.id) && !s.swiped[u.id] && !s.blocked.includes(u.id))
-    .filter((u) => prefs.show === 'both' || u.role === prefs.show)
-    .filter((u) => u.gradYear >= prefs.gradRange[0] && u.gradYear <= prefs.gradRange[1])
-    .filter((u) => prefs.industries.length === 0 || prefs.industries.includes(u.industry))
-    .filter((u) => prefs.maxDistance >= 3000 || miles(origin, u.coords) <= prefs.maxDistance)
-    .map((u) => ({ u, info: matchInfo(me, u) }))
-    .filter(({ info }) => prefs.modes.length === 0 || prefs.modes.includes(info.mode))
-    .map(({ u, info }, i) => ({
-      u,
-      score:
-        info.fit * 2.5 + // their offers meet your asks (or the reverse)
-        inCommon(me, u, s.groups).length * 1.5 + // common ground
-        trustScore(u.id, s.feedback) * 4 + // private reliability
-        mutualValue(mutualConnections(s, u).length) * 1.5 + // a few people in common
-        noveltyValue(s, u) * 1.0 + // widens your network
-        (spotsLeft(u) > 0 ? 1 : 0) -
-        i * 0.02,
-    }))
-    .sort((a, b) => b.score - a.score)
-    .map((x) => x.u)
-}
-
-export function distanceLabel(me: User, prefs: Prefs, other: User): string {
-  const d = miles(originCoords(me, prefs), other.coords)
+export function distanceLabel(me: User, other: User): string {
+  const d = miles(me.coords, other.coords)
   if (d < 1) return 'Less than a mile away'
   if (d < 60) return `${Math.round(d)} mi away`
   return `${Math.round(d / 10) * 10} mi away`
+}
+
+/* ---------------- finding people ---------------- */
+
+export const LEVELS: { id: Level; label: string; hint: string }[] = [
+  { id: 'student', label: 'Students', hint: 'Still at school' },
+  { id: 'early', label: 'Early career', hint: 'Up to 5 years out' },
+  { id: 'mid', label: 'Mid career', hint: '6 to 12 years out' },
+  { id: 'senior', label: 'Senior', hint: '13 years or more' },
+]
+
+export const levelLabel = (l: Level) => LEVELS.find((x) => x.id === l)?.label ?? l
+
+/** Where someone is in their career. A friendlier way to search than a range of class years. */
+export function levelOf(u: User): Level {
+  if (u.role === 'student') return 'student'
+  const years = new Date().getFullYear() - u.gradYear
+  return years <= 5 ? 'early' : years <= 12 ? 'mid' : 'senior'
+}
+
+/** How quickly someone tends to answer, in days. Mocked here from a fixed per-person value. */
+export const replyDays = (u: User) => 1 + (hash(u.id + 'reply') % 4)
+export const replyLine = (u: User) => `Usually replies in ${replyDays(u) === 1 ? 'a day' : `${replyDays(u)} days`}`
+
+/** What someone is searching for. Every part is optional and they combine. */
+export interface Query {
+  text: string
+  industries: string[]
+  cities: string[]
+  levels: Level[]
+  /** "Can help with": topics the person must offer. */
+  topics: string[]
+}
+
+export const EMPTY_QUERY: Query = { text: '', industries: [], cities: [], levels: [], topics: [] }
+export const isEmptyQuery = (q: Query) => !q.text.trim() && !q.industries.length && !q.cities.length && !q.levels.length && !q.topics.length
+
+export interface Found {
+  user: User
+  info: MatchInfo
+  score: number
+  /** Already in the user's network (met, or accepted and not yet met). */
+  connected: boolean
+}
+
+type FindState = Pick<KudzuState, 'me' | 'prefs' | 'schoolId' | 'connections' | 'blocked' | 'feedback' | 'groups'>
+
+/**
+ * Search the school. Only what is in the query narrows the results. Everything
+ * else (what you asked for at sign-up, fit, reliability, room for another chat,
+ * people in common) decides the order and never hides anyone.
+ */
+export function findPeople(s: FindState, q: Query): Found[] {
+  const { me, prefs } = s
+  const connected = new Set(s.connections.map((c) => c.otherId))
+  const words = q.text.trim().toLowerCase().split(/\s+/).filter(Boolean)
+  return schoolUsers(s.schoolId)
+    .filter((u) => !s.blocked.includes(u.id))
+    .filter((u) => {
+      const hay = [u.name, u.company, u.title, u.major, u.industry, u.city].filter(Boolean).join(' ').toLowerCase()
+      return words.every((w) => hay.includes(w))
+    })
+    .filter((u) => !q.industries.length || q.industries.includes(u.industry))
+    .filter((u) => !q.cities.length || q.cities.includes(u.city))
+    .filter((u) => !q.levels.length || q.levels.includes(levelOf(u)))
+    .filter((u) => q.topics.every((t) => u.offers.includes(t)))
+    .map((user, i) => {
+      const info = matchInfo(me, user)
+      const isConnected = connected.has(user.id)
+      const score =
+        info.fit * 2.5 + // their offers meet your asks (or the reverse)
+        inCommon(me, user, s.groups).length * 1.0 + // common ground
+        trustScore(user.id, s.feedback) * 3 + // private reliability
+        mutualValue(mutualConnections(s, user).length) * 1.5 + // a few people in common
+        noveltyValue(s, user) * 1.0 + // widens your network
+        (spotsLeft(user) > 0 ? 1 : -2) + // has room for another chat
+        (4 - replyDays(user)) * 0.3 + // tends to answer
+        // what you said at sign-up: weights, never walls
+        (prefs.industries.includes(user.industry) ? 1.2 : 0) +
+        (prefs.cities.includes(user.city) ? 1.0 : 0) +
+        (prefs.levels.includes(levelOf(user)) ? 0.8 : 0) -
+        // people you already know come after new ones, unless you searched for them by name
+        (isConnected && !words.length ? 3 : 0) -
+        i * 0.01
+      return { user, info, score, connected: isConnected }
+    })
+    .sort((a, b) => b.score - a.score)
+}
+
+/**
+ * The front door: a few people who can help with one thing you are looking for,
+ * each with someone you both know where there is one.
+ */
+export function suggestFor(s: FindState, topic: string): (Found & { via?: User })[] {
+  return findPeople(s, { ...EMPTY_QUERY, topics: [topic] })
+    .filter((f) => !f.connected && spotsLeft(f.user) > 0)
+    .slice(0, 4)
+    .map((f) => ({ ...f, via: mutualConnections(s, f.user)[0] }))
+}
+
+/* ---------------- requests ---------------- */
+
+/** How many requests someone may have waiting at once, so each one is considered. */
+export const REQUEST_LIMIT = 5
+/** After this many days without an answer a request lapses and the sender is told. */
+export const REQUEST_DAYS = 10
+
+export type RequestState = Request['status'] | 'expired'
+
+export const requestState = (r: Request, now: number): RequestState =>
+  r.status === 'pending' && now - r.at > REQUEST_DAYS * DAY ? 'expired' : r.status
+
+export const daysLeft = (r: Request, now: number) => Math.max(0, Math.ceil((r.at + REQUEST_DAYS * DAY - now) / DAY))
+
+type RequestsState = Pick<KudzuState, 'requests' | 'schoolId' | 'blocked'>
+
+const inScope = (s: RequestsState, r: Request) => {
+  const other = r.fromId === 'me' ? r.toId : r.fromId
+  return inSchool(other, s.schoolId) && !s.blocked.includes(other)
+}
+
+/** Requests waiting on the user. */
+export const incomingRequests = (s: RequestsState, now: number) =>
+  s.requests.filter((r) => r.toId === 'me' && inScope(s, r) && requestState(r, now) === 'pending')
+
+/** Requests the user sent that are still waiting, or lapsed and not yet dismissed. */
+export const outgoingRequests = (s: RequestsState, now: number) =>
+  s.requests.filter((r) => r.fromId === 'me' && inScope(s, r) && ['pending', 'expired'].includes(requestState(r, now)))
+
+export const openRequestCount = (s: RequestsState, now: number) => outgoingRequests(s, now).filter((r) => requestState(r, now) === 'pending').length
+
+/** The user's live request to one person, if there is one. */
+export const requestTo = (s: RequestsState, otherId: string, now: number) =>
+  s.requests.find((r) => r.fromId === 'me' && r.toId === otherId && requestState(r, now) === 'pending')
+
+/** Whether a request can be sent to someone, and if not, why. */
+export function canRequest(s: RequestsState & Pick<KudzuState, 'connections'>, u: User, now: number): 'ok' | 'connected' | 'sent' | 'full' | 'limit' {
+  if (s.connections.some((c) => c.otherId === u.id)) return 'connected'
+  if (requestTo(s, u.id, now)) return 'sent'
+  if (spotsLeft(u) === 0) return 'full'
+  if (openRequestCount(s, now) >= REQUEST_LIMIT) return 'limit'
+  return 'ok'
+}
+
+/** Requests the user let lapse. Two in a row pauses them, so nobody else is left waiting. */
+export const lapsedIncoming = (s: RequestsState, now: number) =>
+  s.requests.filter((r) => r.toId === 'me' && inScope(s, r) && requestState(r, now) === 'expired').length
+
+export const quietPaused = (s: RequestsState & Pick<KudzuState, 'quietCleared'>, now: number) => lapsedIncoming(s, now) - s.quietCleared >= 2
+
+/** Mock: whether this person answers. In the demo, some never do, so lapsing can be shown. */
+const willAccept = (u: User) => ALWAYS_ACCEPT.includes(u.id) || hash(u.id + 'accept') % 10 < 6
+
+/** Send a request. In the demo the other person answers after a moment, or never does. */
+export function sendRequest(toId: string, topic: string | undefined, note: string, promptId?: string) {
+  const st = () => useKudzu.getState()
+  st().addRequest({ fromId: 'me', toId, topic, note: note.trim(), promptId })
+  const id = st().requests[0].id
+  const other = getUser(toId)
+  if (!other) return
+  st().say(`Request sent to ${firstName(other.name)}`)
+  if (!willAccept(other)) return
+  setTimeout(() => {
+    st().resolveRequest(id, 'accepted')
+    st().say(`${firstName(other.name)} accepted your request`)
+    replyLater(toId, 'Glad you reached out. I’d be happy to talk. Send me a couple of times that work for you.', 2200)
+  }, 2800)
+}
+
+/** Answer a request sent to the user. Each answer is one tap and never needs a reason. */
+export function answerRequest(id: string, how: 'accept' | 'later' | 'decline') {
+  const st = () => useKudzu.getState()
+  const r = st().requests.find((x) => x.id === id)
+  const other = r && getUser(r.fromId)
+  if (!r || !other) return
+  const name = firstName(other.name)
+  if (how === 'decline') {
+    st().resolveRequest(id, 'declined')
+    st().say(`${name} has been told kindly that you can’t right now`)
+    return
+  }
+  st().resolveRequest(id, 'accepted')
+  st().addMessage(other.id, {
+    from: 'me',
+    text: how === 'accept' ? `Happy to, ${name}. Let’s find a time.` : `I’d be glad to, ${name}. The next couple of weeks are full, so could we look at later this month?`,
+  })
+  st().say(`You accepted ${name}’s request`)
+  replyLater(other.id, how === 'accept' ? 'Thank you so much! I’m free most afternoons.' : 'Of course, later this month is great. Thank you!', 2000)
+}
+
+/** Demo panel: someone the user could help sends them a request. Returns their id. */
+export function receiveRequest(s: KudzuState, now: number): string | null {
+  const asked = new Set(s.requests.filter((r) => r.toId === 'me').map((r) => r.fromId))
+  const pick = findPeople(s, EMPTY_QUERY).find((f) => !f.connected && !asked.has(f.user.id) && f.info.mode !== 'learn' && !requestTo(s, f.user.id, now))
+  if (!pick) return null
+  const topic = pick.info.topics[0]
+  s.addRequest({ fromId: pick.user.id, toId: 'me', topic, note: `Hi! I saw you can help with ${topic ? topicLabel(topic).toLowerCase() : 'a few things I’m working through'}. Could I ask you a couple of questions?` })
+  s.say(`${firstName(pick.user.name)} sent you a request`)
+  return pick.user.id
 }
 
 /* ---------------- connection strength ---------------- */
@@ -398,7 +566,7 @@ export function suggestKnown(s: Pick<KudzuState, 'me' | 'schoolId' | 'blocked' |
 
 export function isForYou(e: KEvent, me: User, prefs: Prefs): boolean {
   const interests = prefs.industries.length ? prefs.industries : [me.industry]
-  return isClassEvent(e, me) || e.city === me.city ||(e.groupId ? me.groupIds.includes(e.groupId) : false) || e.industries.some((i) => interests.includes(i))
+  return isClassEvent(e, me) || e.city === me.city || prefs.cities.includes(e.city) || (e.groupId ? me.groupIds.includes(e.groupId) : false) || e.industries.some((i) => interests.includes(i))
 }
 
 export const eventGuests = (e: KEvent, me: User): User[] => [
@@ -432,12 +600,6 @@ export function sendText(otherId: string, text: string) {
   replyLater(otherId, REPLIES[Math.floor(Math.random() * REPLIES.length)], 1700 + Math.random() * 1200)
 }
 
-/** Reply to the opening comment after a match so new chats don't sit silent. */
-export function greetAfterMatch(otherId: string) {
-  const conv = useKudzu.getState().conversations.find((c) => c.otherId === otherId)
-  if (!conv || conv.messages.length === 0 || conv.messages.some((m) => m.from !== 'me')) return
-  replyLater(otherId, 'Thanks for reaching out! I’d be glad to talk about that. What made you curious?', 2600)
-}
 
 export function sendProposal(otherId: string, proposal: Proposal) {
   const st = () => useKudzu.getState()
