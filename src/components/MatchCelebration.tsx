@@ -1,15 +1,15 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { Coffee, MessageCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { useKadzu } from '../store/useKadzu'
+import { useKudzu } from '../store/useKudzu'
 import { getUser, greetAfterMatch, matchInfo } from '../services'
 import { firstName } from '../lib/util'
 import { Avatar, Button, Portal } from './ui'
 
 export default function MatchCelebration() {
-  const matchWith = useKadzu((s) => s.matchWith)
-  const me = useKadzu((s) => s.me)
-  const set = useKadzu((s) => s.set)
+  const matchWith = useKudzu((s) => s.matchWith)
+  const me = useKudzu((s) => s.me)
+  const set = useKudzu((s) => s.set)
   const nav = useNavigate()
   const other = matchWith ? getUser(matchWith) : undefined
 

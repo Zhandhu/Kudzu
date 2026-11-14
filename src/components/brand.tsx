@@ -2,12 +2,12 @@ import { useRef } from 'react'
 import { motion } from 'framer-motion'
 import type { Strength } from '../types'
 import { APP_NAME, STRENGTH_META } from '../config/brand'
-import { useKadzu } from '../store/useKadzu'
+import { useKudzu } from '../store/useKudzu'
 
 /** Wordmark with a small curling tendril. Tap three times to open the demo panel. */
 export function Logo({ size = 24, light = false }: { size?: number; light?: boolean }) {
   const taps = useRef<number[]>([])
-  const set = useKadzu((s) => s.set)
+  const set = useKudzu((s) => s.set)
   const color = light ? '#faf6ee' : '#2b502a'
   const onTap = () => {
     const t = Date.now()

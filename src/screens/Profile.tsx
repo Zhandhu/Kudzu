@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Bell, BookOpen, ChevronRight, Eye, HeartHandshake, Lock, LogOut, PauseCircle, Pencil, SlidersHorizontal } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { User } from '../types'
-import { useKadzu, useNow } from '../store/useKadzu'
+import { useKudzu, useNow } from '../store/useKudzu'
 import { accountStanding, getSchool, promptText, receivedThanks, schoolEvents } from '../services'
 import { CITIES, ago, fmtDateTime } from '../lib/util'
 import { Logo, VineDivider } from '../components/brand'
@@ -13,9 +13,9 @@ import { AsksOffersFields, BasicsFields, PromptEditor } from '../components/Prof
 import { AccountNotice } from '../components/AccountNotice'
 
 function EditSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const me = useKadzu((s) => s.me)
-  const updateMe = useKadzu((s) => s.updateMe)
-  const say = useKadzu((s) => s.say)
+  const me = useKudzu((s) => s.me)
+  const updateMe = useKudzu((s) => s.updateMe)
+  const say = useKudzu((s) => s.say)
   const [draft, setDraft] = useState<User>(me)
   const [wasOpen, setWasOpen] = useState(false)
   if (open !== wasOpen) {
@@ -48,7 +48,7 @@ function EditSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
 }
 
 export default function Profile() {
-  const s = useKadzu()
+  const s = useKudzu()
   const now = useNow()
   const me = s.me
   const [editing, setEditing] = useState(false)

@@ -64,7 +64,7 @@ interface Actions {
   say: (text: string) => void
 }
 
-export type KadzuState = Data & Actions
+export type KudzuState = Data & Actions
 
 const fresh = (): Data => {
   const now = Date.now()
@@ -115,7 +115,7 @@ function touch(connections: Connection[], otherId: string, type: InteractionType
 const mapConv = (list: Conversation[], otherId: string, fn: (c: Conversation) => Conversation) =>
   list.map((c) => (c.otherId === otherId ? fn(c) : c))
 
-export const useKadzu = create<KadzuState>()(
+export const useKudzu = create<KudzuState>()(
   persist(
     (set, get) => ({
       ...fresh(),
@@ -284,11 +284,11 @@ export const useKadzu = create<KadzuState>()(
     }),
     {
       // bump this when the saved shape changes, so old browsers start from fresh seed data
-      name: 'kadzu-demo-v2',
+      name: 'kudzu-demo-v2',
       partialize: (s) => {
         const { matchWith, checkin, toast, demoOpen, typing, ...rest } = s
         void matchWith, checkin, toast, demoOpen, typing
-        return rest as KadzuState
+        return rest as KudzuState
       },
     },
   ),
@@ -296,6 +296,6 @@ export const useKadzu = create<KadzuState>()(
 
 /** Current demo time. Re-renders whenever the demo clock is moved. */
 export function useNow(): number {
-  const off = useKadzu((s) => s.timeOffsetDays)
+  const off = useKudzu((s) => s.timeOffsetDays)
   return Date.now() + off * DAY
 }

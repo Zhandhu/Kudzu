@@ -7,12 +7,12 @@ import { MODE_META, topicLabel } from '../config/brand'
 import { USERS, USERS_BY_ID, knows } from '../data/users'
 import { SCHOOLS, PROMPTS } from '../data/schools'
 import { SEED_NUDGES } from '../data/seed'
-import { useKadzu, nowOf, type KadzuState } from '../store/useKadzu'
+import { useKudzu, nowOf, type KudzuState } from '../store/useKudzu'
 import { CITIES, DAY, firstName, hash, miles } from '../lib/util'
 
 /* ---------------- lookups ---------------- */
 
-export const getUser = (id: string): User | undefined => (id === 'me' ? useKadzu.getState().me : USERS_BY_ID[id])
+export const getUser = (id: string): User | undefined => (id === 'me' ? useKudzu.getState().me : USERS_BY_ID[id])
 export const getSchool = (id: string) => SCHOOLS.find((s) => s.id === id) ?? SCHOOLS[0]
 export const listSchools = () => SCHOOLS
 export const schoolForEmail = (email: string) => {
@@ -103,7 +103,7 @@ export function matchInfo(me: User, other: User): MatchInfo {
 
 /* ---------------- using the network you already have ---------------- */
 
-type NetworkState = Pick<KadzuState, 'connections' | 'schoolId' | 'blocked'>
+type NetworkState = Pick<KudzuState, 'connections' | 'schoolId' | 'blocked'>
 
 /** People you are connected to who also know `other`. */
 export function mutualConnections(s: NetworkState, other: User): User[] {
@@ -150,7 +150,7 @@ export function originCoords(me: User, prefs: Prefs): [number, number] {
   return prefs.travelingTo ? CITIES[prefs.travelingTo] ?? me.coords : me.coords
 }
 
-export function buildDeck(s: Pick<KadzuState, 'me' | 'prefs' | 'schoolId' | 'swiped' | 'connections' | 'blocked' | 'feedback' | 'groups'>): User[] {
+export function buildDeck(s: Pick<KudzuState, 'me' | 'prefs' | 'schoolId' | 'swiped' | 'connections' | 'blocked' | 'feedback' | 'groups'>): User[] {
   const { me, prefs } = s
   const connected = new Set(s.connections.map((c) => c.otherId))
   const origin = originCoords(me, prefs)
@@ -202,13 +202,13 @@ export function strengthOf(c: Connection, now: number): { level: Strength; days:
   return { level, days }
 }
 
-export function schoolConnections(s: Pick<KadzuState, 'connections' | 'schoolId' | 'blocked'>): Connection[] {
+export function schoolConnections(s: Pick<KudzuState, 'connections' | 'schoolId' | 'blocked'>): Connection[] {
   return s.connections.filter((c) => inSchool(c.otherId, s.schoolId) && !s.blocked.includes(c.otherId))
 }
 
 /* ---------------- nudges ---------------- */
 
-export function computeNudges(s: KadzuState, now: number): Nudge[] {
+export function computeNudges(s: KudzuState, now: number): Nudge[] {
   const conns = schoolConnections(s)
   const ids = new Set(conns.map((c) => c.otherId))
   const out: Nudge[] = SEED_NUDGES.filter((n) => n.schoolId === s.schoolId && ids.has(n.otherId))
@@ -242,7 +242,7 @@ export function computeNudges(s: KadzuState, now: number): Nudge[] {
 
 /* ---------------- events ---------------- */
 
-export function schoolEvents(s: Pick<KadzuState, 'events' | 'schoolId' | 'me'>, now: number): KEvent[] {
+export function schoolEvents(s: Pick<KudzuState, 'events' | 'schoolId' | 'me'>, now: number): KEvent[] {
   return s.events
     .filter((e) => e.schoolId === s.schoolId && e.start > now - DAY)
     .filter((e) => e.visibility === 'public' || !e.groupId || s.me.groupIds.includes(e.groupId) || e.hostId === 'me')
@@ -271,7 +271,7 @@ const REPLIES = [
 ]
 
 function replyLater(otherId: string, text: string, delay: number, after?: () => void) {
-  const st = () => useKadzu.getState()
+  const st = () => useKudzu.getState()
   setTimeout(() => st().setTyping(otherId, true), 500)
   setTimeout(() => {
     st().setTyping(otherId, false)
@@ -281,19 +281,19 @@ function replyLater(otherId: string, text: string, delay: number, after?: () => 
 }
 
 export function sendText(otherId: string, text: string) {
-  useKadzu.getState().addMessage(otherId, { from: 'me', text })
+  useKudzu.getState().addMessage(otherId, { from: 'me', text })
   replyLater(otherId, REPLIES[Math.floor(Math.random() * REPLIES.length)], 1700 + Math.random() * 1200)
 }
 
 /** Reply to the opening comment after a match so new chats don't sit silent. */
 export function greetAfterMatch(otherId: string) {
-  const conv = useKadzu.getState().conversations.find((c) => c.otherId === otherId)
+  const conv = useKudzu.getState().conversations.find((c) => c.otherId === otherId)
   if (!conv || conv.messages.length === 0 || conv.messages.some((m) => m.from !== 'me')) return
   replyLater(otherId, 'Thanks for reaching out! I’d be glad to talk about that. What made you curious?', 2600)
 }
 
 export function sendProposal(otherId: string, proposal: Proposal) {
-  const st = () => useKadzu.getState()
+  const st = () => useKudzu.getState()
   st().addMessage(otherId, { from: 'me', proposal })
   const conv = st().conversations.find((c) => c.otherId === otherId)
   const msgId = conv?.messages[conv.messages.length - 1]?.id
@@ -302,8 +302,8 @@ export function sendProposal(otherId: string, proposal: Proposal) {
 }
 
 export function acceptTheirProposal(otherId: string, msgId: string, slot: number) {
-  useKadzu.getState().acceptProposal(otherId, msgId, slot)
-  useKadzu.getState().addMessage(otherId, { from: 'me', text: 'That time works for me!' })
+  useKudzu.getState().acceptProposal(otherId, msgId, slot)
+  useKudzu.getState().addMessage(otherId, { from: 'me', text: 'That time works for me!' })
   replyLater(otherId, 'Perfect, it’s on my calendar.', 1800)
 }
 
@@ -314,7 +314,7 @@ export function acceptTheirProposal(otherId: string, msgId: string, slot: number
  * other person. The note is the only part of a check-in they ever see.
  */
 export function submitCheckin(fb: Omit<Feedback, 'at'>, msgId: string, thanks: string) {
-  const st = () => useKadzu.getState()
+  const st = () => useKudzu.getState()
   st().submitFeedback(fb, msgId)
   const note = thanks.trim()
   if (fb.met !== 'yes' || !note) return
@@ -331,7 +331,7 @@ export interface ThanksNote {
 }
 
 /** Thank-you notes the signed-in user has received, newest first. Only they can see these. */
-export function receivedThanks(s: Pick<KadzuState, 'conversations' | 'schoolId' | 'blocked'>): ThanksNote[] {
+export function receivedThanks(s: Pick<KudzuState, 'conversations' | 'schoolId' | 'blocked'>): ThanksNote[] {
   const out: ThanksNote[] = []
   for (const c of s.conversations) {
     if (!inSchool(c.otherId, s.schoolId) || s.blocked.includes(c.otherId)) continue
@@ -349,7 +349,7 @@ const SAMPLE_THANKS = [
 ]
 
 /** Demo panel: someone the user helped sends a thank-you note. Returns their id. */
-export function receiveThanks(s: KadzuState): string | null {
+export function receiveThanks(s: KudzuState): string | null {
   const thanked = new Set(receivedThanks(s).map((t) => t.from.id))
   const candidates = schoolConnections(s)
     .map((c) => getUser(c.otherId))
@@ -374,7 +374,7 @@ export const looksLikeReferralAsk = (text: string) => REFERRAL_PATTERN.test(text
 
 /** The right way round: after a chat, the person who helped offers the introduction. */
 export function offerIntroduction(otherId: string) {
-  useKadzu.getState().addMessage(otherId, {
+  useKudzu.getState().addMessage(otherId, {
     from: 'me',
     text: 'I’d be glad to introduce you to someone I know who works on this. Send me a short note about yourself and I’ll pass it along.',
   })
@@ -382,7 +382,7 @@ export function offerIntroduction(otherId: string) {
 }
 
 /** Finds a confirmed chat that has not had its check-in yet (used by the demo panel). */
-export function findCheckinTarget(s: KadzuState): { otherId: string; msgId: string } | null {
+export function findCheckinTarget(s: KudzuState): { otherId: string; msgId: string } | null {
   for (const c of s.conversations) {
     if (!inSchool(c.otherId, s.schoolId)) continue
     const m = c.messages.find((x) => x.proposal?.acceptedSlot && !x.proposal.checkedIn)
@@ -392,7 +392,7 @@ export function findCheckinTarget(s: KadzuState): { otherId: string; msgId: stri
 }
 
 /** Chats whose confirmed time has passed and still need a check-in. */
-export function dueCheckins(s: KadzuState): { otherId: string; msgId: string }[] {
+export function dueCheckins(s: KudzuState): { otherId: string; msgId: string }[] {
   const now = nowOf(s)
   const out: { otherId: string; msgId: string }[] = []
   for (const c of s.conversations) {
@@ -405,6 +405,6 @@ export function dueCheckins(s: KadzuState): { otherId: string; msgId: string }[]
 }
 
 /** The signed-in user's own standing, from feedback others have (mock) left. */
-export function accountStanding(s: KadzuState): 'good' | 'warning' {
+export function accountStanding(s: KudzuState): 'good' | 'warning' {
   return s.showWarning ? 'warning' : 'good'
 }

@@ -1,6 +1,6 @@
-# Kadzu research base
+# Kudzu research base
 
-This folder is the evidence behind Kadzu's design decisions. It exists so that when we argue about a feature, we argue from what is known, and so that we can tell which of our beliefs are tested and which are guesses.
+This folder is the evidence behind Kudzu's design decisions. It exists so that when we argue about a feature, we argue from what is known, and so that we can tell which of our beliefs are tested and which are guesses.
 
 It covers three questions:
 
@@ -64,7 +64,7 @@ Every claim in this folder carries a grade.
 Two limits apply to everything here:
 
 - **Most sources were checked through abstracts and summaries, not full texts.** Where a specific number could not be confirmed against the paper, [sources.md](sources.md) says so.
-- **Almost none of this research was done on an app like Kadzu.** The mentoring studies are mostly workplace programmes. The matching studies are mostly dating apps. The findings are the best available starting point, and each one needs testing with our own users.
+- **Almost none of this research was done on an app like Kudzu.** The mentoring studies are mostly workplace programmes. The matching studies are mostly dating apps. The findings are the best available starting point, and each one needs testing with our own users.
 
 ## How the research loop works
 

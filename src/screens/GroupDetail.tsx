@@ -1,6 +1,6 @@
 import { ChevronRight, Users } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
-import { useKadzu, useNow } from '../store/useKadzu'
+import { useKudzu, useNow } from '../store/useKudzu'
 import { groupMembers } from '../services'
 import { DAY, fmtDateTime } from '../lib/util'
 import { Avatar, BackHeader, Button } from '../components/ui'
@@ -9,10 +9,10 @@ import { roleLine } from '../components/ProfileView'
 export default function GroupDetail() {
   const { id = '' } = useParams()
   const now = useNow()
-  const g = useKadzu((s) => s.groups.find((x) => x.id === id))
-  const me = useKadzu((s) => s.me)
-  const events = useKadzu((s) => s.events)
-  const toggle = useKadzu((s) => s.toggleGroup)
+  const g = useKudzu((s) => s.groups.find((x) => x.id === id))
+  const me = useKudzu((s) => s.me)
+  const events = useKudzu((s) => s.events)
+  const toggle = useKudzu((s) => s.toggleGroup)
   if (!g) return <><BackHeader title="Group" /><p className="p-8 text-center text-sm text-ink/60">This group is no longer available.</p></>
 
   const members = groupMembers(g.id, me)

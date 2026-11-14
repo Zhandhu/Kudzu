@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { CalendarCheck, Check, ChevronLeft, Coffee, HeartHandshake, Lightbulb, MapPin, Send, UserPlus, Video } from 'lucide-react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import type { Message, Mode, User } from '../types'
-import { useKadzu, useNow } from '../store/useKadzu'
+import { useKudzu, useNow } from '../store/useKudzu'
 import { acceptTheirProposal, getUser, looksLikeReferralAsk, matchInfo, offerIntroduction, promptText, sendProposal, sendText, strengthOf } from '../services'
 import { DAY, HOUR, firstName, fmtDateTime, fmtTime, startOfDay } from '../lib/util'
 import { LeafIcon, Tendril } from '../components/brand'
@@ -20,7 +20,7 @@ function openers(mode: Mode, other: User): string[] {
 const PLACES = ['Vine & Bean Café, Midtown', 'Student Center coffee bar', 'A spot near your office', 'Video call']
 
 function ProposalCard({ m, other, now, canOfferIntro }: { m: Message; other: User; now: number; canOfferIntro: boolean }) {
-  const set = useKadzu((s) => s.set)
+  const set = useKudzu((s) => s.set)
   const p = m.proposal!
   const mine = m.from === 'me'
   const name = firstName(other.name)
@@ -119,11 +119,11 @@ export default function ChatThread() {
   const nav = useNavigate()
   const now = useNow()
   const other = getUser(id)
-  const conv = useKadzu((s) => s.conversations.find((c) => c.otherId === id))
-  const connection = useKadzu((s) => s.connections.find((c) => c.otherId === id))
-  const typing = useKadzu((s) => !!s.typing[id])
-  const me = useKadzu((s) => s.me)
-  const { ensureConversation, markRead } = useKadzu.getState()
+  const conv = useKudzu((s) => s.conversations.find((c) => c.otherId === id))
+  const connection = useKudzu((s) => s.connections.find((c) => c.otherId === id))
+  const typing = useKudzu((s) => !!s.typing[id])
+  const me = useKudzu((s) => s.me)
+  const { ensureConversation, markRead } = useKudzu.getState()
   const [text, setText] = useState(params.get('draft') ?? '')
   const [proposing, setProposing] = useState(params.get('propose') === '1')
   const endRef = useRef<HTMLDivElement>(null)

@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import type { Prefs, School, User } from '../types'
 import { TAGLINE } from '../config/brand'
 import { DEFAULT_PREFS } from '../data/seed'
-import { useKadzu } from '../store/useKadzu'
+import { useKudzu } from '../store/useKudzu'
 import { listSchools, schoolForEmail } from '../services'
 import { CITIES } from '../lib/util'
 import { Logo, Tendril } from '../components/brand'
@@ -22,9 +22,9 @@ const blank: User = {
 
 export default function Onboarding() {
   const nav = useNavigate()
-  const finishOnboarding = useKadzu((s) => s.finishOnboarding)
-  const skipOnboarding = useKadzu((s) => s.skipOnboarding)
-  const say = useKadzu((s) => s.say)
+  const finishOnboarding = useKudzu((s) => s.finishOnboarding)
+  const skipOnboarding = useKudzu((s) => s.skipOnboarding)
+  const say = useKudzu((s) => s.say)
   const [step, setStep] = useState(-1)
   const [me, setMe] = useState<User>(blank)
   const [prefs, setPrefs] = useState<Prefs>(DEFAULT_PREFS)
@@ -62,7 +62,7 @@ export default function Onboarding() {
       },
       prefs,
     )
-    say(`Welcome to ${school!.name} on Kadzu`)
+    say(`Welcome to ${school!.name} on Kudzu`)
     nav('/meet')
   }
 
@@ -202,7 +202,7 @@ export default function Onboarding() {
           <div className="flex flex-col items-center py-4 text-center">
             <Tendril animate />
             <p className="mt-3 font-display text-lg font-semibold">Request received</p>
-            <p className="mt-1 text-sm text-ink/60">We’ll email you when {requested} joins Kadzu. Schools open once enough students and alumni ask.</p>
+            <p className="mt-1 text-sm text-ink/60">We’ll email you when {requested} joins Kudzu. Schools open once enough students and alumni ask.</p>
             <Button className="mt-5" onClick={() => { setRequesting(false); setRequested('') }}>Got it</Button>
           </div>
         ) : (

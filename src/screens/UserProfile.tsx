@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Coffee, MessageCircle } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { useKadzu } from '../store/useKadzu'
+import { useKudzu } from '../store/useKudzu'
 import { getUser, promptText } from '../services'
 import { firstName } from '../lib/util'
 import { BackHeader, Button, Sheet, inputCls } from '../components/ui'
@@ -12,10 +12,10 @@ export default function UserProfile() {
   const { id = '' } = useParams()
   const nav = useNavigate()
   const user = getUser(id)
-  const connected = useKadzu((s) => s.connections.some((c) => c.otherId === id))
-  const liked = useKadzu((s) => s.swiped[id] === 'like')
-  const swipe = useKadzu((s) => s.swipe)
-  const say = useKadzu((s) => s.say)
+  const connected = useKudzu((s) => s.connections.some((c) => c.otherId === id))
+  const liked = useKudzu((s) => s.swiped[id] === 'like')
+  const swipe = useKudzu((s) => s.swipe)
+  const say = useKudzu((s) => s.say)
   const [liking, setLiking] = useState<string | null>(null)
   const [comment, setComment] = useState('')
   if (!user) return <><BackHeader title="Profile" /><p className="p-8 text-center text-sm text-ink/60">This profile is no longer available.</p></>

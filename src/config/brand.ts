@@ -1,7 +1,7 @@
 import type { Mode, Strength } from '../types'
 
 /** Change the product name here and it changes everywhere. */
-export const APP_NAME = 'Kadzu'
+export const APP_NAME = 'Kudzu'
 export const TAGLINE = 'Coffee chats, matched.'
 
 /**

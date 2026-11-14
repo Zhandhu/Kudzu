@@ -2,7 +2,7 @@ import { CalendarDays, Coffee, Handshake, MessageCircle, StickyNote, UserRound }
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import type { InteractionType } from '../types'
 import { STRENGTH_META } from '../config/brand'
-import { useKadzu, useNow } from '../store/useKadzu'
+import { useKudzu, useNow } from '../store/useKudzu'
 import { getUser, matchInfo, strengthOf } from '../services'
 import { ago, firstName, fmtDate } from '../lib/util'
 import { LeafIcon, StrengthBadge } from '../components/brand'
@@ -10,7 +10,7 @@ import { Avatar, BackHeader, inputCls } from '../components/ui'
 import { ModeTag, MoreMenu, roleLine } from '../components/ProfileView'
 
 const KIND: Record<InteractionType, { label: string; icon: typeof Coffee }> = {
-  matched: { label: 'Matched on Kadzu', icon: Handshake },
+  matched: { label: 'Matched on Kudzu', icon: Handshake },
   messaged: { label: 'Exchanged messages', icon: MessageCircle },
   coffee: { label: 'Had a coffee chat', icon: Coffee },
   event: { label: 'Attended an event together', icon: CalendarDays },
@@ -21,9 +21,9 @@ export default function ConnectionDetail() {
   const nav = useNavigate()
   const now = useNow()
   const user = getUser(id)
-  const conn = useKadzu((s) => s.connections.find((c) => c.otherId === id))
-  const setNote = useKadzu((s) => s.setNote)
-  const me = useKadzu((s) => s.me)
+  const conn = useKudzu((s) => s.connections.find((c) => c.otherId === id))
+  const setNote = useKudzu((s) => s.setNote)
+  const me = useKudzu((s) => s.me)
   if (!user || !conn) return <><BackHeader title="Connection" /><p className="p-8 text-center text-sm text-ink/60">You’re not connected with this person yet.</p></>
 
   const st = strengthOf(conn, now)

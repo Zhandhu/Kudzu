@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { CalendarDays, Lock, MapPin, Plus, Users, Video } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import type { EventType, Group, KEvent } from '../types'
-import { useKadzu, useNow } from '../store/useKadzu'
+import { useKudzu, useNow } from '../store/useKudzu'
 import { eventGuests, getUser, groupMembers, isForYou, schoolEvents } from '../services'
 import { CITIES, CITY_NAMES, DAY, coordsFor, fmtDateTime, uid } from '../lib/util'
 import { Avatar, Button, Chip, EmptyState, Field, SchoolChip, Sheet, Toggle, inputCls } from '../components/ui'
@@ -32,7 +32,7 @@ export function EventCover({ e, tall = false }: { e: KEvent; tall?: boolean }) {
 }
 
 function EventCard({ e }: { e: KEvent }) {
-  const me = useKadzu((s) => s.me)
+  const me = useKudzu((s) => s.me)
   const guests = eventGuests(e, me)
   const host = getUser(e.hostId)
   return (
@@ -55,7 +55,7 @@ function EventCard({ e }: { e: KEvent }) {
 }
 
 function HostSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const s = useKadzu()
+  const s = useKudzu()
   const now = useNow()
   const nav = useNavigate()
   const myGroups = s.groups.filter((g) => g.schoolId === s.schoolId && s.me.groupIds.includes(g.id))
@@ -116,8 +116,8 @@ function HostSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
 }
 
 export function GroupCard({ g }: { g: Group }) {
-  const me = useKadzu((s) => s.me)
-  const toggle = useKadzu((s) => s.toggleGroup)
+  const me = useKudzu((s) => s.me)
+  const toggle = useKudzu((s) => s.toggleGroup)
   const members = groupMembers(g.id, me)
   const joined = me.groupIds.includes(g.id)
   return (
@@ -135,7 +135,7 @@ export function GroupCard({ g }: { g: Group }) {
 }
 
 function CreateGroupSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const s = useKadzu()
+  const s = useKudzu()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   return (
@@ -162,7 +162,7 @@ function CreateGroupSheet({ open, onClose }: { open: boolean; onClose: () => voi
 const FILTERS = ['Networking', 'Social', 'Industry', 'Virtual', 'This week'] as const
 
 export default function Events() {
-  const s = useKadzu()
+  const s = useKudzu()
   const now = useNow()
   const [tab, setTab] = useState<'foryou' | 'all' | 'groups'>('foryou')
   const [active, setActive] = useState<string[]>([])

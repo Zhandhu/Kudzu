@@ -2,7 +2,7 @@ import L from 'leaflet'
 import { MapContainer, Marker, TileLayer } from 'react-leaflet'
 import { CalendarDays, Check, ChevronRight, MapPin, Star, Users, Video } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
-import { useKadzu } from '../store/useKadzu'
+import { useKudzu } from '../store/useKudzu'
 import { eventGuests, getUser } from '../services'
 import { fmtDateTime } from '../lib/util'
 import { Avatar, BackHeader } from '../components/ui'
@@ -19,11 +19,11 @@ const pin = L.divIcon({
 
 export default function EventDetail() {
   const { id = '' } = useParams()
-  const e = useKadzu((s) => s.events.find((x) => x.id === id))
-  const me = useKadzu((s) => s.me)
-  const groups = useKadzu((s) => s.groups)
-  const rsvp = useKadzu((s) => s.rsvp)
-  const say = useKadzu((s) => s.say)
+  const e = useKudzu((s) => s.events.find((x) => x.id === id))
+  const me = useKudzu((s) => s.me)
+  const groups = useKudzu((s) => s.groups)
+  const rsvp = useKudzu((s) => s.rsvp)
+  const say = useKudzu((s) => s.say)
   if (!e) return <><BackHeader title="Event" /><p className="p-8 text-center text-sm text-ink/60">This event is no longer available.</p></>
 
   const guests = eventGuests(e, me)

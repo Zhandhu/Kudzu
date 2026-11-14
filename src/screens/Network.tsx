@@ -4,7 +4,7 @@ import { Coffee, List, Map as MapIcon, MessageCircle, Search, X } from 'lucide-r
 import { Link, useNavigate } from 'react-router-dom'
 import type { Mode, Nudge, Strength } from '../types'
 import { MODES, MODE_META, STRENGTH_META, STRENGTH_ORDER } from '../config/brand'
-import { useKadzu, useNow } from '../store/useKadzu'
+import { useKudzu, useNow } from '../store/useKudzu'
 import { computeNudges, getUser, matchInfo, schoolConnections, strengthOf } from '../services'
 import { LeafIcon } from '../components/brand'
 import { Avatar, Chip, EmptyState, SchoolChip, inputCls } from '../components/ui'
@@ -13,7 +13,7 @@ import NetworkMap, { type MapPerson } from '../components/NetworkMap'
 
 function NudgeCard({ n }: { n: Nudge }) {
   const nav = useNavigate()
-  const dismiss = useKadzu((s) => s.dismissNudge)
+  const dismiss = useKudzu((s) => s.dismissNudge)
   const u = getUser(n.otherId)
   if (!u) return null
   const go = () => {
@@ -38,7 +38,7 @@ function NudgeCard({ n }: { n: Nudge }) {
 }
 
 export default function Network() {
-  const s = useKadzu()
+  const s = useKudzu()
   const now = useNow()
   const [view, setView] = useState<'list' | 'map'>('list')
   const [q, setQ] = useState('')

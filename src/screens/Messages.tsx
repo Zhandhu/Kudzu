@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { ClipboardCheck, Coffee } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { Conversation } from '../types'
-import { useKadzu, useNow } from '../store/useKadzu'
+import { useKudzu, useNow } from '../store/useKudzu'
 import { dueCheckins, getUser, inSchool } from '../services'
 import { ago, firstName } from '../lib/util'
 import { Avatar, EmptyState, SchoolChip } from '../components/ui'
@@ -17,7 +17,7 @@ function preview(c: Conversation): string {
 }
 
 export default function Messages() {
-  const s = useKadzu()
+  const s = useKudzu()
   const now = useNow()
   const convs = useMemo(
     () => s.conversations.filter((c) => inSchool(c.otherId, s.schoolId) && !s.blocked.includes(c.otherId)),

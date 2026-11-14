@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { AnimatePresence, motion, useMotionValue, useTransform } from 'framer-motion'
 import { Coffee, SlidersHorizontal, Users, X } from 'lucide-react'
 import type { User } from '../types'
-import { useKadzu } from '../store/useKadzu'
+import { useKudzu } from '../store/useKudzu'
 import { accountStanding, buildDeck, promptText } from '../services'
 import { firstName } from '../lib/util'
 import { Logo } from '../components/brand'
@@ -45,7 +45,7 @@ function SwipeCard({ user, onSwipe, onLikePrompt }: { user: User; onSwipe: (d: D
 
 /** One mocked example of a group chat: you and a friend with two alumni. */
 function BringFriendCard({ alums, onDone }: { alums: User[]; onDone: (requested: boolean) => void }) {
-  const me = useKadzu((s) => s.me)
+  const me = useKudzu((s) => s.me)
   const friend = { id: 'friend', name: 'Avery Brooks' }
   return (
     <div className="absolute inset-0 flex flex-col overflow-hidden rounded-3xl bg-vine-700 p-6 text-cream shadow-card">
@@ -84,7 +84,7 @@ function BringFriendCard({ alums, onDone }: { alums: User[]; onDone: (requested:
 }
 
 export default function Meet() {
-  const s = useKadzu()
+  const s = useKudzu()
   const [dir, setDir] = useState<Dir>('like')
   const [filters, setFilters] = useState(false)
   const [liking, setLiking] = useState<string | null>(null)

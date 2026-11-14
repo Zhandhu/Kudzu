@@ -11,7 +11,7 @@ Grades in brackets are explained in the [README](README.md#how-strong-is-the-evi
 - **Few students get this at all.** In a national survey of graduates, only about 22% strongly agreed they had a mentor who encouraged their goals. Graduates who strongly agreed with three items together (a professor who cared, one who made them excited to learn, and a mentor who encouraged them) had roughly double the odds of being engaged at work. That figure is for the three combined, not for mentoring alone. **[C]** (Gallup-Purdue Index, 2014)
 - **Access is uneven.** First-generation graduates who had a mentor were less likely to name a professor (61%, against 72% of white graduates), which suggests they depend more on other routes. **[C]** (Strada-Gallup, 2018)
 
-**What this means for Kadzu.** A small average effect means most of the value sits in the minority of relationships that go well. Counting matches rewards the wrong thing. The measure that matters is a conversation both people would call worthwhile. It also means the app should let people say which kind of support they want, because "career advice" and "someone who has been where I am" are different requests.
+**What this means for Kudzu.** A small average effect means most of the value sits in the minority of relationships that go well. Counting matches rewards the wrong thing. The measure that matters is a conversation both people would call worthwhile. It also means the app should let people say which kind of support they want, because "career advice" and "someone who has been where I am" are different requests.
 
 ## 2. What makes a pairing work
 
@@ -19,7 +19,7 @@ Grades in brackets are explained in the [README](README.md#how-strong-is-the-evi
 - **Having a say matters.** In formal programmes, people who felt they had input into their match, and who rated their training highly, reported better relationships. Mentors also reported better relationships when the pair met regularly and set goals. **[B]** (Allen, Eby and Lentz, 2006)
 - **People need several developers, not one mentor.** The developmental-network view treats a career as supported by a set of relationships that vary in strength and diversity. **[B]** (Higgins and Kram, 2001)
 
-**What this means for Kadzu.**
+**What this means for Kudzu.**
 
 - **Prompts are our similarity engine.** A prompt answer is the only place on a profile where values show. That argues for prompts that surface how someone thinks about work ("My unpopular career opinion…") over ones that are only charming ("My coffee order says…"), and for using prompt answers in matching, which we do not do today.
 - **Swiping is the "say" in the match.** The Hinge-style model gets this right by construction.
@@ -49,7 +49,7 @@ Grades in brackets are explained in the [README](README.md#how-strong-is-the-evi
 - **People underestimate how much being contacted is appreciated.** This held across studies with more than 5,900 participants, and the gap was largest when the contact was unexpected or the tie was weak. One study has been independently replicated. **[A]** (Liu et al., 2022)
 - **People expect deep conversations with strangers to be awkward, and they are wrong.** Deep conversations went better than expected, and telling people their expectations were miscalibrated led them to choose deeper topics. **[A]** (Kardas, Kumar and Epley, 2021)
 
-**What this means for Kadzu.** A student's main obstacle is believing they are imposing. Three parts of the prototype already work against that, and should be kept:
+**What this means for Kudzu.** A student's main obstacle is believing they are imposing. Three parts of the prototype already work against that, and should be kept:
 
 - **"Open to N chats per month"** is a standing invitation. It turns "may I bother you?" into "you asked for this."
 - **Liking a prompt** gives the student something specific to say, which removes the blank-message problem.

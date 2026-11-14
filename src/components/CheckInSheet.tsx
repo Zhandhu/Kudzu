@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { HeartHandshake, Lock, ThumbsDown, ThumbsUp } from 'lucide-react'
 import type { Feedback } from '../types'
 import { FEEDBACK_TAGS } from '../config/brand'
-import { useKadzu } from '../store/useKadzu'
+import { useKudzu } from '../store/useKudzu'
 import { getUser, submitCheckin } from '../services'
 
 const STARTERS = [
@@ -14,8 +14,8 @@ import { Avatar, Button, Chip, Sheet, inputCls } from './ui'
 
 /** Private post-chat check-in. Answers are never shown on anyone's profile. */
 export default function CheckInSheet() {
-  const checkin = useKadzu((s) => s.checkin)
-  const set = useKadzu((s) => s.set)
+  const checkin = useKudzu((s) => s.checkin)
+  const set = useKudzu((s) => s.set)
   const other = checkin ? getUser(checkin.otherId) : undefined
   const [met, setMet] = useState<Feedback['met'] | null>(null)
   const [rating, setRating] = useState<'up' | 'down' | undefined>()

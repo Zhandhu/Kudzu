@@ -5,7 +5,7 @@ import { ChevronLeft, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import type { User } from '../types'
 import { avatarGradient, initials } from '../lib/util'
-import { useKadzu } from '../store/useKadzu'
+import { useKudzu } from '../store/useKudzu'
 import { getSchool } from '../services'
 import { Tendril } from './brand'
 
@@ -148,7 +148,7 @@ export function BackHeader({ title, right }: { title?: string; right?: ReactNode
 }
 
 export function SchoolChip() {
-  const schoolId = useKadzu((s) => s.schoolId)
+  const schoolId = useKudzu((s) => s.schoolId)
   const school = getSchool(schoolId)
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full border border-sage-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-ink/70">
@@ -171,8 +171,8 @@ export const inputCls =
   'w-full rounded-xl border border-sage-200 bg-white px-3.5 py-2.5 text-sm outline-none placeholder:text-ink/35 focus:border-vine-500'
 
 export function Toast() {
-  const toast = useKadzu((s) => s.toast)
-  const set = useKadzu((s) => s.set)
+  const toast = useKudzu((s) => s.toast)
+  const set = useKudzu((s) => s.set)
   useEffect(() => {
     if (!toast) return
     const t = setTimeout(() => set({ toast: null }), 2600)

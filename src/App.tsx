@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { CalendarDays, Coffee, MessageCircle, Sprout, UserRound, Wrench } from 'lucide-react'
-import { useKadzu } from './store/useKadzu'
+import { useKudzu } from './store/useKudzu'
 import { OverlayContext, Toast } from './components/ui'
 import { APP_NAME, TAGLINE } from './config/brand'
 import { inSchool } from './services'
@@ -30,7 +30,7 @@ const TABS = [
 ]
 
 function TabBar() {
-  const unread = useKadzu((s) => s.conversations.filter((c) => c.unread && inSchool(c.otherId, s.schoolId) && !s.blocked.includes(c.otherId)).length)
+  const unread = useKudzu((s) => s.conversations.filter((c) => c.unread && inSchool(c.otherId, s.schoolId) && !s.blocked.includes(c.otherId)).length)
   return (
     <nav className="flex shrink-0 border-t border-sage-200 bg-cream pb-[max(env(safe-area-inset-bottom),6px)] pt-1.5">
       {TABS.map(({ to, label, icon: Icon }) => (
@@ -51,8 +51,8 @@ function TabBar() {
 }
 
 export default function App() {
-  const onboarded = useKadzu((s) => s.onboarded)
-  const set = useKadzu((s) => s.set)
+  const onboarded = useKudzu((s) => s.onboarded)
+  const set = useKudzu((s) => s.set)
   const [overlay, setOverlay] = useState<HTMLElement | null>(null)
   const { pathname } = useLocation()
   const showTabs = onboarded && TABS.some((t) => pathname === t.to)

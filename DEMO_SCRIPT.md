@@ -1,11 +1,11 @@
-# Kadzu demo script
+# Kudzu demo script
 
 A five-minute walkthrough that shows every feature in order.
 
 **Before you start**
 
 1. Run `npm run dev` and open the app on a laptop, so it shows inside the phone frame.
-2. Open the demo controls (wrench button, or tap the Kadzu logo three times) and choose **Reset all demo data**.
+2. Open the demo controls (wrench button, or tap the Kudzu logo three times) and choose **Reset all demo data**.
 3. You should be on the welcome screen.
 
 The demo controls are referred to below as **Demo**.
@@ -14,7 +14,7 @@ The demo controls are referred to below as **Demo**.
 
 ## 0:00 Onboarding (40 seconds)
 
-"Kadzu matches students and alumni of the same school for coffee chats."
+"Kudzu matches students and alumni of the same school for coffee chats."
 
 1. Tap **Verify with your .edu email**.
 2. Type `riley@gatech.edu`. Point out that Georgia Tech is detected and selected from the email domain. Mention the other schools in the list, the alum verification path, and **My school isn't here yet**.
@@ -73,7 +73,7 @@ The demo controls are referred to below as **Demo**.
 1. **Demo → Switch school → Emory.** Flip through Meet, Events and Network. Everything is now Emory.
 2. **Demo → Switch user** to show the alum view.
 
-"Kadzu works for any school. Schools are data, not code."
+"Kudzu works for any school. Schools are data, not code."
 
 ---
 

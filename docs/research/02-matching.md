@@ -291,7 +291,7 @@ Most of the matching evidence in this file comes from dating apps, because that 
 
 These three differences are our reasoning. No study compares the two settings directly. **[H]**
 
-| | Dating | Kadzu |
+| | Dating | Kudzu |
 | --- | --- | --- |
 | **What makes a match** | Mutual attraction, largely similarity | Complementarity: one person's need meets another's offer |
 | **How many** | One partner, after which both leave | Many relationships, and both stay |

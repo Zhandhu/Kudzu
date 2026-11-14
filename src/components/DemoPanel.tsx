@@ -1,12 +1,12 @@
 import { AlertTriangle, ClipboardCheck, FastForward, GraduationCap, Heart, HeartHandshake, RotateCcw, UserRoundCog } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { useKadzu } from '../store/useKadzu'
+import { useKudzu } from '../store/useKudzu'
 import { buildDeck, findCheckinTarget, listSchools, receiveThanks } from '../services'
 import { Chip, Sheet, Toggle } from './ui'
 
 /** Presenter controls. Open by tapping the logo three times or the wrench button. */
 export default function DemoPanel() {
-  const s = useKadzu()
+  const s = useKudzu()
   const nav = useNavigate()
   const close = () => s.set({ demoOpen: false })
 

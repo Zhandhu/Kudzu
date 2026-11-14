@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { ArrowLeftRight, Briefcase, Compass, Flag, GraduationCap, HandHeart, Heart, MapPin, MoreHorizontal, ShieldOff, Sparkles, Sprout, Users } from 'lucide-react'
 import type { Mode, User } from '../types'
 import { MODE_META, topicLabel } from '../config/brand'
-import { useKadzu } from '../store/useKadzu'
+import { useKudzu } from '../store/useKudzu'
 import { distanceLabel, inCommon, matchInfo, mutualConnections, networkGap, promptText, spotsLeft } from '../services'
 import { avatarGradient, firstName, initials } from '../lib/util'
 import { Avatar, Chip, Sheet } from './ui'
@@ -13,7 +13,7 @@ const REPORT_REASONS = ['Only wanted a referral or a job', 'Soliciting or spam',
 export function MoreMenu({ user, light = false, onBlocked }: { user: User; light?: boolean; onBlocked?: () => void }) {
   const [open, setOpen] = useState(false)
   const [reporting, setReporting] = useState(false)
-  const { block, report } = useKadzu.getState()
+  const { block, report } = useKudzu.getState()
   const name = firstName(user.name)
   const close = () => { setOpen(false); setReporting(false) }
   return (
@@ -92,16 +92,16 @@ export function roleLine(u: User) {
 
 /** Full profile body. Used in the swipe card, the profile page and guest lists. */
 export function ProfileView({ user, onLikePrompt, showMenu = true, onBlocked }: { user: User; onLikePrompt?: (promptId: string) => void; showMenu?: boolean; onBlocked?: () => void }) {
-  const me = useKadzu((s) => s.me)
-  const prefs = useKadzu((s) => s.prefs)
-  const groups = useKadzu((s) => s.groups)
+  const me = useKudzu((s) => s.me)
+  const prefs = useKudzu((s) => s.prefs)
+  const groups = useKudzu((s) => s.groups)
   const isMe = user.id === 'me'
   const common = isMe ? [] : inCommon(me, user, groups)
   const info = isMe ? null : matchInfo(me, user)
   const spots = spotsLeft(user)
-  const connections = useKadzu((s) => s.connections)
-  const schoolId = useKadzu((s) => s.schoolId)
-  const blocked = useKadzu((s) => s.blocked)
+  const connections = useKudzu((s) => s.connections)
+  const schoolId = useKudzu((s) => s.schoolId)
+  const blocked = useKudzu((s) => s.blocked)
   const net = { connections, schoolId, blocked }
   const mutuals = isMe ? [] : mutualConnections(net, user)
   const gap = isMe || connections.some((c) => c.otherId === user.id) ? null : networkGap(net, user)
