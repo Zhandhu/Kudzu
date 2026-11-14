@@ -39,6 +39,8 @@ function NudgeCard({ n }: { n: Nudge }) {
 }
 
 type Person = MapPerson & { rhythmDays?: number }
+/** The keep-in-touch app has no search of the school, so links to it are left out. */
+const simpleApp = () => useKudzu.getState().experience === 'simple'
 
 /** One of the automatic slices of your school: your class, or your city. */
 function CohortCard({ to, icon: Icon, title, people, connected }: { to: string; icon: typeof MapPin; title: string; people: User[]; connected: Set<string> }) {
@@ -116,7 +118,7 @@ export default function Network() {
     <div className="relative flex h-full flex-col">
       <header className="px-4 pb-2 pt-4">
         <div className="flex items-center justify-between">
-          <h1 className="font-display text-2xl font-semibold">Network</h1>
+          <h1 className="font-display text-2xl font-semibold">{simpleApp() ? 'Your map' : 'Network'}</h1>
           <div className="flex items-center gap-2">
             <SchoolChip />
             <div className="flex rounded-full bg-sage-100 p-0.5">
@@ -139,7 +141,7 @@ export default function Network() {
         <EmptyState title="Your network starts here" body="Add the people you already know, and meet new ones. Each connection grows the more you keep in touch.">
           <div className="flex flex-col gap-2">
             <Link to="/known" className="inline-flex justify-center rounded-full bg-vine-700 px-5 py-3 text-sm font-semibold text-cream">Add people you know</Link>
-            <Link to="/find" className="inline-flex justify-center rounded-full border border-sage-200 bg-white px-5 py-3 text-sm font-semibold text-vine-800">Find new people</Link>
+            <Link to="/find" className={simpleApp() ? "hidden" : "inline-flex justify-center rounded-full border border-sage-200 bg-white px-5 py-3 text-sm font-semibold text-vine-800"}>Find new people</Link>
           </div>
         </EmptyState>
       ) : view === 'map' ? (
@@ -223,7 +225,7 @@ export default function Network() {
           </span>
           <ChevronRight size={18} className="text-ink/30" />
         </Link>
-        <Link to="/find" className="mt-2 flex items-center gap-3 rounded-2xl border border-sage-200 bg-white px-3.5 py-3">
+        <Link to="/find" className={simpleApp() ? "hidden" : "mt-2 flex items-center gap-3 rounded-2xl border border-sage-200 bg-white px-3.5 py-3"}>
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-coffee-100 text-coffee-600"><Search size={17} /></span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold">Find someone new</span>

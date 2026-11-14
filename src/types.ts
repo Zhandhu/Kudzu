@@ -28,6 +28,8 @@ export interface Degree {
   level: string
   major: string
   gradYear: number
+  /** Confirmed by a school email, or waiting on the alumni office. Unset means confirmed at sign-up. */
+  verified?: 'verified' | 'pending'
 }
 
 /** One stop on a career path, oldest first. */

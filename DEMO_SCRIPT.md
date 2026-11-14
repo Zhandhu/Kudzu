@@ -16,12 +16,12 @@ The demo controls are referred to below as **Demo**.
 
 "Kudzu connects students and alumni of the same school, and helps them stay connected."
 
-1. Tap **Verify with your .edu email**. Sign-up is **one menu**, not a queue of screens. Three sections are needed. The rest are optional. Each row has a box that fills in when it is done.
+1. Tap **Verify with your .edu email**. The first page asks **what brings you to Kudzu**: **Grow my network**, or **Keep in touch**, a simpler app for people who only want to stay close to the people they know. Pick **Grow my network** and tap **Continue**. Sign-up is **one menu**, not a queue of screens. Three sections are needed. The rest are optional. Each row has a box that fills in when it is done.
 2. Open **You and your school**. Type a name, then `riley@gatech.edu`. Georgia Tech is detected and selected from the email domain. Tap a second school to show that someone with **two degrees** joins both networks and picks one as their **default**. Mention the alum verification path and **My school isn't here yet**. Tap **Done**: the box fills in.
 3. Open **Your current career** and type a role. That is the one part that is needed. Show **Add an earlier role** and the **I changed careers** flag.
 4. Open **People you already know**. Search by name or **@username**, tap someone, and add a **phone number** to invite a friend who isn't on Kudzu. Nobody starts with an empty network.
-5. Point to the optional rows: **what you're here for** (nobody picks "mentor" or "mentee": the app works that out), **fields you're interested in**, which decide who is shown first and never hide anyone, **hobbies, clubs and affiliations**, and **prompts**. Point to the choice at the bottom: **Grow my network**, or **Keep in touch**, a simple app for people who only want to stay in touch and perhaps help someone.
-6. Tap **Skip** (top right) to load the prefilled demo user, Riley, a third-year Industrial Engineering student.
+5. Point to the optional rows: **what you're here for** (nobody picks "mentor" or "mentee": the app works that out), **fields you're interested in**, which decide who is shown first and never hide anyone, **hobbies, clubs and affiliations**, and **prompts**.
+6. Tap **Skip** (top right) to load the prefilled demo user, Riley, a third-year Industrial Engineering student. (Fastest route for a demo: on the first page, pick an app and tap **Skip the rest**.)
 
 ## 0:40 Find (70 seconds)
 
@@ -78,7 +78,7 @@ The demo controls are referred to below as **Demo**.
 
 ## Closing: any school (10 seconds)
 
-1. Tap the **GT** chip at the top of any tab. It lists Riley's school networks and marks the default. Tap **Add another school** to show how a second degree is added, then swap into it.
+1. Tap the **GT** chip at the top of any tab. It lists Riley's school networks and marks the default. Tap **Add another school**, pick one, and fill in the degree. Without that school’s email the degree is marked pending while it is confirmed. Then swap into it.
 2. **Demo → Switch school → Emory.** Flip through Find, Events and Network. Everything is now Emory.
 3. **Demo → Switch user** to show the alum view. Morgan’s profile shows a career path and the **Changed careers** flag.
 
@@ -88,7 +88,7 @@ The demo controls are referred to below as **Demo**.
 
 ## If something goes wrong
 
-- **Stuck or cluttered state:** Demo → **Reset all demo data**, then **Skip onboarding (demo)**.
+- **Stuck or cluttered state:** Demo → **Reset all demo data**, then **Skip onboarding (demo)**, pick an app, and **Skip the rest**.
 - **Find shows nobody:** tap **Clear all**, or remove a filter.
 - **Map is grey:** map tiles need an internet connection. The pins and vines still draw without them.
 - **No confirmed chat for the check-in:** propose a coffee chat in any conversation first. It is accepted automatically.

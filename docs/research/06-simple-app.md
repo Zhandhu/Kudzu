@@ -9,7 +9,7 @@ People who already have a network and are not trying to grow it. Many are older 
 1. To keep in touch with the people they know.
 2. Sometimes, to help a student or a recent graduate.
 
-They do not want to search a school, browse events, or read a map. The full app asks "who do you want to meet?" The simple app asks "who have you not talked to in a while?"
+They do not want to search a school or browse events. They do want the map: seeing where their people are is part of keeping up with them. The full app asks "who do you want to meet?" The simple app asks "who have you not talked to in a while?"
 
 This replaces the earlier idea of "simple" as the same Find page drawn as a list. That changed how results looked, not what the app was for.
 
@@ -18,9 +18,9 @@ This replaces the earlier idea of "simple" as the same Find page drawn as a list
 | Piece | State |
 | --- | --- |
 | A setting, `experience`, with two values: `full` and `simple` | Built. Saved with the rest of the demo data |
-| Choosing it at sign-up ("Grow my network" or "Keep in touch") | Built |
+| Choosing it at sign-up | Built. It is the first page after the welcome screen, on its own, with nothing pre-selected. A demo can pick one there and skip the rest: the full app loads the student, the simple app loads the alum |
 | Changing it later, under Profile, Settings | Built |
-| Three tabs instead of five: Home, Messages, Profile | Built. Find, Events and Network lead to Home |
+| Four tabs instead of five: Home, Map, Messages, Profile | Built. Find and Events lead to Home |
 | The Home screen | Built as a first version, below |
 | A switch for "show people I could help" | Built. On Home and in settings. Off shows nobody |
 
@@ -42,7 +42,7 @@ Tapping a person in "Your people" opens their page, with notes, history and the 
 | --- | --- |
 | Searching the school | They are not looking for new people |
 | Events and groups | Not what they came for |
-| The map and vines | A list in order of who to write to does the same job with less to learn |
+| Events and groups on the profile | Same reason |
 | Matching preferences | Nothing is being matched |
 
 Nothing is deleted. Switching back to the full app brings all of it back, with the same people and messages.

@@ -1,9 +1,10 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronDown, ChevronLeft, X } from 'lucide-react'
+import { Check, ChevronDown, ChevronLeft, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import type { User } from '../types'
+import type { School, User } from '../types'
+import { DEGREE_LEVELS } from '../config/brand'
 import { avatarGradient, initials } from '../lib/util'
 import { useKudzu } from '../store/useKudzu'
 import { getSchool, listSchools } from '../services'
@@ -160,7 +161,11 @@ export function SchoolChip() {
   const [adding, setAdding] = useState(false)
   const school = getSchool(schoolId)
   const others = listSchools().filter((sc) => !me.schoolIds.includes(sc.id))
-  const close = () => { setOpen(false); setAdding(false) }
+  // the school being added, and the degree being entered for it
+  const [pick, setPick] = useState<School | null>(null)
+  const [form, setForm] = useState({ level: 'Master’s', major: '', year: 2020, email: '', sure: false })
+  const emailOk = !!pick && pick.domains.some((d) => form.email.trim().toLowerCase().endsWith('@' + d))
+  const close = () => { setOpen(false); setAdding(false); setPick(null) }
   return (
     <>
       <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 rounded-full border border-sage-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-ink/70" aria-label={`${school.shortName}. Your school networks`}>
@@ -168,12 +173,50 @@ export function SchoolChip() {
         {school.shortName}
         <ChevronDown size={12} className="text-ink/40" />
       </button>
-      <Sheet open={open} onClose={close} title={adding ? 'Add a school' : 'Your school networks'}>
-        {adding ? (
+      <Sheet open={open} onClose={close} title={pick ? `Your degree at ${pick.shortName}` : adding ? 'Add a school' : 'Your school networks'}>
+        {pick ? (
+          // A school is only added with a degree behind it, and with a way to confirm that degree.
+          <div className="space-y-4">
+            <p className="text-sm text-ink/60">Tell us what you studied at {pick.name}. A school’s network is for its own students and alumni, so we confirm each degree.</p>
+            <div className="grid grid-cols-[1fr_1.4fr] gap-2">
+              <Field label="Degree"><select className={inputCls} value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })}>{DEGREE_LEVELS.map((l) => <option key={l}>{l}</option>)}</select></Field>
+              <Field label="Major or programme"><input className={inputCls} value={form.major} onChange={(e) => setForm({ ...form, major: e.target.value })} placeholder="What you studied" /></Field>
+            </div>
+            <div>
+              <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-ink/50">Class of</span>
+              <div className="flex items-center gap-3">
+                <button onClick={() => setForm({ ...form, year: Math.max(1970, form.year - 1) })} className="h-10 w-10 rounded-full bg-sage-100 text-xl font-semibold text-vine-700" aria-label="Earlier year">−</button>
+                <span className="w-16 text-center font-display text-2xl font-semibold">{form.year}</span>
+                <button onClick={() => setForm({ ...form, year: Math.min(2032, form.year + 1) })} className="h-10 w-10 rounded-full bg-sage-100 text-xl font-semibold text-vine-700" aria-label="Later year">+</button>
+              </div>
+            </div>
+            <Field label={`Your ${pick.shortName} email (optional)`}>
+              <input type="email" className={inputCls} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder={`you@${pick.domains[0]}`} />
+            </Field>
+            <p className={`rounded-xl px-3.5 py-2.5 text-[12.5px] leading-snug ${emailOk ? 'bg-vine-100 text-vine-800' : 'bg-amber-50 text-amber-900'}`}>
+              {emailOk
+                ? `That’s a ${pick.name} address, so this degree is confirmed straight away.`
+                : `Without a ${pick.shortName} email we’ll confirm your degree with the alumni office. You can use the network while it’s pending.`}
+            </p>
+            <button onClick={() => setForm({ ...form, sure: !form.sure })} aria-pressed={form.sure} className="flex w-full items-center gap-3 rounded-2xl border border-sage-200 bg-white p-3 text-left">
+              <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 ${form.sure ? 'border-vine-700 bg-vine-700 text-cream' : 'border-sage-300 text-transparent'}`}><Check size={15} strokeWidth={3} /></span>
+              <span className="text-[13px] font-medium">I hold this degree, or I’m studying for it now</span>
+            </button>
+            <div className="flex gap-2">
+              <Button variant="secondary" className="flex-1" onClick={() => setPick(null)}>Back</Button>
+              <Button
+                className="flex-1" disabled={!form.major.trim() || !form.sure}
+                onClick={() => { addSchool({ schoolId: pick.id, level: form.level, major: form.major.trim(), gradYear: form.year, verified: emailOk ? 'verified' : 'pending' }); setPick(null); setAdding(false) }}
+              >
+                Add {pick.shortName}
+              </Button>
+            </div>
+          </div>
+        ) : adding ? (
           <div className="space-y-2">
             <p className="mb-3 text-sm text-ink/60">Add another school you have a degree from. You’ll be able to swap into its network.</p>
             {others.map((sc) => (
-              <button key={sc.id} onClick={() => { addSchool({ schoolId: sc.id, level: 'Master’s', major: '', gradYear: me.gradYear }); setAdding(false) }} className="flex w-full items-center gap-3 rounded-2xl border border-sage-200 bg-white p-3 text-left">
+              <button key={sc.id} onClick={() => { setPick(sc); setForm({ level: 'Master’s', major: '', year: me.gradYear, email: '', sure: false }) }} className="flex w-full items-center gap-3 rounded-2xl border border-sage-200 bg-white p-3 text-left">
                 <span className="h-9 w-9 shrink-0 rounded-xl" style={{ background: sc.accent }} />
                 <span className="min-w-0 flex-1"><span className="block font-semibold">{sc.name}</span><span className="block text-xs text-ink/50">{sc.city}</span></span>
               </button>
@@ -194,6 +237,7 @@ export function SchoolChip() {
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-1.5 font-semibold">{sc.name}{isHome && <span className="rounded-full bg-vine-700 px-2 py-0.5 text-[10px] font-bold uppercase text-cream">Default</span>}</span>
                       <span className="block text-xs text-ink/50">{d ? `${d.level}${d.major ? ` · ${d.major}` : ''} · ’${String(d.gradYear).slice(2)}` : sc.city}{viewing ? ' · Viewing now' : ''}</span>
+                      {d?.verified === 'pending' && <span className="mt-0.5 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-800">Degree pending confirmation</span>}
                     </span>
                   </button>
                   {!isHome && <button onClick={() => setHomeSchool(id)} className="mt-2 text-[12px] font-semibold text-vine-700 underline underline-offset-4">Make this my default</button>}

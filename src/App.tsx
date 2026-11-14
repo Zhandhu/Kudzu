@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { CalendarDays, House, MessageCircle, Search, Sprout, UserRound, Wrench } from 'lucide-react'
+import { CalendarDays, House, Map as MapIcon, MessageCircle, Search, Sprout, UserRound, Wrench } from 'lucide-react'
 import { useKudzu } from './store/useKudzu'
 import { OverlayContext, Toast } from './components/ui'
 import { APP_NAME, TAGLINE } from './config/brand'
@@ -31,9 +31,10 @@ const TABS = [
   { to: '/profile', label: 'Profile', icon: UserRound },
 ]
 
-/** The simple app keeps three tabs: the people you know, your messages, and you. */
+/** The simple app keeps four tabs: the people you know, where they are, your messages, and you. */
 const SIMPLE_TABS = [
   { to: '/home', label: 'Home', icon: House },
+  { to: '/network', label: 'Map', icon: MapIcon },
   { to: '/messages', label: 'Messages', icon: MessageCircle },
   { to: '/profile', label: 'Profile', icon: UserRound },
 ]
@@ -96,7 +97,7 @@ export default function App() {
                 <Route path="/home" element={simple ? <Home /> : <Navigate to="/find" replace />} />
                 <Route path="/find" element={simple ? <Navigate to="/home" replace /> : <Find />} />
                 <Route path="/events" element={simple ? <Navigate to="/home" replace /> : <Events />} />
-                <Route path="/network" element={simple ? <Navigate to="/home" replace /> : <Network />} />
+                <Route path="/network" element={<Network />} />
                 <Route path="/events/:id" element={<EventDetail />} />
                 <Route path="/groups/:id" element={<GroupDetail />} />
                 <Route path="/network/:id" element={<ConnectionDetail />} />

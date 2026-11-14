@@ -59,7 +59,9 @@ export default function Home() {
 
       <div className="px-4">
         <h1 className="mt-2 font-display text-[28px] font-semibold leading-tight">Hello, {firstName(s.me.name)}</h1>
-        <p className="mt-0.5 text-[15px] text-ink/60">{people.length} {people.length === 1 ? 'person' : 'people'} in your network.</p>
+        <p className="mt-0.5 text-[15px] text-ink/60">
+          {people.length} {people.length === 1 ? 'person' : 'people'} in your network. <Link to="/network" className="font-semibold text-vine-700 underline underline-offset-4">See them on the map</Link>
+        </p>
 
         {/* 1. who to catch up with */}
         <section className="mt-6">

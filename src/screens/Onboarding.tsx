@@ -51,7 +51,9 @@ function DoneBox({ done }: { done: boolean }) {
 export default function Onboarding() {
   const nav = useNavigate()
   const s = useKudzu()
-  const [started, setStarted] = useState(false)
+  const [stage, setStage] = useState<'welcome' | 'choose' | 'menu'>('welcome')
+  // whether an app has been chosen yet: nothing is pre-selected, so it is a real decision
+  const [picked, setPicked] = useState(false)
   const [open, setOpen] = useState<SectionId | null>(null)
   const [me, setMe] = useState<User>(blank)
   const [prefs, setPrefs] = useState<Prefs>(NO_PREFS)
@@ -122,7 +124,7 @@ export default function Onboarding() {
   const phoneOk = phone.replace(/\D/g, '').length >= 7
   const invite = () => { if (!phoneOk) return; setInvites((v) => (v.includes(phone.trim()) ? v : [...v, phone.trim()])); setPhone(''); setNobody(false) }
 
-  const skip = () => { s.skipOnboarding(); nav('/') }
+  const skip = () => { s.skipOnboarding(view, help); nav('/') }
   const finish = () => {
     s.finishOnboarding(
       {
@@ -145,7 +147,7 @@ export default function Onboarding() {
     nav('/')
   }
 
-  if (!started) {
+  if (stage === 'welcome') {
     return (
       <div className="flex h-full flex-col bg-vine-800 px-7 pb-8 pt-16 text-cream">
         <Logo size={34} light />
@@ -154,14 +156,77 @@ export default function Onboarding() {
           <h1 className="font-display text-[40px] font-semibold leading-[1.05]">{TAGLINE}</h1>
           <p className="mt-3 text-[15px] leading-relaxed text-vine-100">Meet students and alumni from your school for a coffee, a piece of advice, or a connection that lasts.</p>
           <div className="mt-8 space-y-3">
-            <button onClick={() => setStarted(true)} className="flex w-full items-center justify-center gap-2.5 rounded-full bg-cream py-3.5 text-sm font-semibold text-ink">
+            <button onClick={() => setStage('choose')} className="flex w-full items-center justify-center gap-2.5 rounded-full bg-cream py-3.5 text-sm font-semibold text-ink">
               <span className="flex h-5 w-5 items-center justify-center rounded bg-[#0a66c2] text-[11px] font-bold text-white">in</span> Continue with LinkedIn
             </button>
-            <button onClick={() => setStarted(true)} className="flex w-full items-center justify-center gap-2.5 rounded-full border border-cream/40 py-3.5 text-sm font-semibold">
+            <button onClick={() => setStage('choose')} className="flex w-full items-center justify-center gap-2.5 rounded-full border border-cream/40 py-3.5 text-sm font-semibold">
               <Mail size={17} /> Verify with your .edu email
             </button>
           </div>
-          <button onClick={skip} className="mt-6 w-full text-center text-[13px] font-medium text-vine-200 underline underline-offset-4">Skip onboarding (demo)</button>
+          <button onClick={() => setStage('choose')} className="mt-6 w-full text-center text-[13px] font-medium text-vine-200 underline underline-offset-4">Skip onboarding (demo)</button>
+        </div>
+      </div>
+    )
+  }
+
+  /* ---------------- the first decision: which app ---------------- */
+
+  // This comes before anything else because it changes what the rest of the app is.
+  // It is also where a demo can pick a side and skip the remaining sign-up.
+  if (stage === 'choose') {
+    const CHOICES = [
+      {
+        id: 'full' as const, icon: Sprout, title: 'Grow my network', line: 'I want to meet people.',
+        points: ['Search your school by field, city or what you need', 'Ask someone for a coffee chat', 'Events, groups and a map of your network'],
+        who: 'Most students and people early in a career start here.',
+      },
+      {
+        id: 'simple' as const, icon: HeartHandshake, title: 'Keep in touch', line: 'I want to stay close to the people I know.',
+        points: ['One home screen: who to catch up with', 'A map of where your people are', 'Help a student, only if you want to'],
+        who: 'For people with a network already, who want less to look at.',
+      },
+    ]
+    return (
+      <div className="flex h-full flex-col">
+        <header className="px-5 pt-4">
+          <button onClick={() => setStage('welcome')} className="-ml-1.5 rounded-full p-1.5 hover:bg-sage-100" aria-label="Back"><ChevronLeft size={22} /></button>
+          <h1 className="mt-2 font-display text-[28px] font-semibold leading-tight">What brings you to Kudzu?</h1>
+          <p className="mt-1 text-sm text-ink/60">This decides what the app looks like. You can change it later in your settings.</p>
+        </header>
+
+        <div className="app-scroll min-h-0 flex-1 space-y-3 overflow-y-auto px-5 pb-4 pt-4" role="group" aria-label="Which app">
+          {CHOICES.map(({ id, icon: Icon, title, line, points, who }) => {
+            const on = picked && view === id
+            return (
+              <button key={id} onClick={() => { setView(id); setPicked(true) }} aria-pressed={!!on} className={`block w-full rounded-3xl border-2 p-4 text-left transition-colors ${on ? 'border-vine-700 bg-vine-50' : 'border-sage-200 bg-white'}`}>
+                <span className="flex items-center gap-3">
+                  <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${on ? 'bg-vine-700 text-cream' : 'bg-sage-100 text-vine-700'}`}><Icon size={22} /></span>
+                  <span className="flex-1">
+                    <span className="block font-display text-[21px] font-semibold leading-tight">{title}</span>
+                    <span className="block text-[13px] text-ink/60">{line}</span>
+                  </span>
+                  <DoneBox done={!!on} />
+                </span>
+                <span className="mt-3 block space-y-1">
+                  {points.map((p) => <span key={p} className="flex items-start gap-2 text-[13.5px] leading-snug text-ink/80"><Check size={15} className="mt-0.5 shrink-0 text-vine-600" /> {p}</span>)}
+                </span>
+                <span className="mt-2.5 block text-xs text-ink/50">{who}</span>
+              </button>
+            )
+          })}
+          {picked && view === 'simple' && (
+            <button onClick={() => setHelp(!help)} aria-pressed={help} className="flex w-full items-center gap-3 rounded-2xl border border-sage-200 bg-white p-3 text-left">
+              <DoneBox done={help} />
+              <span className="text-[13px]"><span className="block font-semibold">I’m open to helping students and recent graduates</span><span className="block text-ink/55">We’ll show you a few people you could help. Leave it off to see none.</span></span>
+            </button>
+          )}
+        </div>
+
+        <div className="border-t border-sage-200 bg-cream px-5 pb-[max(env(safe-area-inset-bottom),14px)] pt-3">
+          <Button className="w-full" disabled={!picked} onClick={() => setStage('menu')}>Continue</Button>
+          <button onClick={skip} disabled={!picked} className="mt-2.5 w-full text-center text-[13px] font-medium text-ink/55 underline underline-offset-4 disabled:opacity-40">
+            {picked ? `Skip the rest and look around (demo)` : 'Pick one to continue'}
+          </button>
         </div>
       </div>
     )
@@ -184,7 +249,7 @@ export default function Onboarding() {
       <div className="flex h-full flex-col">
         <header className="px-5 pt-4">
           <div className="flex items-center justify-between">
-            <button onClick={() => setStarted(false)} className="-ml-1.5 rounded-full p-1.5 hover:bg-sage-100" aria-label="Back"><ChevronLeft size={22} /></button>
+            <button onClick={() => setStage('choose')} className="-ml-1.5 rounded-full p-1.5 hover:bg-sage-100" aria-label="Back"><ChevronLeft size={22} /></button>
             <button onClick={skip} className="text-xs font-semibold text-ink/45">Skip</button>
           </div>
           <h1 className="mt-3 font-display text-[26px] font-semibold leading-tight">Set up your profile</h1>
@@ -201,22 +266,11 @@ export default function Onboarding() {
           <h2 className="mb-1.5 mt-5 text-xs font-semibold uppercase tracking-wide text-ink/50">Optional</h2>
           <div className="divide-y divide-sage-200 rounded-2xl bg-white ring-1 ring-sage-200">{SECTIONS.filter((x) => !x.needed).map(rowFor)}</div>
 
-          <h2 className="mb-1.5 mt-5 text-xs font-semibold uppercase tracking-wide text-ink/50">What you want from Kudzu</h2>
-          <div className="grid grid-cols-2 gap-2">
-            {([['full', 'Grow my network', 'Find new people, events and a map of your network', Sprout], ['simple', 'Keep in touch', 'One simple screen for the people you already know', HeartHandshake]] as const).map(([id, label, sub, Icon]) => (
-              <button key={id} onClick={() => setView(id)} aria-pressed={view === id} className={`rounded-2xl border p-3 text-left ${view === id ? 'border-vine-700 bg-vine-50' : 'border-sage-200 bg-white'}`}>
-                <span className="flex items-center gap-1.5 text-sm font-semibold"><Icon size={15} className="text-vine-700" /> {label}</span>
-                <span className="mt-0.5 block text-xs text-ink/55">{sub}</span>
-              </button>
-            ))}
-          </div>
-          {view === 'simple' && (
-            <button onClick={() => setHelp(!help)} aria-pressed={help} className="mt-2 flex w-full items-center gap-3 rounded-2xl border border-sage-200 bg-white p-3 text-left">
-              <DoneBox done={help} />
-              <span className="text-[13px]"><span className="block font-semibold">I’m open to helping students and recent graduates</span><span className="block text-ink/55">We’ll show you a few people you could help. Leave it off to see none.</span></span>
-            </button>
-          )}
-          <p className="mt-1.5 text-xs text-ink/45">You can switch at any time in your profile settings.</p>
+          <button onClick={() => setStage('choose')} className="mt-5 flex w-full items-center gap-3 rounded-2xl bg-sage-100 px-3.5 py-3 text-left">
+            {view === 'simple' ? <HeartHandshake size={18} className="shrink-0 text-vine-700" /> : <Sprout size={18} className="shrink-0 text-vine-700" />}
+            <span className="flex-1 text-[13px]"><span className="block font-semibold">{view === 'simple' ? 'Keep in touch' : 'Grow my network'}</span><span className="block text-ink/55">The app you chose. Tap to change.</span></span>
+            <ChevronRight size={18} className="shrink-0 text-ink/30" />
+          </button>
         </div>
 
         <div className="border-t border-sage-200 bg-cream px-5 pb-[max(env(safe-area-inset-bottom),14px)] pt-3">

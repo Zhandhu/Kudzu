@@ -57,7 +57,7 @@ interface Data {
 interface Actions {
   reset: () => void
   finishOnboarding: (me: User, prefs: Prefs) => void
-  skipOnboarding: () => void
+  skipOnboarding: (experience?: 'full' | 'simple', openToHelp?: boolean) => void
   signOut: () => void
   updateMe: (patch: Partial<User>) => void
   setPrefs: (patch: Partial<Prefs>) => void
@@ -166,7 +166,12 @@ export const useKudzu = create<KudzuState>()(
       reset: () => set({ ...fresh() }),
       // the default school comes first in `schoolIds`
       finishOnboarding: (me, prefs) => set({ me, prefs, schoolId: me.schoolIds[0], homeSchoolId: me.schoolIds[0], persona: 'custom', onboarded: true }),
-      skipOnboarding: () => set({ onboarded: true }),
+      // The demo shortcut. Each app loads the person it suits: the student for growing
+      // a network, the alum fifteen years out for keeping one.
+      skipOnboarding: (experience = 'full', openToHelp = true) =>
+        set(experience === 'simple'
+          ? { onboarded: true, experience, openToHelp, me: ALUM_PERSONA, persona: 'alum' }
+          : { onboarded: true, experience, openToHelp, me: STUDENT_PERSONA, persona: 'student' }),
       signOut: () => set({ onboarded: false }),
       updateMe: (patch) =>
         set((s) => ({ me: { ...s.me, ...patch, ...(patch.city && CITIES[patch.city] ? { coords: CITIES[patch.city] } : {}) } })),

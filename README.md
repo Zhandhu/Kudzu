@@ -27,7 +27,7 @@ Open the URL Vite prints (usually http://localhost:5173). On a laptop the app re
 
 ## Presenting the demo
 
-- On the welcome screen, tap **Skip onboarding (demo)** to load a prefilled Georgia Tech student.
+- On the welcome screen, tap **Skip onboarding (demo)**, pick one of the two apps, then **Skip the rest**. "Grow my network" loads a prefilled Georgia Tech student. "Keep in touch" loads an alum.
 - Open the **demo controls** by tapping the Kudzu logo three times, or with the wrench button.
 - [`DEMO_SCRIPT.md`](DEMO_SCRIPT.md) is a five-minute walkthrough that shows every feature in order.
 
@@ -58,7 +58,7 @@ Demo controls:
 
 **Sign-up is one menu.** Three sections are needed: you and your school, your current career, and people you already know. The rest are optional and can be added later from the profile: what you're here for, the fields you're interested in, hobbies, clubs and affiliations, and prompts. The career section also takes earlier roles and a flag for people who changed careers. Each row has a box that fills in when the section is done, and they can be done in any order. Sign-up also covers .edu detection, alum verification, request-a-school, inviting someone by phone number, and choosing which of the two apps to use.
 
-**Two apps, one network.** "Grow my network" is everything in the table above. "Keep in touch" is a simple app for people who are not looking for new connections: one Home screen with who to catch up with, everyone they know (longest gap first), and, if they switch it on, people they could help. It has three tabs and no search, events or map. It is chosen at sign-up and changed under Profile, Settings. It is a first version: see [`docs/research/06-simple-app.md`](docs/research/06-simple-app.md) for what is built and what is still to decide.
+**Two apps, one network.** "Grow my network" is everything in the table above. "Keep in touch" is a simple app for people who are not looking for new connections: one Home screen with who to catch up with, everyone they know (longest gap first), and, if they switch it on, people they could help. It has four tabs (Home, Map, Messages, Profile): the map of the network is kept, and there is no search of the school and no events. It is chosen on the first page of sign-up and changed under Profile, Settings. It is a first version: see [`docs/research/06-simple-app.md`](docs/research/06-simple-app.md) for what is built and what is still to decide.
 
 **More than one school.** Someone with degrees from two schools belongs to both networks. One is their default, which the app opens on. Tapping the school name at the top of any tab lists their networks, swaps between them, changes the default, or adds another.
 
