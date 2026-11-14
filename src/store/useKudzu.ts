@@ -32,10 +32,18 @@ interface Data {
   reports: { userId: string; reason: string }[]
   showWarning: boolean
   paused: boolean
-  /** Whether Find shows results as leaves on branches or as plain rows. */
-  findView: 'leaves' | 'rows'
+  /**
+   * Which app the user gets. "full" is for growing a network: Find, Events, the map.
+   * "simple" is for keeping one: a single home screen of people to stay in touch with,
+   * and, if they choose, people they could help. Chosen at sign-up, changed in settings.
+   */
+  experience: 'full' | 'simple'
+  /** In the simple app: whether to show people the user could help. */
+  openToHelp: boolean
   /** Set once the user has seen the hint that a coffee chat can be proposed from a chat. */
   coffeeHintSeen: boolean
+  /** Mocked: whether the user has linked a calendar, so free times can be suggested. */
+  calendarConnected: boolean
   settings: { notifications: boolean; privateMode: boolean }
   // transient UI state (not persisted)
   checkin: { otherId: string; msgId: string } | null
@@ -67,6 +75,8 @@ interface Actions {
   ensureConversation: (otherId: string) => void
   addMessage: (otherId: string, msg: Omit<Message, 'id' | 'at'>) => void
   acceptProposal: (otherId: string, msgId: string, slot: number) => void
+  /** Marks a set of proposed times as set aside, because other times were suggested instead. */
+  replaceProposal: (otherId: string, msgId: string) => void
   markRead: (otherId: string) => void
   setTyping: (otherId: string, on: boolean) => void
   submitFeedback: (fb: Omit<Feedback, 'at'>, msgId: string) => void
@@ -108,8 +118,10 @@ const fresh = (): Data => {
     reports: [],
     showWarning: false,
     paused: false,
-    findView: 'leaves',
+    experience: 'full',
+    openToHelp: true,
     coffeeHintSeen: false,
+    calendarConnected: false,
     settings: { notifications: true, privateMode: false },
     checkin: null,
     toast: null,
@@ -280,6 +292,14 @@ export const useKudzu = create<KudzuState>()(
         })
       },
 
+      replaceProposal: (otherId, msgId) =>
+        set((s) => ({
+          conversations: mapConv(s.conversations, otherId, (c) => ({
+            ...c,
+            messages: c.messages.map((m) => (m.id === msgId && m.proposal && !m.proposal.acceptedSlot ? { ...m, proposal: { ...m.proposal, replaced: true } } : m)),
+          })),
+        })),
+
       acceptProposal: (otherId, msgId, slot) =>
         set((s) => ({
           conversations: mapConv(s.conversations, otherId, (c) => ({
@@ -368,7 +388,7 @@ export const useKudzu = create<KudzuState>()(
     }),
     {
       // bump this when the saved shape changes, so old browsers start from fresh seed data
-      name: 'kudzu-demo-v6',
+      name: 'kudzu-demo-v7',
       partialize: (s) => {
         const { checkin, toast, demoOpen, typing, eventOpen, ...rest } = s
         void checkin, toast, demoOpen, typing, eventOpen

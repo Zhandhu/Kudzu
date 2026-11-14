@@ -20,7 +20,7 @@ The demo controls are referred to below as **Demo**.
 2. Open **You and your school**. Type a name, then `riley@gatech.edu`. Georgia Tech is detected and selected from the email domain. Tap a second school to show that someone with **two degrees** joins both networks and picks one as their **default**. Mention the alum verification path and **My school isn't here yet**. Tap **Done**: the box fills in.
 3. Open **Your current career** and type a role. That is the one part that is needed. Show **Add an earlier role** and the **I changed careers** flag.
 4. Open **People you already know**. Search by name or **@username**, tap someone, and add a **phone number** to invite a friend who isn't on Kudzu. Nobody starts with an empty network.
-5. Point to the optional rows: **what you're here for** (nobody picks "mentor" or "mentee": the app works that out), **fields you're interested in**, which decide who is shown first and never hide anyone, **hobbies, clubs and affiliations**, and **prompts**. Point to **Leaves** or **Simple list** at the bottom.
+5. Point to the optional rows: **what you're here for** (nobody picks "mentor" or "mentee": the app works that out), **fields you're interested in**, which decide who is shown first and never hide anyone, **hobbies, clubs and affiliations**, and **prompts**. Point to the choice at the bottom: **Grow my network**, or **Keep in touch**, a simple app for people who only want to stay in touch and perhaps help someone.
 6. Tap **Skip** (top right) to load the prefilled demo user, Riley, a third-year Industrial Engineering student.
 
 ## 0:40 Find (70 seconds)
@@ -31,21 +31,21 @@ The demo controls are referred to below as **Demo**.
 2. Tap **Maya O.** Her whole profile opens as a **card floating over the search**. Point to the green **Learn from** box, people in common, and her three prompts.
 3. Tap **Ask Maya for a chat**. Pick what it is about, type one line and tap **Send request**. "No swiping, and no waiting for a mutual match. You ask, with a reason."
 4. After a moment the bar changes to **Message** and **Propose coffee**: Maya has accepted. (Maya always accepts. Others accept about 60% of the time, and some never answer, so that case can be shown.) Tap outside the card to close it. The search is still there.
-5. Type **consult** in the search bar and tap the **Consulting** chip it offers. Results **grow on branches**, grouped by city. Tap **Level** to regroup them. (Search for one city and the app stops grouping by city on its own.) Leaves are coloured by relationship: learn from, trade notes, give back. Outlined leaves are people already in Riley's network.
+5. Type **consult** in the search bar and tap the **Consulting** chip it offers. Results **grow on branches**, grouped by city. Tap **Level** to regroup them. (Search for one city and the app stops grouping by city on its own.) Leaves are tinted by relationship: learn from, trade notes, give back. Outlined leaves are people already in Riley's network. The corner of each leaf shows how far away they are: **1st**, **2nd** (someone Riley knows knows them) or **3rd**.
 6. Tap the **+** in the search bar to show the other ways to narrow: field, city, level and **Can help with**. Tap one: it applies and the sheet closes by itself. Tap the chip to remove it.
-7. Tap **Simple** (top right) to show the same results as a plain list. Tap **Leaves** to go back.
-8. Point to the two leaves in the bottom-right corner. Tap the **tendril**, which is **Requests**:
+7. Point to the two leaves in the bottom-right corner. Tap the **tendril**, which is **Requests**:
    - **Asked of you** are requests from others. Each can be answered in one tap: **Accept**, **Later on** or **Not right now**.
    - **Waiting on** are Riley's own. One reads "Rachel couldn't get to this one," with a button to **see who else can help**. "A request never just goes quiet."
-9. Tap the **brown leaf**, **Not yet met**: Nina and Kwame have accepted but Riley has not met them yet, so they are not in the network. Tapping a name or the cup opens the chat.
+8. Tap the **brown leaf**, **Not yet met**: Nina and Kwame have accepted but Riley has not met them yet, so they are not in the network. Tapping a name or the cup opens the chat.
 
 ## 1:50 Messages (60 seconds)
 
 1. Open the **Messages** tab and look down the conversation list.
 2. Open **Maya**. The line from your request is the first message, and she has replied.
-3. Point to the **cup at the bottom right**. The first time, a bubble says "You can propose a coffee chat". Chatting comes first, and coffee is there when you want it. Tap the cup. Pick two or three times and a place, then **Send proposal**. After a moment Maya accepts and the card becomes **Coffee chat confirmed**.
-4. Go back and open **Marcus Lee**. He proposed times to you. Tap **Accept** on one.
-5. Tap the **⋯** menu in the header to show **Report / Block**. Close it.
+3. Point to the **cup at the bottom right**. The first time, a bubble says "You can propose a coffee chat". Chatting comes first, and coffee is there when you want it. Tap the cup. Tap **Google** to link a calendar: each time is now marked **Both free**, or says who is busy, and the best two are picked for you. Tap **Send proposal**. After a moment Maya accepts and the card becomes **Coffee chat confirmed**.
+4. Go back and open **Marcus Lee**. He proposed times to you. Each says whether Riley is free. Point to **Accept**, then tap **Suggest other times**, pick two and send them. His times are set aside and he accepts one of Riley's. Mention **Talk it over**, which starts a message instead.
+5. Optional: propose coffee to **Jordan Alvarez**. Jordan answers with other times, to show it from the other side.
+6. Tap the **⋯** menu in the header to show **Report / Block**. Close it.
 
 ## 2:50 Network (70 seconds)
 

@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { BadgeCheck, Check, ChevronLeft, ChevronRight, Clock, GraduationCap, LayoutList, Leaf, Mail, Phone, Search, Star, X } from 'lucide-react'
+import { BadgeCheck, Check, ChevronLeft, ChevronRight, Clock, GraduationCap, HeartHandshake, Mail, Phone, Search, Sprout, Star, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import type { Degree, Prefs, School, User } from '../types'
 import { CURRENT_CLASS_YEAR, DEGREE_LEVELS, TAGLINE } from '../config/brand'
@@ -64,7 +64,8 @@ export default function Onboarding() {
   const [nobody, setNobody] = useState(false)
   const [who, setWho] = useState('')
   const [phone, setPhone] = useState('')
-  const [view, setView] = useState<'leaves' | 'rows'>('leaves')
+  const [view, setView] = useState<'full' | 'simple'>('full')
+  const [help, setHelp] = useState(true)
   const up = (patch: Partial<User>) => setMe((m) => ({ ...m, ...patch }))
 
   const degrees = me.degrees ?? []
@@ -121,7 +122,7 @@ export default function Onboarding() {
   const phoneOk = phone.replace(/\D/g, '').length >= 7
   const invite = () => { if (!phoneOk) return; setInvites((v) => (v.includes(phone.trim()) ? v : [...v, phone.trim()])); setPhone(''); setNobody(false) }
 
-  const skip = () => { s.skipOnboarding(); nav('/find') }
+  const skip = () => { s.skipOnboarding(); nav('/') }
   const finish = () => {
     s.finishOnboarding(
       {
@@ -139,9 +140,9 @@ export default function Onboarding() {
       prefs,
     )
     for (const id of known) s.addKnown(id, 'unsure', true)
-    s.set({ invites, findView: view })
+    s.set({ invites, experience: view, openToHelp: help })
     s.say(`Welcome to ${homeSchool!.name} on Kudzu`)
-    nav('/find')
+    nav('/')
   }
 
   if (!started) {
@@ -200,16 +201,22 @@ export default function Onboarding() {
           <h2 className="mb-1.5 mt-5 text-xs font-semibold uppercase tracking-wide text-ink/50">Optional</h2>
           <div className="divide-y divide-sage-200 rounded-2xl bg-white ring-1 ring-sage-200">{SECTIONS.filter((x) => !x.needed).map(rowFor)}</div>
 
-          <h2 className="mb-1.5 mt-5 text-xs font-semibold uppercase tracking-wide text-ink/50">How you want to see people</h2>
+          <h2 className="mb-1.5 mt-5 text-xs font-semibold uppercase tracking-wide text-ink/50">What you want from Kudzu</h2>
           <div className="grid grid-cols-2 gap-2">
-            {([['leaves', 'Leaves', 'People grow on branches', Leaf], ['rows', 'Simple list', 'Plain rows, top to bottom', LayoutList]] as const).map(([id, label, sub, Icon]) => (
+            {([['full', 'Grow my network', 'Find new people, events and a map of your network', Sprout], ['simple', 'Keep in touch', 'One simple screen for the people you already know', HeartHandshake]] as const).map(([id, label, sub, Icon]) => (
               <button key={id} onClick={() => setView(id)} aria-pressed={view === id} className={`rounded-2xl border p-3 text-left ${view === id ? 'border-vine-700 bg-vine-50' : 'border-sage-200 bg-white'}`}>
                 <span className="flex items-center gap-1.5 text-sm font-semibold"><Icon size={15} className="text-vine-700" /> {label}</span>
                 <span className="mt-0.5 block text-xs text-ink/55">{sub}</span>
               </button>
             ))}
           </div>
-          <p className="mt-1.5 text-xs text-ink/45">You can switch at any time from the Find tab.</p>
+          {view === 'simple' && (
+            <button onClick={() => setHelp(!help)} aria-pressed={help} className="mt-2 flex w-full items-center gap-3 rounded-2xl border border-sage-200 bg-white p-3 text-left">
+              <DoneBox done={help} />
+              <span className="text-[13px]"><span className="block font-semibold">I’m open to helping students and recent graduates</span><span className="block text-ink/55">We’ll show you a few people you could help. Leave it off to see none.</span></span>
+            </button>
+          )}
+          <p className="mt-1.5 text-xs text-ink/45">You can switch at any time in your profile settings.</p>
         </div>
 
         <div className="border-t border-sage-200 bg-cream px-5 pb-[max(env(safe-area-inset-bottom),14px)] pt-3">
@@ -218,7 +225,7 @@ export default function Onboarding() {
               {neededDone < needed.length ? `Still needed: ${needed.filter((x) => !done[x.id]).map((x) => x.title.toLowerCase()).join(', ')}` : 'Finish “What you’re here for”, or clear it to do later'}
             </p>
           )}
-          <Button className="w-full" disabled={!canFinish} onClick={finish}>Start finding people</Button>
+          <Button className="w-full" disabled={!canFinish} onClick={finish}>Get started</Button>
         </div>
       </div>
     )

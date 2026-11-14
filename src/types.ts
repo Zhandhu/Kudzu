@@ -160,6 +160,8 @@ export interface Proposal {
   mode: 'in-person' | 'virtual'
   acceptedSlot?: number
   checkedIn?: boolean
+  /** Set when these times were set aside because other times were suggested instead. */
+  replaced?: boolean
 }
 
 export interface Message {

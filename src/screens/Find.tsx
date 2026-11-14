@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronRight, Coffee, LayoutList, Leaf, Plus, Search, X } from 'lucide-react'
+import { ChevronRight, Coffee, Plus, Search, X } from 'lucide-react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import type { Level, Request, User } from '../types'
@@ -7,7 +7,7 @@ import { INDUSTRIES, MODE_META, TOPICS, topicLabel } from '../config/brand'
 import { useKudzu, useNow } from '../store/useKudzu'
 import {
   EMPTY_QUERY, LEVELS, REQUEST_LIMIT, accountStanding, answerRequest, daysLeft, findPeople, getUser, incomingRequests, isEmptyQuery,
-  levelLabel, levelOf, outgoingRequests, pendingConnections, quietPaused, requestState,
+  levelLabel, levelOf, mutualConnections, outgoingRequests, pendingConnections, quietPaused, requestState,
   requestTo, spotsLeft, suggestFor, suggestForText, type Found, type Query,
 } from '../services'
 import { CITY_NAMES, ago, firstName, hash } from '../lib/util'
@@ -26,11 +26,15 @@ const shortName = (u: User) => { const p = u.name.split(' '); return p.length > 
 const FACES = ['🧑', '🧑‍🦱', '🧑‍🦰', '🧑‍🦳', '🧑‍🦲', '👱', '🧔']
 const faceFor = (u: User) => FACES[hash(u.id + u.name) % FACES.length]
 
+/** Connection distance: 1st is in your network, 2nd is known by someone you know, 3rd is further out. */
+const DEGREE = { 1: '1st', 2: '2nd', 3: '3rd' } as const
+const DEGREE_HINT = { 1: 'In your network', 2: 'Someone you know knows them', 3: 'No one in common yet' } as const
+
 /**
  * One person as a leaf: a headshot, their name, class and company, and nothing else.
  * The tint says how you relate to them. One tap opens the whole profile.
  */
-function PersonLeaf({ f, index, requested, onPick }: { f: Found; index: number; requested: boolean; onPick: () => void }) {
+function PersonLeaf({ f, index, requested, degree, onPick }: { f: Found; index: number; requested: boolean; degree: 1 | 2 | 3; onPick: () => void }) {
   const m = MODE_META[f.info.mode]
   const u = f.user
   const full = !f.connected && spotsLeft(u) === 0
@@ -53,7 +57,10 @@ function PersonLeaf({ f, index, requested, onPick }: { f: Found; index: number; 
         <span className="block whitespace-nowrap text-[12px] leading-snug text-ink/55">Class of ’{String(u.gradYear).slice(2)}</span>
         <span className="block truncate text-[12px] leading-snug text-ink/70">{u.company ?? (u.role === 'student' ? 'Student' : u.industry)}</span>
       </span>
-      {requested && <span className="absolute right-2.5 top-2"><TendrilIcon size={14} color={m.color} /></span>}
+      {/* how far away they are: in your network, one introduction away, or further */}
+      <span className="absolute right-2.5 top-1.5 flex items-center gap-1 text-[10px] font-bold" style={{ color: m.color }} title={DEGREE_HINT[degree]}>
+        {requested && <TendrilIcon size={13} color={m.color} />}{DEGREE[degree]}
+      </span>
     </button>
   )
 }
@@ -147,7 +154,6 @@ export default function Find() {
   const [need, setNeed] = useState(needSent)
   const setAsk = (v: string | null) => setParams(v ? { for: v } : {}, { replace: true })
   const setNeedSent = (v: string) => setParams(v ? { for: OTHER, q: v } : { for: OTHER }, { replace: true })
-  const leaves = s.findView !== 'rows'
   const empty = isEmptyQuery(q)
 
   // arriving with a topic in the link (from a lapsed request) starts a search for it
@@ -212,7 +218,9 @@ export default function Find() {
     { key: 'pending', label: 'Not yet met', count: pending.length, onClick: () => setSheet('pending') },
   ]
 
-  const leaf = (f: Found, i: number) => <PersonLeaf key={f.user.id} f={f} index={i} requested={isRequested(f.user.id)} onPick={() => setPicked(f.user.id)} />
+  const leaf = (f: Found, i: number) => (
+    <PersonLeaf key={f.user.id} f={f} index={i} requested={isRequested(f.user.id)} degree={f.connected ? 1 : mutualConnections(s, f.user).length ? 2 : 3} onPick={() => setPicked(f.user.id)} />
+  )
 
   // What drops out from under the need you tapped: a few people, or the reason there are none.
   const dropOut = () => {
@@ -228,7 +236,7 @@ export default function Find() {
           <p className="mt-2 rounded-2xl border border-dashed border-sage-300 p-4 text-center text-sm text-ink/55">
             {ask === OTHER ? 'Nobody fits those words yet. Try a field, a company or a city.' : 'Nobody with room right now. Try another need, or search above.'}
           </p>
-        ) : leaves ? (
+        ) : (
           <div className="grid grid-cols-2 gap-2 pt-2">
             {suggested.map((f, i) => (
               <motion.div
@@ -242,8 +250,6 @@ export default function Find() {
               </motion.div>
             ))}
           </div>
-        ) : (
-          <div className="pt-1">{suggested.map((f) => row(f, f.via))}</div>
         )}
         {ask !== OTHER && suggested.length > 0 && (
           <button onClick={() => setQ({ ...EMPTY_QUERY, topics: [ask] })} className="mt-2 text-xs font-semibold text-vine-700">See everyone who can help</button>
@@ -252,19 +258,6 @@ export default function Find() {
     )
   }
 
-  const row = (f: Found, via?: User) => (
-    <button key={f.user.id} onClick={() => setPicked(f.user.id)} data-person-row className="flex w-full items-center gap-3 rounded-2xl px-2 py-2.5 text-left hover:bg-sage-50">
-      <Avatar user={f.user} size={44} />
-      <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-1.5 truncate font-semibold">{f.user.name}{isRequested(f.user.id) && <TendrilIcon size={14} />}</span>
-        <span className="block truncate text-[13px] text-ink/55">{roleLine(f.user)} · {f.user.city}</span>
-        <span className="block truncate text-xs text-vine-700">{f.info.reason}</span>
-        {via && <span className="block truncate text-[11px] text-coffee-600">You → {firstName(via.name)} → {firstName(f.user.name)}</span>}
-      </span>
-      <ChevronRight size={18} className="shrink-0 text-ink/30" />
-    </button>
-  )
-
   return (
     <div className="relative flex h-full flex-col">
       <header className="px-4 pb-2 pt-4">
@@ -272,13 +265,6 @@ export default function Find() {
           <Logo />
           <div className="flex items-center gap-2">
             <SchoolChip />
-            <button
-              onClick={() => { s.set({ findView: leaves ? 'rows' : 'leaves' }); setPicked(null) }}
-              className="flex items-center gap-1 rounded-full bg-white px-2.5 py-1.5 text-[11px] font-semibold text-ink/70 ring-1 ring-sage-200"
-              aria-label={leaves ? 'Switch to simple list' : 'Switch to leaves'}
-            >
-              {leaves ? <><LayoutList size={14} /> Simple</> : <><Leaf size={14} /> Leaves</>}
-            </button>
           </div>
         </div>
 
@@ -351,7 +337,7 @@ export default function Find() {
           <EmptyState title="Nobody matches that" body="Try removing a filter, or search for a company or a city.">
             <Button onClick={() => setQ(EMPTY_QUERY)}>Clear search</Button>
           </EmptyState>
-        ) : leaves ? (
+        ) : (
           <div className="px-1">
             <div className="mb-3 flex items-center justify-between">
               <span className="text-xs text-ink/55">{results.length} {results.length === 1 ? 'person' : 'people'}</span>
@@ -377,12 +363,8 @@ export default function Find() {
                 <span key={m} className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full" style={{ background: MODE_META[m].color }} /> {MODE_META[m].label}</span>
               ))}
               <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full border border-vine-700 bg-white" /> In your network</span>
+              <span className="basis-full"><b className="font-semibold text-ink/65">1st</b> in your network · <b className="font-semibold text-ink/65">2nd</b> someone you know knows them · <b className="font-semibold text-ink/65">3rd</b> further out</span>
             </div>
-          </div>
-        ) : (
-          <div>
-            <div className="px-2 pb-1 text-xs text-ink/55">{results.length} {results.length === 1 ? 'person' : 'people'}</div>
-            {results.map((f) => row(f))}
           </div>
         )}
       </div>

@@ -68,6 +68,9 @@ export const DEFAULT_PREFS: Prefs = {
 /** A request to these people is always accepted, so the demo is repeatable. */
 export const ALWAYS_ACCEPT = ['g1']
 
+/** The first time you propose coffee to these people they answer with other times, so that case can be shown. */
+export const SUGGESTS_OTHER_TIMES = ['g2']
+
 /* ---------------- groups ---------------- */
 
 export const SEED_GROUPS: Group[] = [

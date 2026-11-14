@@ -4,7 +4,7 @@ import { CalendarCheck, Check, ChevronLeft, Coffee, HeartHandshake, MapPin, Send
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import type { Message, Mode, User } from '../types'
 import { useKudzu, useNow } from '../store/useKudzu'
-import { acceptTheirProposal, getUser, matchInfo, promptText, sendText, strengthOf } from '../services'
+import { acceptTheirProposal, getUser, isBusy, matchInfo, promptText, sendText, strengthOf } from '../services'
 import { firstName, fmtDateTime } from '../lib/util'
 import { LeafIcon, Tendril } from '../components/brand'
 import { Avatar, Button, Chip, inputCls } from '../components/ui'
@@ -19,12 +19,23 @@ function openers(mode: Mode, other: User): string[] {
   return [`Hi ${name}! Want to compare notes?`, 'How are you approaching this semester?']
 }
 
-function ProposalCard({ m, other, now }: { m: Message; other: User; now: number }) {
+function ProposalCard({ m, other, now, onOtherTimes, onDiscuss }: { m: Message; other: User; now: number; onOtherTimes: () => void; onDiscuss: () => void }) {
   const set = useKudzu((s) => s.set)
+  const calendar = useKudzu((s) => s.calendarConnected)
   const p = m.proposal!
   const mine = m.from === 'me'
   const name = firstName(other.name)
   const Mode = p.mode === 'virtual' ? Video : MapPin
+
+  // times that were answered with other times stay in the thread, but out of the way
+  if (p.replaced) {
+    return (
+      <div className="mx-auto w-[88%] rounded-2xl border border-dashed border-sage-300 px-4 py-2.5 text-[13px] text-ink/50">
+        {mine ? `${name} suggested other times instead of yours` : `You suggested other times instead of ${name}’s`}
+        <span className="block text-xs text-ink/40">{p.slots.map((t) => fmtDateTime(t)).join(' · ')}</span>
+      </div>
+    )
+  }
 
   if (p.acceptedSlot) {
     const past = p.acceptedSlot < now
@@ -41,7 +52,7 @@ function ProposalCard({ m, other, now }: { m: Message; other: User; now: number 
           ) : past ? (
             <Button variant="coffee" className="mt-2 w-full !py-2.5" onClick={() => set({ checkin: { otherId: other.id, msgId: m.id } })}>How did it go?</Button>
           ) : (
-            <div className="pt-1 text-[13px] text-ink/50">We’ll check in with you afterwards.</div>
+            <div className="pt-1 text-[13px] text-ink/50">{calendar ? 'Added to your calendar. ' : ''}We’ll check in with you afterwards.</div>
           )}
         </div>
       </div>
@@ -57,13 +68,27 @@ function ProposalCard({ m, other, now }: { m: Message; other: User; now: number 
           mine ? (
             <div key={slot} className="rounded-xl border border-coffee-200 bg-white px-3 py-2 text-sm">{fmtDateTime(slot)}</div>
           ) : (
-            <button key={slot} onClick={() => acceptTheirProposal(other.id, m.id, slot)} className="flex w-full items-center justify-between rounded-xl border border-coffee-300 bg-white px-3 py-2.5 text-sm font-medium hover:bg-coffee-100">
-              {fmtDateTime(slot)} <span className="text-xs font-semibold text-coffee-600">Accept</span>
+            <button key={slot} onClick={() => acceptTheirProposal(other.id, m.id, slot)} className="flex w-full items-center justify-between rounded-xl border border-coffee-300 bg-white px-3 py-2.5 text-left text-sm font-medium hover:bg-coffee-100">
+              <span>
+                {fmtDateTime(slot)}
+                {calendar && <span className={`block text-[11px] font-semibold ${isBusy('me', slot) ? 'text-coffee-600' : 'text-vine-600'}`}>{isBusy('me', slot) ? 'You’re busy then' : 'You’re free then'}</span>}
+              </span>
+              <span className="text-xs font-semibold text-coffee-600">Accept</span>
             </button>
           ),
         )}
       </div>
-      <div className="mt-2 text-xs text-ink/50">{mine ? `Waiting for ${name} to pick a time…` : 'Tap a time to confirm.'}</div>
+      {mine ? (
+        <div className="mt-2 text-xs text-ink/50">Waiting for {name} to pick a time…</div>
+      ) : (
+        <>
+          <div className="mt-2 text-xs text-ink/50">Tap a time to confirm. None of them work?</div>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <button onClick={onOtherTimes} className="rounded-full border border-coffee-500 py-2 text-xs font-semibold text-coffee-700">Suggest other times</button>
+            <button onClick={onDiscuss} className="rounded-full border border-sage-200 bg-white py-2 text-xs font-semibold text-ink/65">Talk it over</button>
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -84,6 +109,9 @@ export default function ChatThread() {
   // the sheet never opens by itself. A bubble points at the button the first time,
   // and again whenever you arrive from a coffee button.
   const [proposing, setProposing] = useState(false)
+  // set while answering their proposal with other times
+  const [answering, setAnswering] = useState<string | undefined>()
+  const inputRef = useRef<HTMLInputElement>(null)
   const hintSeen = useKudzu((s) => s.coffeeHintSeen)
   const [hint, setHint] = useState(!hintSeen || params.get('coffee') === '1')
   const endRef = useRef<HTMLDivElement>(null)
@@ -122,7 +150,7 @@ export default function ChatThread() {
         <MoreMenu user={other} onBlocked={() => nav('/messages')} />
       </header>
 
-      <div className="app-scroll min-h-0 flex-1 space-y-2.5 overflow-y-auto px-3 pb-20 pt-4">
+      <div className="app-scroll min-h-0 flex-1 space-y-2.5 overflow-y-auto px-3 py-4">
         {messages.length === 0 && (
           <div className="flex flex-col items-center px-6 pt-10 text-center">
             <Tendril animate />
@@ -136,7 +164,16 @@ export default function ChatThread() {
           </div>
         )}
         {messages.map((m) => {
-          if (m.proposal) return <ProposalCard key={m.id} m={m} other={other} now={now} />
+          if (m.proposal) {
+            return (
+              <ProposalCard
+                key={m.id} m={m} other={other} now={now}
+                onOtherTimes={() => { setAnswering(m.id); setProposing(true) }}
+                // "talk it over" starts the sentence for you, in the message box
+                onDiscuss={() => { setText(`Those times are tricky for me, ${firstName(other.name)}. `); inputRef.current?.focus() }}
+              />
+            )
+          }
           const mine = m.from === 'me'
           if (m.thanks) {
             return (
@@ -169,7 +206,8 @@ export default function ChatThread() {
             </div>
           </div>
         )}
-        <div ref={endRef} />
+        {/* room at the end, so the coffee button never covers the last message */}
+        <div ref={endRef} className="h-16" />
       </div>
 
       {/* the coffee button sits at the bottom right, just above the message box */}
@@ -193,11 +231,11 @@ export default function ChatThread() {
       </div>
 
       <form onSubmit={(e) => { e.preventDefault(); send() }} className="flex items-center gap-2 border-t border-sage-200 bg-cream px-3 pb-[max(env(safe-area-inset-bottom),10px)] pt-2.5">
-        <input className={`${inputCls} !rounded-full`} placeholder={`Message ${firstName(other.name)}`} value={text} onChange={(e) => setText(e.target.value)} aria-label="Message" />
+        <input ref={inputRef} className={`${inputCls} !rounded-full`} placeholder={`Message ${firstName(other.name)}`} value={text} onChange={(e) => setText(e.target.value)} aria-label="Message" />
         <button type="submit" disabled={!text.trim()} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-vine-700 text-cream disabled:opacity-40" aria-label="Send"><Send size={17} /></button>
       </form>
 
-      <ProposeSheet open={proposing} onClose={() => setProposing(false)} other={other} />
+      <ProposeSheet open={proposing} onClose={() => { setProposing(false); setAnswering(undefined) }} other={other} replaces={answering} />
     </div>
   )
 }

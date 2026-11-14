@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Bell, BookOpen, ChevronRight, Eye, HeartHandshake, Lock, LogOut, PauseCircle, Pencil, SlidersHorizontal } from 'lucide-react'
+import { Bell, BookOpen, CalendarCheck, ChevronRight, Eye, HeartHandshake, Lock, LogOut, PauseCircle, Pencil, SlidersHorizontal } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { User } from '../types'
 import { openEvent, useKudzu, useNow } from '../store/useKudzu'
@@ -59,6 +59,7 @@ export default function Profile() {
   const me = s.me
   const [editing, setEditing] = useState(false)
   const [prefsOpen, setPrefsOpen] = useState(false)
+  const simple = s.experience === 'simple'
   const school = getSchool(s.schoolId)
   const myGroups = s.groups.filter((g) => g.schoolId === s.schoolId && me.groupIds.includes(g.id))
   const myEvents = schoolEvents(s, now).filter((e) => e.myRsvp || e.hostId === 'me')
@@ -143,7 +144,7 @@ export default function Profile() {
 
       <VineDivider />
 
-      <section className="mx-4">
+      <section className={simple ? 'hidden' : 'mx-4'}>
         <h2 className="mb-2 text-sm font-semibold">Your groups</h2>
         {myGroups.length === 0 ? (
           <Link to="/events" className="block rounded-2xl border border-dashed border-sage-300 p-4 text-center text-sm text-ink/55">You haven’t joined any groups. Browse them in Events → Groups.</Link>
@@ -154,7 +155,7 @@ export default function Profile() {
         )}
       </section>
 
-      <section className="mx-4 mt-5">
+      <section className={simple ? 'hidden' : 'mx-4 mt-5'}>
         <h2 className="mb-2 text-sm font-semibold">Your events</h2>
         {myEvents.length === 0 ? (
           <Link to="/events" className="block rounded-2xl border border-dashed border-sage-300 p-4 text-center text-sm text-ink/55">No RSVPs yet. Find something in Events.</Link>
@@ -175,8 +176,27 @@ export default function Profile() {
 
       <section className="mx-4 mt-6">
         <h2 className="mb-2 text-sm font-semibold">Settings</h2>
+        {/* the two apps: one for growing a network, one for keeping it */}
+        <div className="mb-3 rounded-2xl bg-white p-3.5 ring-1 ring-sage-200">
+          <div className="text-sm font-semibold">What you want from Kudzu</div>
+          <div className="mt-2 grid grid-cols-2 gap-2" role="group" aria-label="App style">
+            {([['full', 'Grow my network', 'Find, events and the map'], ['simple', 'Keep in touch', 'One simple home screen']] as const).map(([id, label, sub]) => (
+              <button key={id} onClick={() => { if (s.experience !== id) { s.set({ experience: id }); s.say(id === 'simple' ? 'Switched to the simple app' : 'Switched to the full app') } }} aria-pressed={s.experience === id} className={`rounded-xl border px-3 py-2.5 text-left ${s.experience === id ? 'border-vine-700 bg-vine-50' : 'border-sage-200'}`}>
+                <span className="block text-[13px] font-semibold">{label}</span>
+                <span className="block text-xs text-ink/55">{sub}</span>
+              </button>
+            ))}
+          </div>
+          {simple && (
+            <div className="mt-3 flex items-center gap-3">
+              <span className="flex-1 text-[13px]"><span className="block font-medium">Show people I could help</span><span className="block text-xs text-ink/50">Students and recent graduates looking for what you offer</span></span>
+              <Toggle on={s.openToHelp} onChange={(openToHelp) => s.set({ openToHelp })} label="Show people I could help" />
+            </div>
+          )}
+        </div>
         <div className="divide-y divide-sage-200 rounded-2xl bg-white text-sm ring-1 ring-sage-200">
-          <button onClick={() => setPrefsOpen(true)} className={`${row} w-full text-left`}><SlidersHorizontal size={18} className="text-vine-600" /><span className="flex-1 font-medium">Matching preferences</span><ChevronRight size={18} className="text-ink/30" /></button>
+          {!simple && <button onClick={() => setPrefsOpen(true)} className={`${row} w-full text-left`}><SlidersHorizontal size={18} className="text-vine-600" /><span className="flex-1 font-medium">Matching preferences</span><ChevronRight size={18} className="text-ink/30" /></button>}
+          <div className={row}><CalendarCheck size={18} className="text-vine-600" /><span className="flex-1"><span className="font-medium">Calendar</span><span className="block text-xs text-ink/50">{s.calendarConnected ? 'Linked. Coffee chats suggest times you’re free' : 'Link it to find times that work for both of you'}</span></span><Toggle on={s.calendarConnected} onChange={(calendarConnected) => s.set({ calendarConnected })} label="Calendar" /></div>
           <div className={row}><Bell size={18} className="text-vine-600" /><span className="flex-1 font-medium">Notifications</span><Toggle on={s.settings.notifications} onChange={(notifications) => s.set({ settings: { ...s.settings, notifications } })} label="Notifications" /></div>
           <div className={row}><Eye size={18} className="text-vine-600" /><span className="flex-1"><span className="font-medium">Private mode</span><span className="block text-xs text-ink/50">Only people you like can see you</span></span><Toggle on={s.settings.privateMode} onChange={(privateMode) => s.set({ settings: { ...s.settings, privateMode } })} label="Private mode" /></div>
           <div className={row}><PauseCircle size={18} className="text-vine-600" /><span className="flex-1"><span className="font-medium">Pause my profile</span><span className="block text-xs text-ink/50">Take a break without losing your network</span></span><Toggle on={s.paused} onChange={(paused) => s.set({ paused })} label="Pause my profile" /></div>

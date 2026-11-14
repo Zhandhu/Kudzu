@@ -6,7 +6,7 @@ import type { Connection, Feedback, InteractionType, KEvent, Level, Mode, Nudge,
 import { MODE_META, topicLabel } from '../config/brand'
 import { USERS, USERS_BY_ID, knows } from '../data/users'
 import { SCHOOLS, PROMPTS } from '../data/schools'
-import { ALWAYS_ACCEPT, SEED_NUDGES } from '../data/seed'
+import { ALWAYS_ACCEPT, SEED_NUDGES, SUGGESTS_OTHER_TIMES } from '../data/seed'
 import { useKudzu, nowOf, type KudzuState } from '../store/useKudzu'
 import { CITY_NAMES, DAY, firstName, hash, miles } from '../lib/util'
 
@@ -659,11 +659,47 @@ export function sendText(otherId: string, text: string) {
 }
 
 
-export function sendProposal(otherId: string, proposal: Proposal) {
+/* ---------------- calendars (mocked) ---------------- */
+
+/** Whether someone else has linked a calendar. Made up from their id: about two in three have. */
+export const hasCalendar = (userId: string) => hash('cal' + userId) % 3 !== 0
+/** Whether a person is busy at a time, according to their (made-up) calendar. */
+export const isBusy = (who: string, t: number) => hash(`${who}:${Math.round(t / 3600000)}`) % 3 === 0
+
+export interface SlotOption { t: number; meBusy: boolean; themBusy: boolean }
+
+/**
+ * Times to offer for a coffee chat. With a calendar linked, each is checked
+ * against it (and against the other person's, if they linked one), and the times
+ * that work for both come first.
+ */
+export function slotOptions(now: number, otherId: string, myCalendar: boolean): SlotOption[] {
+  const d0 = new Date(now); d0.setHours(0, 0, 0, 0)
+  const theirs = hasCalendar(otherId)
+  return [[1, 9], [1, 13], [2, 8.5], [2, 16], [3, 14], [4, 10], [5, 16], [7, 9.5]]
+    .map(([d, h]) => d0.getTime() + d * DAY + h * 3600000)
+    .map((t) => ({ t, meBusy: myCalendar && isBusy('me', t), themBusy: myCalendar && theirs && isBusy(otherId, t) }))
+    .sort((a, b) => Number(a.meBusy || a.themBusy) - Number(b.meBusy || b.themBusy) || a.t - b.t)
+}
+
+/**
+ * Sends times for a coffee chat. `replaces` is their proposal that these times
+ * answer: it is set aside. Most people accept one of the times. A few answer a
+ * first proposal with other times, which is the case `SUGGESTS_OTHER_TIMES` shows.
+ */
+export function sendProposal(otherId: string, proposal: Proposal, replaces?: string) {
   const st = () => useKudzu.getState()
+  if (replaces) st().replaceProposal(otherId, replaces)
+  const before = st().conversations.find((c) => c.otherId === otherId)?.messages ?? []
+  const firstFromMe = !before.some((m) => m.proposal && m.from === 'me')
   st().addMessage(otherId, { from: 'me', proposal })
   const conv = st().conversations.find((c) => c.otherId === otherId)
   const msgId = conv?.messages[conv.messages.length - 1]?.id
+  if (!replaces && firstFromMe && SUGGESTS_OTHER_TIMES.includes(otherId) && msgId) {
+    replyLater(otherId, 'I’d love to, but those are tricky for me. Would one of these work instead?', 2400, () => st().replaceProposal(otherId, msgId))
+    setTimeout(() => st().addMessage(otherId, { from: otherId, proposal: { ...proposal, slots: proposal.slots.map((t) => t + 2 * DAY + 3600000), acceptedSlot: undefined } }), 2900)
+    return
+  }
   const slot = proposal.slots[Math.floor(Math.random() * proposal.slots.length)]
   replyLater(otherId, 'That time works for me. See you then!', 2600, () => msgId && st().acceptProposal(otherId, msgId, slot))
 }

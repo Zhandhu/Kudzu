@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { CalendarDays, MessageCircle, Search, Sprout, UserRound, Wrench } from 'lucide-react'
+import { CalendarDays, House, MessageCircle, Search, Sprout, UserRound, Wrench } from 'lucide-react'
 import { useKudzu } from './store/useKudzu'
 import { OverlayContext, Toast } from './components/ui'
 import { APP_NAME, TAGLINE } from './config/brand'
 import { inSchool } from './services'
 import Find from './screens/Find'
+import Home from './screens/Home'
 import Messages from './screens/Messages'
 import ChatThread from './screens/ChatThread'
 import Network from './screens/Network'
@@ -30,12 +31,19 @@ const TABS = [
   { to: '/profile', label: 'Profile', icon: UserRound },
 ]
 
-function TabBar() {
+/** The simple app keeps three tabs: the people you know, your messages, and you. */
+const SIMPLE_TABS = [
+  { to: '/home', label: 'Home', icon: House },
+  { to: '/messages', label: 'Messages', icon: MessageCircle },
+  { to: '/profile', label: 'Profile', icon: UserRound },
+]
+
+function TabBar({ tabs }: { tabs: typeof TABS }) {
   const unread = useKudzu((s) => s.conversations.filter((c) => c.unread && inSchool(c.otherId, s.schoolId) && !s.blocked.includes(c.otherId)).length)
   return (
     <nav className="flex shrink-0 border-t border-sage-200 bg-cream pb-[max(env(safe-area-inset-bottom),6px)] pt-1.5">
-      {TABS.map(({ to, label, icon: Icon }) => (
-        <NavLink key={to} to={to} className={({ isActive }) => `relative flex flex-1 flex-col items-center gap-0.5 py-1 text-[10.5px] font-semibold ${isActive ? 'text-vine-700' : 'text-ink/40'}`}>
+      {tabs.map(({ to, label, icon: Icon }) => (
+        <NavLink key={to} to={to} className={({ isActive }) => `relative flex flex-1 flex-col items-center gap-0.5 py-1 ${tabs.length < 5 ? 'text-[12.5px]' : 'text-[10.5px]'} font-semibold ${isActive ? 'text-vine-700' : 'text-ink/40'}`}>
           {({ isActive }) => (
             <>
               <Icon size={22} strokeWidth={isActive ? 2.4 : 1.9} />
@@ -56,7 +64,10 @@ export default function App() {
   const set = useKudzu((s) => s.set)
   const [overlay, setOverlay] = useState<HTMLElement | null>(null)
   const { pathname } = useLocation()
-  const showTabs = onboarded && TABS.some((t) => pathname === t.to)
+  const simple = useKudzu((s) => s.experience === 'simple')
+  const tabs = simple ? SIMPLE_TABS : TABS
+  const start = simple ? '/home' : '/find'
+  const showTabs = onboarded && tabs.some((t) => pathname === t.to)
 
   return (
     <div className="flex h-full items-center justify-center gap-14 sm:py-4">
@@ -81,11 +92,13 @@ export default function App() {
               </Routes>
             ) : (
               <Routes>
-                <Route path="/find" element={<Find />} />
-                <Route path="/events" element={<Events />} />
+                {/* the simple app has no search of the school and no events: those addresses lead home */}
+                <Route path="/home" element={simple ? <Home /> : <Navigate to="/find" replace />} />
+                <Route path="/find" element={simple ? <Navigate to="/home" replace /> : <Find />} />
+                <Route path="/events" element={simple ? <Navigate to="/home" replace /> : <Events />} />
+                <Route path="/network" element={simple ? <Navigate to="/home" replace /> : <Network />} />
                 <Route path="/events/:id" element={<EventDetail />} />
                 <Route path="/groups/:id" element={<GroupDetail />} />
-                <Route path="/network" element={<Network />} />
                 <Route path="/network/:id" element={<ConnectionDetail />} />
                 <Route path="/messages" element={<Messages />} />
                 <Route path="/messages/:id" element={<ChatThread />} />
@@ -94,11 +107,11 @@ export default function App() {
                 <Route path="/guidelines" element={<Guidelines />} />
                 <Route path="/cohorts/:kind" element={<Cohort />} />
                 <Route path="/known" element={<Known />} />
-                <Route path="*" element={<Navigate to="/find" replace />} />
+                <Route path="*" element={<Navigate to={start} replace />} />
               </Routes>
             )}
           </main>
-          {showTabs && <TabBar />}
+          {showTabs && <TabBar tabs={tabs} />}
           <div ref={setOverlay} className="pointer-events-none absolute inset-0 z-[1500]" />
           {onboarded && <EventPopup />}
           <CheckInSheet />

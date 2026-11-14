@@ -11,6 +11,7 @@ It covers five questions:
 | 3 | Which features work, which should change, and how do we keep finding out? | [03-efficacy.md](03-efficacy.md) |
 | 4 | Are we meeting our goals, and what comes next? | [04-goals.md](04-goals.md) |
 | 5 | How should Meet change from swiping to finding? | [05-find.md](05-find.md) |
+| 6 | What does a simple app for keeping in touch look like? | [06-simple-app.md](06-simple-app.md) |
 
 All citations, with links and how far each was checked, are in [sources.md](sources.md).
 
