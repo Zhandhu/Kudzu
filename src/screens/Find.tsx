@@ -51,15 +51,20 @@ function PersonLeaf({ f, index, requested, degree, onPick }: { f: Found; index: 
       data-leaf
       aria-label={`${u.name}, ${roleLine(u)}`}
     >
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/85 text-[24px] leading-none" aria-hidden>{faceFor(u)}</span>
+      {/* The headshot carries the distance as a tag on its lower edge: in your network,
+          one introduction away, or further. It is part of the picture, so it never
+          runs into the name beside it. */}
+      <span className="relative shrink-0" title={DEGREE_HINT[degree]}>
+        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/85 text-[24px] leading-none" aria-hidden>{faceFor(u)}</span>
+        <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 rounded-full px-1.5 text-[9.5px] font-bold leading-[15px] text-cream ring-2 ring-white" style={{ background: m.color }}>{DEGREE[degree]}</span>
+      </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[14.5px] font-semibold leading-tight" style={{ color: m.color }}>{shortName(u)}</span>
+        <span className="flex items-center gap-1 text-[14.5px] font-semibold leading-tight" style={{ color: m.color }}>
+          <span className="truncate">{shortName(u)}</span>
+          {requested && <TendrilIcon size={13} color={m.color} />}
+        </span>
         <span className="block whitespace-nowrap text-[12px] leading-snug text-ink/55">Class of ’{String(u.gradYear).slice(2)}</span>
         <span className="block truncate text-[12px] leading-snug text-ink/70">{u.company ?? (u.role === 'student' ? 'Student' : u.industry)}</span>
-      </span>
-      {/* how far away they are: in your network, one introduction away, or further */}
-      <span className="absolute right-2.5 top-1.5 flex items-center gap-1 text-[10px] font-bold" style={{ color: m.color }} title={DEGREE_HINT[degree]}>
-        {requested && <TendrilIcon size={13} color={m.color} />}{DEGREE[degree]}
       </span>
     </button>
   )
