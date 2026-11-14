@@ -116,10 +116,13 @@ function PersonRow({ p }: { p: MapPerson }) {
   )
 }
 
-export default function NetworkMap({ me, people }: { me: User; people: MapPerson[] }) {
+export default function NetworkMap({ me, people, onSelection }: { me: User; people: MapPerson[]; onSelection?: (open: boolean) => void }) {
   const [zoom, setZoom] = useState(4)
   const [sel, setSel] = useState<{ city: string } | { id: string } | null>(null)
   const [grow, setGrow] = useState(0)
+
+  // lets the page hide floating controls while a person or city card is open
+  useEffect(() => { onSelection?.(!!sel) }, [sel, onSelection])
 
   // vines grow outward from the root marker when the map opens
   useEffect(() => {

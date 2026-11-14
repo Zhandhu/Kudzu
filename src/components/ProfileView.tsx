@@ -60,7 +60,7 @@ export function ModeIcon({ mode, size = 14 }: { mode: Mode; size?: number }) {
 export function ModeTag({ mode }: { mode: Mode }) {
   const m = MODE_META[mode]
   return (
-    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold" style={{ background: m.bg, color: m.color }}>
+    <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold" style={{ background: m.bg, color: m.color }}>
       <ModeIcon mode={mode} size={11} /> {m.tag}
     </span>
   )

@@ -43,10 +43,10 @@ export const INDUSTRIES = [
 ]
 
 export const STRENGTH_META: Record<Strength, { label: string; color: string; hint: string }> = {
-  strong: { label: 'Strong', color: '#2b502a', hint: 'Talked in the last month' },
-  steady: { label: 'Steady', color: '#6fa565', hint: '1–3 months' },
-  fading: { label: 'Fading', color: '#c9a227', hint: '3–6 months' },
-  dormant: { label: 'Dormant', color: '#8b5e3c', hint: '6+ months' },
+  strong: { label: 'Strong', color: '#2b502a', hint: 'Close and current' },
+  steady: { label: 'Steady', color: '#6fa565', hint: 'In good shape' },
+  fading: { label: 'Fading', color: '#c9a227', hint: 'Could use a hello' },
+  dormant: { label: 'Dormant', color: '#8b5e3c', hint: 'Quiet for a while' },
 }
 
 export const STRENGTH_ORDER: Strength[] = ['strong', 'steady', 'fading', 'dormant']
