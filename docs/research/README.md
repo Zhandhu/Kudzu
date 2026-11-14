@@ -2,13 +2,14 @@
 
 This folder is the evidence behind Kudzu's design decisions. It exists so that when we argue about a feature, we argue from what is known, and so that we can tell which of our beliefs are tested and which are guesses.
 
-It covers three questions:
+It covers four questions:
 
 | # | Question | File |
 | --- | --- | --- |
 | 1 | How should the app fit together for a mentor, a mentee and a peer? | [01-roles.md](01-roles.md) |
 | 2 | How should we match people to maximise satisfaction? | [02-matching.md](02-matching.md) |
 | 3 | Which features work, which should change, and how do we keep finding out? | [03-efficacy.md](03-efficacy.md) |
+| 4 | Are we meeting our goals, and what comes next? | [04-goals.md](04-goals.md) |
 
 All citations, with links and how far each was checked, are in [sources.md](sources.md).
 
