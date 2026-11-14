@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Coffee, MessageCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useKadzu } from '../store/useKadzu'
-import { getUser, greetAfterMatch } from '../services'
+import { getUser, greetAfterMatch, matchInfo } from '../services'
 import { firstName } from '../lib/util'
 import { Avatar, Button, Portal } from './ui'
 
@@ -62,6 +62,9 @@ export default function MatchCelebration() {
             </motion.h2>
             <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.100 }} className="mt-2 text-sm text-vine-100">
               {other.title}{other.company ? ` at ${other.company}` : ''} · Class of {other.gradYear}
+            </motion.p>
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.200 }} className="mt-3 rounded-full bg-white/10 px-3.5 py-1.5 text-[13px] font-medium text-cream">
+              {matchInfo(me, other).reason}
             </motion.p>
 
             <motion.div initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 1.300 }} className="mt-10 flex w-full flex-col gap-3">

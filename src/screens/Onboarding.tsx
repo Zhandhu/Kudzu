@@ -11,13 +11,13 @@ import { CITIES } from '../lib/util'
 import { Logo, Tendril } from '../components/brand'
 import { Button, Field, Sheet, inputCls } from '../components/ui'
 import { PrefsForm } from '../components/PrefsForm'
-import { BasicsFields, IntentionPicker, PromptEditor } from '../components/ProfileEditor'
+import { AsksOffersFields, BasicsFields, PromptEditor } from '../components/ProfileEditor'
 
 const STEPS = ['Join your school', 'About you', 'The basics', 'What you’re here for', 'Your prompts', 'Who you’ll meet']
 
 const blank: User = {
   id: 'me', schoolIds: [], role: 'student', gradYear: 2028, name: '', major: '', title: '', company: undefined,
-  industry: 'Tech', city: 'Atlanta', coords: CITIES.Atlanta, intentions: ['Coffee chat'], prompts: [], capacity: 4, used: 0, groupIds: [], verified: 'verified',
+  industry: 'Tech', city: 'Atlanta', coords: CITIES.Atlanta, asks: [], offers: [], prompts: [], capacity: 4, used: 0, groupIds: [], verified: 'verified',
 }
 
 export default function Onboarding() {
@@ -44,7 +44,7 @@ export default function Onboarding() {
     !!school,
     me.gradYear >= 1970 && me.gradYear <= 2032,
     !!me.name.trim() && !!me.major.trim() && (me.role === 'student' || !!me.title?.trim()),
-    me.intentions.length > 0,
+    me.asks.length + me.offers.length > 0,
     filledPrompts === 3,
     true,
   ][step]
@@ -168,8 +168,10 @@ export default function Onboarding() {
 
             {step === 3 && (
               <div className="space-y-4">
-                <p className="text-sm text-ink/60">Pick as many as apply. These show on your profile so people know what to expect.</p>
-                <IntentionPicker value={me.intentions} onChange={(intentions) => up({ intentions })} />
+                <p className="text-sm text-ink/60">
+                  You don’t pick a role. Tell us what you want and what you can give, and we’ll match you with people to learn from, people to help, and peers to trade notes with.
+                </p>
+                <AsksOffersFields value={me} onChange={up} />
                 <Field label={`Open to ${me.capacity} chats per month`}>
                   <input type="range" min={1} max={10} className="w-full" value={me.capacity} onChange={(e) => up({ capacity: +e.target.value })} />
                 </Field>

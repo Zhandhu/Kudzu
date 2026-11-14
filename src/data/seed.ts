@@ -15,7 +15,8 @@ export const STUDENT_PERSONA: User = {
   industry: 'Consulting',
   city: 'Atlanta',
   coords: CITIES.Atlanta,
-  intentions: ['Coffee chat', 'Mentorship', 'Career advice'],
+  asks: ['industry', 'decision', 'interview', 'recruiting'],
+  offers: ['campus', 'path'],
   prompts: [
     { promptId: 'p6', answer: 'Consulting or product. I like both and I have one summer left to test it.' },
     { promptId: 'p9', answer: 'You were an IE who ended up somewhere unexpected.' },
@@ -39,7 +40,8 @@ export const ALUM_PERSONA: User = {
   industry: 'Tech',
   city: 'Atlanta',
   coords: CITIES.Atlanta,
-  intentions: ['Coffee chat', 'Mentorship', 'Long-term connection'],
+  asks: ['industry'],
+  offers: ['industry', 'decision', 'path', 'interview', 'resume'],
   prompts: [
     { promptId: 'p5', answer: 'Getting from operations into product, and what to say in the interview.' },
     { promptId: 'p2', answer: 'Ask for the coffee chat. Almost everyone says yes.' },
@@ -56,7 +58,7 @@ export const DEFAULT_PREFS: Prefs = {
   industries: [],
   maxDistance: 3000,
   travelingTo: null,
-  intentions: [],
+  modes: [],
   show: 'both',
 }
 
@@ -161,6 +163,7 @@ export function seedConnections(now: number): Connection[] {
     c('g5', 'Offered to run a mock case with me before recruiting starts.', ix('matched', 34), ix('messaged', 30), ix('event', 21, 'Fall alumni mixer'), ix('messaged', 6)),
     c('g7', 'Knows a lot about grid modernization. Has two kids, early mornings only.', ix('matched', 60), ix('coffee', 41), ix('messaged', 12)),
     c('g11', '', ix('matched', 25), ix('messaged', 22), ix('messaged', 20)),
+    c('g25', 'First-year in Computer Engineering. Asked about clubs and picking a thread.', ix('matched', 40), ix('coffee', 18), ix('messaged', 17)),
     // steady
     c('g2', 'Met at the fall mixer, works on engines. Travels to Atlanta a few times a year.', ix('matched', 120), ix('messaged', 110), ix('coffee', 45), ix('messaged', 45)),
     c('g15', 'Said to send my resume when product internships open.', ix('matched', 150), ix('coffee', 96), ix('messaged', 55)),
@@ -221,6 +224,13 @@ export function seedConversations(now: number): Conversation[] {
       { id: `seed-${n++}`, from: 'g2', at: now - 50 * DAY, proposal: { slots: [now - 45 * DAY], place: 'Video call', mode: 'virtual', acceptedSlot: now - 45 * DAY, checkedIn: true } },
       t('g2', 45, 'Good talking today. Send me your resume whenever you want another set of eyes on it.'),
       t('me', 45, 'Will do. Thank you, that was really helpful.')),
+
+    // 6. a chat where the demo user was the one giving advice, ending in a thank-you note
+    conv('g25', false,
+      t('g25', 40, 'Hi! I’m a first-year in Computer Engineering and I have no idea which clubs are worth it. Could I ask you a few questions?'),
+      t('me', 39, 'Of course. I was just as lost two years ago. Coffee at the Student Center?'),
+      { id: `seed-${n++}`, from: 'me', at: now - 38 * DAY, proposal: { slots: [now - 18 * DAY], place: 'Student Center coffee bar', mode: 'in-person', acceptedSlot: now - 18 * DAY, checkedIn: true } },
+      t('g25', 17, 'Thank you for being so honest about which clubs are worth the time. I joined the solar racing team the next day and I already love it.', { thanks: true })),
 
     conv('e1', false, t('e1', 40, 'Good luck with the application. Let me know how it goes!')),
     conv('u1', false, t('u1', 10, 'Charlotte is great for banking. Happy to introduce you to a few people.')),

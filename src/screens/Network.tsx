@@ -2,13 +2,13 @@ import { useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Coffee, List, Map as MapIcon, MessageCircle, Search, X } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
-import type { Nudge, Strength } from '../types'
-import { STRENGTH_META, STRENGTH_ORDER } from '../config/brand'
+import type { Mode, Nudge, Strength } from '../types'
+import { MODES, MODE_META, STRENGTH_META, STRENGTH_ORDER } from '../config/brand'
 import { useKadzu, useNow } from '../store/useKadzu'
-import { computeNudges, getUser, schoolConnections, strengthOf } from '../services'
+import { computeNudges, getUser, matchInfo, schoolConnections, strengthOf } from '../services'
 import { LeafIcon } from '../components/brand'
-import { Avatar, EmptyState, SchoolChip, inputCls } from '../components/ui'
-import { roleLine } from '../components/ProfileView'
+import { Avatar, Chip, EmptyState, SchoolChip, inputCls } from '../components/ui'
+import { ModeIcon, ModeTag, roleLine } from '../components/ProfileView'
 import NetworkMap, { type MapPerson } from '../components/NetworkMap'
 
 function NudgeCard({ n }: { n: Nudge }) {
@@ -43,6 +43,7 @@ export default function Network() {
   const [view, setView] = useState<'list' | 'map'>('list')
   const [q, setQ] = useState('')
   const [sort, setSort] = useState<'strength' | 'recent' | 'name'>('strength')
+  const [mode, setMode] = useState<Mode | null>(null)
 
   const people = useMemo<MapPerson[]>(
     () =>
@@ -57,6 +58,7 @@ export default function Network() {
 
   const filtered = people.filter((p) => {
     const t = q.trim().toLowerCase()
+    if (mode && matchInfo(s.me, p.user).mode !== mode) return false
     return !t || [p.user.name, p.user.company, p.user.city, p.user.industry, p.user.title].some((f) => f?.toLowerCase().includes(t))
   })
   const sorted = [...filtered].sort((a, b) => (sort === 'name' ? a.user.name.localeCompare(b.user.name) : a.days - b.days))
@@ -67,7 +69,9 @@ export default function Network() {
       <div className="min-w-0 flex-1">
         <div className="truncate font-semibold">{p.user.name}</div>
         <div className="truncate text-[13px] text-ink/55">{roleLine(p.user)}</div>
-        <div className="text-[11px] text-ink/45">{p.user.city} · {p.days === 0 ? 'today' : `${p.days}d ago`}</div>
+        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-ink/45">
+          <ModeTag mode={matchInfo(s.me, p.user).mode} /> {p.user.city} · {p.days === 0 ? 'today' : `${p.days}d ago`}
+        </div>
       </div>
       <LeafIcon level={p.level} size={22} />
     </Link>
@@ -127,7 +131,16 @@ export default function Network() {
             </select>
           </div>
 
-          {sorted.length === 0 && <p className="py-10 text-center text-sm text-ink/50">No connections match “{q}”.</p>}
+          <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto px-1">
+            <Chip tone="plain" active={!mode} onClick={() => setMode(null)}>Everyone</Chip>
+            {MODES.map((m) => (
+              <Chip key={m} tone="plain" active={mode === m} onClick={() => setMode(mode === m ? null : m)}>
+                <ModeIcon mode={m} size={13} /> {MODE_META[m].tag}
+              </Chip>
+            ))}
+          </div>
+
+          {sorted.length === 0 && <p className="py-10 text-center text-sm text-ink/50">{q.trim() ? `No connections match “${q}”.` : 'No one here yet.'}</p>}
 
           {sort === 'strength'
             ? STRENGTH_ORDER.map((level) => {

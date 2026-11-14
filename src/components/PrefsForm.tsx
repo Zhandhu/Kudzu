@@ -1,5 +1,5 @@
 import type { Prefs } from '../types'
-import { INDUSTRIES, INTENTIONS } from '../config/brand'
+import { INDUSTRIES, MODES, MODE_META } from '../config/brand'
 import { CITY_NAMES } from '../lib/util'
 import { Chip, DualRange } from './ui'
 
@@ -67,12 +67,15 @@ export function PrefsForm({ prefs, onChange, homeCity }: { prefs: Prefs; onChang
       </section>
 
       <section>
-        <div className={h}>Looking for</div>
+        <div className={h}>Kind of match</div>
         <div className="flex flex-wrap gap-2">
-          {INTENTIONS.map((i) => (
-            <Chip key={i} active={prefs.intentions.includes(i)} onClick={() => onChange({ intentions: toggle(prefs.intentions, i) })}>{i}</Chip>
+          {MODES.map((m) => (
+            <Chip key={m} active={prefs.modes.includes(m)} onClick={() => onChange({ modes: toggle(prefs.modes, m) })}>{MODE_META[m].label}</Chip>
           ))}
         </div>
+        <p className="mt-1.5 text-[11px] text-ink/45">
+          We work this out from what you and they are looking for. Leave empty to see all three.
+        </p>
       </section>
     </div>
   )

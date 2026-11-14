@@ -112,7 +112,7 @@ export default function Meet() {
   }
 
   const activeFilters =
-    (s.prefs.show !== 'both' ? 1 : 0) + (s.prefs.industries.length ? 1 : 0) + (s.prefs.intentions.length ? 1 : 0) +
+    (s.prefs.show !== 'both' ? 1 : 0) + (s.prefs.industries.length ? 1 : 0) + (s.prefs.modes.length ? 1 : 0) +
     (s.prefs.maxDistance < 3000 ? 1 : 0) + (s.prefs.travelingTo ? 1 : 0) + (s.prefs.gradRange[0] > 2005 || s.prefs.gradRange[1] < 2030 ? 1 : 0)
 
   return (

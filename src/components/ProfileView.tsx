@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Briefcase, Flag, GraduationCap, Heart, MapPin, MoreHorizontal, ShieldOff, Sparkles, Users } from 'lucide-react'
-import type { User } from '../types'
+import { ArrowLeftRight, Briefcase, Compass, Flag, GraduationCap, HandHeart, Heart, MapPin, MoreHorizontal, ShieldOff, Sparkles, Users } from 'lucide-react'
+import type { Mode, User } from '../types'
+import { MODE_META, topicLabel } from '../config/brand'
 import { useKadzu } from '../store/useKadzu'
-import { distanceLabel, inCommon, promptText, spotsLeft } from '../services'
+import { distanceLabel, inCommon, matchInfo, promptText, spotsLeft } from '../services'
 import { avatarGradient, firstName, initials } from '../lib/util'
 import { Chip, Sheet } from './ui'
 
@@ -50,6 +51,40 @@ export function MoreMenu({ user, light = false, onBlocked }: { user: User; light
   )
 }
 
+export function ModeIcon({ mode, size = 14 }: { mode: Mode; size?: number }) {
+  const Icon = mode === 'learn' ? Compass : mode === 'give' ? HandHeart : ArrowLeftRight
+  return <Icon size={size} />
+}
+
+/** Small tag naming the soft role of a connection, from the viewer's side. */
+export function ModeTag({ mode }: { mode: Mode }) {
+  const m = MODE_META[mode]
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold" style={{ background: m.bg, color: m.color }}>
+      <ModeIcon mode={mode} size={11} /> {m.tag}
+    </span>
+  )
+}
+
+/** "Looking for" and "Can offer", with the topics behind the match picked out. */
+export function TopicRows({ user, highlightAsks = [], highlightOffers = [] }: { user: User; highlightAsks?: string[]; highlightOffers?: string[] }) {
+  const row = (title: string, ids: string[], highlight: string[], tone: 'sage' | 'coffee') =>
+    ids.length > 0 && (
+      <div>
+        <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-ink/50">{title}</div>
+        <div className="flex flex-wrap gap-1.5">
+          {ids.map((id) => <Chip key={id} small tone={tone} active={highlight.includes(id)}>{topicLabel(id)}</Chip>)}
+        </div>
+      </div>
+    )
+  return (
+    <div className="space-y-3">
+      {row('Looking for', user.asks, highlightAsks, 'sage')}
+      {row('Can offer', user.offers, highlightOffers, 'coffee')}
+    </div>
+  )
+}
+
 export function roleLine(u: User) {
   if (u.title && u.company) return `${u.title} @ ${u.company}`
   return u.title ?? (u.role === 'student' ? 'Student' : 'Alum')
@@ -62,6 +97,7 @@ export function ProfileView({ user, onLikePrompt, showMenu = true, onBlocked }: 
   const groups = useKadzu((s) => s.groups)
   const isMe = user.id === 'me'
   const common = isMe ? [] : inCommon(me, user, groups)
+  const info = isMe ? null : matchInfo(me, user)
   const spots = spotsLeft(user)
 
   return (
@@ -95,9 +131,16 @@ export function ProfileView({ user, onLikePrompt, showMenu = true, onBlocked }: 
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-1.5">
-          {user.intentions.map((i) => <Chip key={i} small>{i}</Chip>)}
-        </div>
+        {info && (
+          <div className="rounded-xl px-3.5 py-3" style={{ background: MODE_META[info.mode].bg }}>
+            <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide" style={{ color: MODE_META[info.mode].color }}>
+              <ModeIcon mode={info.mode} size={13} /> {MODE_META[info.mode].label}
+            </div>
+            <div className="mt-1 text-[14.5px] font-medium leading-snug text-ink">{info.reason}</div>
+          </div>
+        )}
+
+        <TopicRows user={user} highlightAsks={info?.mode === 'give' ? info.topics : []} highlightOffers={info?.mode === 'learn' ? info.topics : []} />
 
         <div className={`flex items-center gap-2 rounded-xl px-3 py-2 text-[13px] font-medium ${spots > 0 ? 'bg-coffee-100 text-coffee-700' : 'bg-sage-100 text-ink/60'}`}>
           <Users size={15} />

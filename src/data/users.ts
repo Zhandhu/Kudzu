@@ -1,14 +1,33 @@
-import type { Intention, Role, User } from '../types'
+import type { Role, User } from '../types'
 import { coordsFor } from '../lib/util'
 
 /** All people here are fictional. */
 
-const INTENT: Record<string, Intention> = {
-  C: 'Coffee chat',
-  M: 'Mentorship',
-  A: 'Career advice',
-  J: 'Job/referral help',
-  L: 'Long-term connection',
+/**
+ * Each seed profile carries a short code for what the person is here for:
+ *   C coffee chat · M mentorship · A career advice · J jobs and referrals · L long-term connection
+ * That code, with their role and class year, sets what they look for and what they offer.
+ */
+function topicsFor(role: Role, gradYear: number, codes: string): { asks: string[]; offers: string[] } {
+  const has = (c: string) => codes.includes(c)
+  const pick = (...rules: [boolean, string][]) => rules.filter(([on]) => on).map(([, id]) => id)
+  if (role === 'alum') {
+    return {
+      offers: pick(
+        [true, 'industry'], [has('A'), 'decision'], [has('M'), 'path'], [has('J') || has('M'), 'interview'],
+        [has('C'), 'resume'], [has('J'), 'referral'], [gradYear >= 2018, 'recruiting'],
+      ),
+      // recent graduates still want guidance; others are curious about fields beyond their own
+      asks: gradYear >= 2021 ? ['decision', 'path'] : has('L') ? ['industry'] : [],
+    }
+  }
+  return {
+    asks: pick(
+      [true, 'industry'], [has('A'), 'decision'], [has('M'), 'path'], [has('J') || has('C'), 'interview'],
+      [has('C'), 'resume'], [has('J'), 'referral'], [gradYear >= 2028, 'recruiting'], [gradYear >= 2029, 'campus'],
+    ),
+    offers: pick([gradYear <= 2029, 'campus'], [gradYear <= 2028, 'path'], [gradYear <= 2027, 'recruiting'], [gradYear <= 2027, 'interview']),
+  }
 }
 
 type P = [string, string]
@@ -42,7 +61,7 @@ function mk(
     industry,
     city,
     coords: coordsFor(city, id),
-    intentions: intents.split('').map((c) => INTENT[c]),
+    ...topicsFor(role, gradYear, intents),
     prompts: prompts.map(([promptId, answer]) => ({ promptId, answer })),
     capacity,
     used,

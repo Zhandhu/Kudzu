@@ -1,15 +1,34 @@
-import type { Intention, PromptAnswer, User } from '../types'
-import { INDUSTRIES, INTENTIONS } from '../config/brand'
+import type { PromptAnswer, User } from '../types'
+import { INDUSTRIES, TOPICS } from '../config/brand'
 import { listPrompts } from '../services'
 import { CITY_NAMES } from '../lib/util'
 import { Chip, Field, inputCls } from './ui'
 
-export function IntentionPicker({ value, onChange }: { value: Intention[]; onChange: (v: Intention[]) => void }) {
+/** Picks help topics from the shared menu. Used twice: for asks and for offers. */
+export function TopicPicker({ value, onChange, tone = 'sage' }: { value: string[]; onChange: (v: string[]) => void; tone?: 'sage' | 'coffee' }) {
   return (
     <div className="flex flex-wrap gap-2">
-      {INTENTIONS.map((i) => (
-        <Chip key={i} active={value.includes(i)} onClick={() => onChange(value.includes(i) ? value.filter((x) => x !== i) : [...value, i])}>{i}</Chip>
+      {TOPICS.map((t) => (
+        <Chip key={t.id} tone={tone} active={value.includes(t.id)} onClick={() => onChange(value.includes(t.id) ? value.filter((x) => x !== t.id) : [...value, t.id])}>{t.label}</Chip>
       ))}
+    </div>
+  )
+}
+
+/** The two halves of "what you're here for". */
+export function AsksOffersFields({ value, onChange }: { value: User; onChange: (patch: Partial<User>) => void }) {
+  return (
+    <div className="space-y-5">
+      <div>
+        <div className="mb-1 text-sm font-semibold">I’m looking for</div>
+        <p className="mb-2 text-xs text-ink/55">What would help you right now?</p>
+        <TopicPicker value={value.asks} onChange={(asks) => onChange({ asks })} />
+      </div>
+      <div>
+        <div className="mb-1 text-sm font-semibold">I can offer</div>
+        <p className="mb-2 text-xs text-ink/55">Everyone has something. A second-year knows things a first-year doesn’t.</p>
+        <TopicPicker tone="coffee" value={value.offers} onChange={(offers) => onChange({ offers })} />
+      </div>
     </div>
   )
 }

@@ -1,7 +1,7 @@
-import { AlertTriangle, ClipboardCheck, FastForward, GraduationCap, Heart, RotateCcw, UserRoundCog } from 'lucide-react'
+import { AlertTriangle, ClipboardCheck, FastForward, GraduationCap, Heart, HeartHandshake, RotateCcw, UserRoundCog } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useKadzu } from '../store/useKadzu'
-import { buildDeck, findCheckinTarget, listSchools } from '../services'
+import { buildDeck, findCheckinTarget, listSchools, receiveThanks } from '../services'
 import { Chip, Sheet, Toggle } from './ui'
 
 /** Presenter controls. Open by tapping the logo three times or the wrench button. */
@@ -55,6 +55,18 @@ export default function DemoPanel() {
         <button className={item} onClick={triggerCheckin}>
           <ClipboardCheck size={19} className="text-coffee-500" />
           <span className="flex-1">Trigger a post-chat check-in<span className={sub}>Opens the private feedback form.</span></span>
+        </button>
+
+        <button
+          className={item}
+          onClick={() => {
+            close()
+            if (receiveThanks(s)) nav('/profile')
+            else s.say('Everyone in your network has already thanked you.')
+          }}
+        >
+          <HeartHandshake size={19} className="text-coffee-500" />
+          <span className="flex-1">Receive a thank-you note<span className={sub}>Someone you helped thanks you. Shows on your profile and in the chat.</span></span>
         </button>
 
         <div className={item}>

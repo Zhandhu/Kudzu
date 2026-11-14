@@ -1,13 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { CalendarCheck, Check, ChevronLeft, Coffee, MapPin, Send, Video } from 'lucide-react'
+import { CalendarCheck, Check, ChevronLeft, Coffee, HeartHandshake, MapPin, Send, Video } from 'lucide-react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import type { Message, User } from '../types'
+import type { Message, Mode, User } from '../types'
 import { useKadzu, useNow } from '../store/useKadzu'
-import { acceptTheirProposal, getUser, promptText, sendProposal, sendText, strengthOf } from '../services'
+import { acceptTheirProposal, getUser, matchInfo, promptText, sendProposal, sendText, strengthOf } from '../services'
 import { DAY, HOUR, firstName, fmtDateTime, fmtTime, startOfDay } from '../lib/util'
 import { LeafIcon, Tendril } from '../components/brand'
 import { Avatar, Button, Chip, Sheet, inputCls } from '../components/ui'
 import { MoreMenu } from '../components/ProfileView'
+
+/** First-message suggestions, which differ by the soft role of the match. */
+function openers(mode: Mode, other: User): string[] {
+  const name = firstName(other.name)
+  if (mode === 'learn') return [`Hi ${name}! I’d love to hear how you got into ${other.industry.toLowerCase()}.`, 'What do you wish you’d known at my stage?']
+  if (mode === 'give') return [`Hi ${name}! Happy to help. What’s on your mind?`, 'Ask me anything. I was in your spot not long ago.']
+  return [`Hi ${name}! Want to compare notes?`, 'How are you approaching this semester?']
+}
 
 const PLACES = ['Vine & Bean Café, Midtown', 'Student Center coffee bar', 'A spot near your office', 'Video call']
 
@@ -107,6 +115,7 @@ export default function ChatThread() {
   const conv = useKadzu((s) => s.conversations.find((c) => c.otherId === id))
   const connection = useKadzu((s) => s.connections.find((c) => c.otherId === id))
   const typing = useKadzu((s) => !!s.typing[id])
+  const me = useKadzu((s) => s.me)
   const { ensureConversation, markRead } = useKadzu.getState()
   const [text, setText] = useState(params.get('draft') ?? '')
   const [proposing, setProposing] = useState(params.get('propose') === '1')
@@ -121,6 +130,7 @@ export default function ChatThread() {
 
   if (!other) return <div className="p-8 text-center text-sm text-ink/60">This conversation is no longer available.</div>
   const messages = conv?.messages ?? []
+  const info = matchInfo(me, other)
   const strength = connection ? strengthOf(connection, now).level : null
 
   const send = () => {
@@ -149,9 +159,9 @@ export default function ChatThread() {
           <div className="flex flex-col items-center px-6 pt-10 text-center">
             <Tendril animate />
             <p className="mt-3 font-display text-lg font-semibold">You matched with {firstName(other.name)}</p>
-            <p className="mt-1 text-sm text-ink/55">Say hello, or skip the small talk and propose a coffee chat.</p>
+            <p className="mt-1 text-sm text-ink/55">{info.reason}. Say hello, or skip the small talk and propose a coffee chat.</p>
             <div className="mt-4 flex flex-wrap justify-center gap-2">
-              {[`Hi ${firstName(other.name)}! Thanks for connecting.`, `I’d love to hear how you got into ${other.industry.toLowerCase()}.`].map((q) => (
+              {openers(info.mode, other).map((q) => (
                 <Chip key={q} tone="plain" onClick={() => sendText(id, q)}>{q}</Chip>
               ))}
             </div>
@@ -160,6 +170,16 @@ export default function ChatThread() {
         {messages.map((m) => {
           if (m.proposal) return <ProposalCard key={m.id} m={m} other={other} now={now} />
           const mine = m.from === 'me'
+          if (m.thanks) {
+            return (
+              <div key={m.id} className="mx-auto w-[88%] rounded-2xl border border-coffee-200 bg-coffee-100/70 p-4 text-center">
+                <div className="flex items-center justify-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-coffee-700">
+                  <HeartHandshake size={14} /> {mine ? `You thanked ${firstName(other.name)}` : `${firstName(other.name)} sent you a thank-you`}
+                </div>
+                <p className="mt-2 font-display text-[16.5px] leading-snug">“{m.text}”</p>
+              </div>
+            )
+          }
           return (
             <div key={m.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-[14.5px] leading-snug ${mine ? 'rounded-br-md bg-vine-700 text-cream' : 'rounded-bl-md bg-white ring-1 ring-sage-200'}`}>

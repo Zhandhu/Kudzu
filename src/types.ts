@@ -1,11 +1,11 @@
 export type Role = 'student' | 'alum'
 
-export type Intention =
-  | 'Coffee chat'
-  | 'Mentorship'
-  | 'Career advice'
-  | 'Job/referral help'
-  | 'Long-term connection'
+/**
+ * The soft role a pairing takes, from the viewer's side. Nobody picks this:
+ * it is worked out from what each person is looking for and can offer.
+ *   learn = they can help me    give = I can help them    trade = same stage
+ */
+export type Mode = 'learn' | 'give' | 'trade'
 
 export interface School {
   id: string
@@ -34,7 +34,10 @@ export interface User {
   industry: string
   city: string
   coords: [number, number]
-  intentions: Intention[]
+  /** Help topics this person is looking for (ids from TOPICS). */
+  asks: string[]
+  /** Help topics this person can offer. */
+  offers: string[]
   prompts: PromptAnswer[]
   /** "Open to N chats per month" */
   capacity: number
@@ -48,7 +51,8 @@ export interface Prefs {
   industries: string[]
   maxDistance: number
   travelingTo: string | null
-  intentions: Intention[]
+  /** Optional narrowing by soft role. Empty means show everyone. */
+  modes: Mode[]
   show: 'student' | 'alum' | 'both'
 }
 
@@ -112,6 +116,8 @@ export interface Message {
   /** Set when the message is a Hinge-style comment on a prompt. */
   promptId?: string
   proposal?: Proposal
+  /** A thank-you note sent after a coffee chat. `text` holds the note. */
+  thanks?: boolean
   system?: boolean
 }
 

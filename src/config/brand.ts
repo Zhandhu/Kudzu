@@ -1,16 +1,34 @@
-import type { Intention, Strength } from '../types'
+import type { Mode, Strength } from '../types'
 
 /** Change the product name here and it changes everywhere. */
 export const APP_NAME = 'Kadzu'
 export const TAGLINE = 'Coffee chats, matched.'
 
-export const INTENTIONS: Intention[] = [
-  'Coffee chat',
-  'Mentorship',
-  'Career advice',
-  'Job/referral help',
-  'Long-term connection',
+/**
+ * One shared menu of help topics. People pick from it twice: what they are
+ * looking for, and what they can offer. A match is strongest where one
+ * person's ask meets the other's offer.
+ */
+export const TOPICS: { id: string; label: string }[] = [
+  { id: 'industry', label: 'An inside look at an industry' },
+  { id: 'decision', label: 'Talking through a decision' },
+  { id: 'path', label: 'Someone who’s been where I am' },
+  { id: 'interview', label: 'Interview practice' },
+  { id: 'resume', label: 'Resume or portfolio feedback' },
+  { id: 'referral', label: 'Referrals and introductions' },
+  { id: 'recruiting', label: 'Recruiting tips and timelines' },
+  { id: 'campus', label: 'Classes, clubs and campus life' },
 ]
+
+export const topicLabel = (id: string) => TOPICS.find((t) => t.id === id)?.label ?? id
+
+export const MODE_META: Record<Mode, { label: string; verb: string; tag: string; color: string; bg: string }> = {
+  learn: { label: 'Learn from', verb: 'Learn from', tag: 'Learning from', color: '#2b502a', bg: '#dfeadc' },
+  give: { label: 'Give back', verb: 'Give back to', tag: 'Giving back', color: '#744a2e', bg: '#f0e4d8' },
+  trade: { label: 'Trade notes', verb: 'Trade notes with', tag: 'Trading notes', color: '#7a6312', bg: '#f6edc9' },
+}
+
+export const MODES: Mode[] = ['learn', 'trade', 'give']
 
 export const INDUSTRIES = [
   'Tech',

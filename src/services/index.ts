@@ -2,7 +2,8 @@
  * Service layer. Screens read data through these functions rather than importing
  * seed files, so a real API can replace this file later without touching the UI.
  */
-import type { Connection, Feedback, KEvent, Nudge, Prefs, Proposal, Strength, User } from '../types'
+import type { Connection, Feedback, KEvent, Mode, Nudge, Prefs, Proposal, Strength, User } from '../types'
+import { MODE_META, topicLabel } from '../config/brand'
 import { USERS, USERS_BY_ID } from '../data/users'
 import { SCHOOLS, PROMPTS } from '../data/schools'
 import { SEED_NUDGES } from '../data/seed'
@@ -40,6 +41,66 @@ export function inCommon(me: User, other: User, groups: { id: string; name: stri
   return out
 }
 
+export interface MatchInfo {
+  mode: Mode
+  /** Topics that explain the match, most relevant first. */
+  topics: string[]
+  /** 0–1: how much of the need is met. */
+  fit: number
+  headline: string
+  reason: string
+}
+
+const listTopics = (ids: string[]) => {
+  // lower-case only the first letter, so "I" inside a label stays capitalised
+  const labels = ids.slice(0, 3).map((id) => topicLabel(id)).map((l) => l[0].toLowerCase() + l.slice(1))
+  return labels.length <= 1 ? labels.join('') : `${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]}`
+}
+
+/**
+ * Works out the soft role for a pairing, from `me`'s side, and why.
+ * Stage decides the default (someone further along is someone to learn from);
+ * what each person asks for and offers can tip it and supplies the reason.
+ */
+export function matchInfo(me: User, other: User): MatchInfo {
+  const theyHelp = me.asks.filter((t) => other.offers.includes(t))
+  const iHelp = other.asks.filter((t) => me.offers.includes(t))
+  const shared = me.asks.filter((t) => other.asks.includes(t))
+  const gap = me.gradYear - other.gradYear // positive: they are further along
+  const sameStage = me.role === other.role && Math.abs(gap) <= (me.role === 'student' ? 0 : 2)
+  const theyAhead = me.role !== other.role ? other.role === 'alum' : gap > 0
+  const name = firstName(other.name)
+  const years = Math.abs(gap)
+  const span = years <= 1 ? 'a year' : `${years} years`
+
+  let mode: Mode
+  let topics: string[]
+  let reason: string
+  let fit: number
+  if (sameStage) {
+    mode = 'trade'
+    const mutual = [...new Set([...theyHelp, ...iHelp])]
+    topics = mutual.length ? mutual : shared
+    reason = mutual.length
+      ? `You can help each other with ${listTopics(mutual)}`
+      : shared.length
+        ? `You’re both looking for ${listTopics(shared)}`
+        : `You and ${name} are at the same stage`
+    fit = Math.min(1, topics.length / Math.max(1, me.asks.length))
+  } else if (theyAhead ? theyHelp.length > 0 || iHelp.length === 0 : iHelp.length === 0 && theyHelp.length > 0) {
+    mode = 'learn'
+    topics = theyHelp
+    reason = theyHelp.length ? `${name} can help with ${listTopics(theyHelp)}` : `${name} is ${span} further along than you`
+    fit = theyHelp.length / Math.max(1, me.asks.length)
+  } else {
+    mode = 'give'
+    topics = iHelp
+    reason = iHelp.length ? `${name} is looking for ${listTopics(iHelp)}` : `You’re ${span} further along than ${name}`
+    fit = iHelp.length / Math.max(1, other.asks.length)
+  }
+  return { mode, topics, fit, reason, headline: `${MODE_META[mode].verb} ${name}` }
+}
+
 /** Private reliability/quality score, 0–1. Never shown in the UI; only used for ranking. */
 export function trustScore(userId: string, feedback: Feedback[]): number {
   let score = userId === 'g1' ? 0.98 : 0.7 + (hash(userId) % 25) / 100
@@ -66,11 +127,13 @@ export function buildDeck(s: Pick<KadzuState, 'me' | 'prefs' | 'schoolId' | 'swi
     .filter((u) => prefs.show === 'both' || u.role === prefs.show)
     .filter((u) => u.gradYear >= prefs.gradRange[0] && u.gradYear <= prefs.gradRange[1])
     .filter((u) => prefs.industries.length === 0 || prefs.industries.includes(u.industry))
-    .filter((u) => prefs.intentions.length === 0 || u.intentions.some((i) => prefs.intentions.includes(i)))
     .filter((u) => prefs.maxDistance >= 3000 || miles(origin, u.coords) <= prefs.maxDistance)
-    .map((u, i) => ({
+    .map((u) => ({ u, info: matchInfo(me, u) }))
+    .filter(({ info }) => prefs.modes.length === 0 || prefs.modes.includes(info.mode))
+    .map(({ u, info }, i) => ({
       u,
-      score: inCommon(me, u, s.groups).length * 1.5 + trustScore(u.id, s.feedback) * 4 + (spotsLeft(u) > 0 ? 1 : 0) - i * 0.02,
+      // need-to-offer fit is weighted alongside common ground and the private trust score
+      score: info.fit * 2.5 + inCommon(me, u, s.groups).length * 1.5 + trustScore(u.id, s.feedback) * 4 + (spotsLeft(u) > 0 ? 1 : 0) - i * 0.02,
     }))
     .sort((a, b) => b.score - a.score)
     .map((x) => x.u)
@@ -204,6 +267,64 @@ export function acceptTheirProposal(otherId: string, msgId: string, slot: number
   useKadzu.getState().acceptProposal(otherId, msgId, slot)
   useKadzu.getState().addMessage(otherId, { from: 'me', text: 'That time works for me!' })
   replyLater(otherId, 'Perfect, it’s on my calendar.', 1800)
+}
+
+/* ---------------- thank-you notes ---------------- */
+
+/**
+ * Saves the private check-in, then delivers the thank-you note (if any) to the
+ * other person. The note is the only part of a check-in they ever see.
+ */
+export function submitCheckin(fb: Omit<Feedback, 'at'>, msgId: string, thanks: string) {
+  const st = () => useKadzu.getState()
+  st().submitFeedback(fb, msgId)
+  const note = thanks.trim()
+  if (fb.met !== 'yes' || !note) return
+  st().addMessage(fb.otherId, { from: 'me', text: note, thanks: true })
+  const name = firstName(getUser(fb.otherId)?.name ?? '')
+  st().say(`Feedback saved privately. Your thank-you is on its way to ${name}.`)
+  replyLater(fb.otherId, 'That means a lot. Thank you for telling me. Happy to do it again any time.', 2600)
+}
+
+export interface ThanksNote {
+  from: User
+  text: string
+  at: number
+}
+
+/** Thank-you notes the signed-in user has received, newest first. Only they can see these. */
+export function receivedThanks(s: Pick<KadzuState, 'conversations' | 'schoolId' | 'blocked'>): ThanksNote[] {
+  const out: ThanksNote[] = []
+  for (const c of s.conversations) {
+    if (!inSchool(c.otherId, s.schoolId) || s.blocked.includes(c.otherId)) continue
+    const from = getUser(c.otherId)
+    if (!from) continue
+    for (const m of c.messages) if (m.thanks && m.from !== 'me' && m.text) out.push({ from, text: m.text, at: m.at })
+  }
+  return out.sort((a, b) => b.at - a.at)
+}
+
+const SAMPLE_THANKS = [
+  'Thank you for the honest advice last week. I rewrote my resume the way you suggested and got two interviews.',
+  'I wanted to say thanks. Talking it through with you is the reason I finally made the decision.',
+  'Thanks for making time. You were the first person who explained what the job is like day to day.',
+]
+
+/** Demo panel: someone the user helped sends a thank-you note. Returns their id. */
+export function receiveThanks(s: KadzuState): string | null {
+  const thanked = new Set(receivedThanks(s).map((t) => t.from.id))
+  const candidates = schoolConnections(s)
+    .map((c) => getUser(c.otherId))
+    .filter((u): u is User => !!u && !thanked.has(u.id))
+  // prefer people the user would have been helping
+  const helped = candidates.find((u) => matchInfo(s.me, u).mode === 'give') ?? candidates.find((u) => matchInfo(s.me, u).mode === 'trade')
+  const pick = helped ?? candidates[0]
+  if (!pick) return null
+  // someone further along thanks you for the conversation, not for advice
+  const text = helped ? SAMPLE_THANKS[thanked.size % SAMPLE_THANKS.length] : 'Thanks for the conversation last week. Your questions made me think, and I got as much out of it as you did.'
+  s.addMessage(pick.id, { from: pick.id, text, thanks: true })
+  s.say(`${firstName(pick.name)} sent you a thank-you note`)
+  return pick.id
 }
 
 /** Finds a confirmed chat that has not had its check-in yet (used by the demo panel). */

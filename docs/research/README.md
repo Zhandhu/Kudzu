@@ -35,14 +35,20 @@ These are ordered by how much evidence supports them against how little they cos
 
 | Priority | Change | Why | Detail |
 | --- | --- | --- | --- |
-| 1 | Add a **thank-you step** to the post-chat check-in, delivered to the mentor | Finding 5 | [03](03-efficacy.md#feedback-and-trust) |
-| 2 | Replace the single intentions list with **"I'm looking for" and "I can offer"** | Findings 2, 6 | [01](01-roles.md#7-proposal-one-model-three-modes) |
+| 1 | Add a **thank-you step** to the post-chat check-in, delivered to the mentor. **Built** | Finding 5 | [03](03-efficacy.md#feedback-and-trust) |
+| 2 | Replace the single intentions list with **"I'm looking for" and "I can offer"**. **Built** | Findings 2, 6 | [01](01-roles.md#7-proposal-one-model-three-modes) |
 | 3 | Make match scores **reciprocal** and **capacity-aware** | Findings 7, 8 | [02](02-matching.md#4-proposed-algorithm) |
 | 4 | Replace the endless deck with a **small daily set** plus one weekly top match | Finding 9 | [02](02-matching.md#4-proposed-algorithm) |
 | 5 | Add a **goal and a suggested agenda** to every coffee proposal | Finding 3 | [03](03-efficacy.md#messages-and-coffee-chats) |
 | 6 | **Redraw the dormant leaf** and rewrite nudges around the value of reconnecting | Findings 10, 11 | [03](03-efficacy.md#network-and-connection-strength) |
 
-Nothing here has been built. These are proposals for discussion.
+Items 1 and 2 are built in the prototype. The rest are proposals for discussion.
+
+What was built differs from the proposals in three ways:
+
+- **Need-to-offer fit is added to the existing ranking** as one more term. The reciprocal, capacity-aware algorithm in [02-matching.md](02-matching.md) is not built.
+- **The check-in does not yet change by mode.** Everyone who had a good chat is offered the thank-you, whichever way the help flowed.
+- **The private impact line for mentors is not built.** The profile shows the notes received and how many people have sent one.
 
 ## How strong is the evidence?
 

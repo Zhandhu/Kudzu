@@ -3,11 +3,11 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import type { InteractionType } from '../types'
 import { STRENGTH_META } from '../config/brand'
 import { useKadzu, useNow } from '../store/useKadzu'
-import { getUser, strengthOf } from '../services'
+import { getUser, matchInfo, strengthOf } from '../services'
 import { ago, firstName, fmtDate } from '../lib/util'
 import { LeafIcon, StrengthBadge } from '../components/brand'
 import { Avatar, BackHeader, inputCls } from '../components/ui'
-import { MoreMenu, roleLine } from '../components/ProfileView'
+import { ModeTag, MoreMenu, roleLine } from '../components/ProfileView'
 
 const KIND: Record<InteractionType, { label: string; icon: typeof Coffee }> = {
   matched: { label: 'Matched on Kadzu', icon: Handshake },
@@ -23,9 +23,11 @@ export default function ConnectionDetail() {
   const user = getUser(id)
   const conn = useKadzu((s) => s.connections.find((c) => c.otherId === id))
   const setNote = useKadzu((s) => s.setNote)
+  const me = useKadzu((s) => s.me)
   if (!user || !conn) return <><BackHeader title="Connection" /><p className="p-8 text-center text-sm text-ink/60">You’re not connected with this person yet.</p></>
 
   const st = strengthOf(conn, now)
+  const info = matchInfo(me, user)
   const meta = STRENGTH_META[st.level]
   const timeline = [...conn.interactions].sort((a, b) => b.at - a.at)
 
@@ -38,6 +40,8 @@ export default function ConnectionDetail() {
         <h2 className="mt-3 font-display text-2xl font-semibold">{user.name}</h2>
         <p className="text-sm text-ink/60">{roleLine(user)}</p>
         <p className="text-xs text-ink/45">{user.city} · Class of {user.gradYear}</p>
+        <div className="mt-2"><ModeTag mode={info.mode} /></div>
+        <p className="mt-1.5 text-[13px] text-ink/65">{info.reason}</p>
       </div>
 
       <div className="mx-4 mt-5 flex items-center gap-3 rounded-2xl p-4" style={{ background: `${meta.color}14` }}>

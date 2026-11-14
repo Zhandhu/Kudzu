@@ -1,15 +1,15 @@
 import { useState } from 'react'
-import { Bell, BookOpen, ChevronRight, Eye, LogOut, PauseCircle, Pencil, SlidersHorizontal } from 'lucide-react'
+import { Bell, BookOpen, ChevronRight, Eye, HeartHandshake, Lock, LogOut, PauseCircle, Pencil, SlidersHorizontal } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { User } from '../types'
 import { useKadzu, useNow } from '../store/useKadzu'
-import { accountStanding, getSchool, promptText, schoolEvents } from '../services'
-import { CITIES, fmtDateTime } from '../lib/util'
+import { accountStanding, getSchool, promptText, receivedThanks, schoolEvents } from '../services'
+import { CITIES, ago, fmtDateTime } from '../lib/util'
 import { Logo, VineDivider } from '../components/brand'
 import { Avatar, Button, Chip, Field, SchoolChip, Sheet, Toggle } from '../components/ui'
-import { roleLine } from '../components/ProfileView'
+import { TopicRows, roleLine } from '../components/ProfileView'
 import { PrefsForm } from '../components/PrefsForm'
-import { BasicsFields, IntentionPicker, PromptEditor } from '../components/ProfileEditor'
+import { AsksOffersFields, BasicsFields, PromptEditor } from '../components/ProfileEditor'
 import { AccountNotice } from '../components/AccountNotice'
 
 function EditSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -36,7 +36,7 @@ function EditSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
           <p className="text-xs text-ink/55">Your avatar is generated from your initials. Photo upload comes later.</p>
         </div>
         <BasicsFields value={draft} onChange={up} />
-        <Field label="What you’re here for"><IntentionPicker value={draft.intentions} onChange={(intentions) => up({ intentions })} /></Field>
+        <AsksOffersFields value={draft} onChange={up} />
         <Field label={`Open to ${draft.capacity} chats per month`}>
           <input type="range" min={1} max={10} className="w-full" value={draft.capacity} onChange={(e) => up({ capacity: +e.target.value })} />
         </Field>
@@ -56,6 +56,7 @@ export default function Profile() {
   const school = getSchool(s.schoolId)
   const myGroups = s.groups.filter((g) => g.schoolId === s.schoolId && me.groupIds.includes(g.id))
   const myEvents = schoolEvents(s, now).filter((e) => e.myRsvp || e.hostId === 'me')
+  const thanks = receivedThanks(s)
   const row = 'flex items-center gap-3 px-4 py-3.5'
 
   return (
@@ -96,8 +97,30 @@ export default function Profile() {
         </div>
       </section>
 
+      <section className="mx-4 mt-4 rounded-2xl bg-white p-4 ring-1 ring-sage-200">
+        <div className="flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-sm font-semibold"><HeartHandshake size={16} className="text-coffee-500" /> Thank-you notes</h2>
+          <span className="flex items-center gap-1 text-[11px] text-ink/45"><Lock size={11} /> Only you see these</span>
+        </div>
+        {thanks.length === 0 ? (
+          <p className="mt-2 text-[13px] leading-relaxed text-ink/55">When someone thanks you after a chat, their note shows up here. It’s the one piece of feedback that is shared.</p>
+        ) : (
+          <>
+            <p className="mt-1 text-xs text-ink/55">{thanks.length} {thanks.length === 1 ? 'person has' : 'people have'} thanked you for your time.</p>
+            <div className="mt-3 space-y-2.5">
+              {thanks.slice(0, 3).map((t) => (
+                <Link key={t.from.id + t.at} to={`/messages/${t.from.id}`} className="block rounded-xl bg-coffee-100/60 p-3">
+                  <p className="font-display text-[15.5px] leading-snug">“{t.text}”</p>
+                  <div className="mt-2 flex items-center gap-2 text-xs text-ink/60"><Avatar user={t.from} size={20} /> {t.from.name} · {ago(t.at, now)}</div>
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
+      </section>
+
       <section className="mx-4 mt-4">
-        <div className="mb-2 flex flex-wrap gap-1.5">{me.intentions.map((i) => <Chip key={i} small>{i}</Chip>)}</div>
+        <div className="mb-3"><TopicRows user={me} /></div>
         <div className="space-y-2">
           {me.prompts.map((p) => (
             <div key={p.promptId} className="rounded-2xl border border-sage-200 bg-white p-3.5">

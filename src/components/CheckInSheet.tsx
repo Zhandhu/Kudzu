@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react'
-import { Lock, ThumbsDown, ThumbsUp } from 'lucide-react'
+import { HeartHandshake, Lock, ThumbsDown, ThumbsUp } from 'lucide-react'
 import type { Feedback } from '../types'
 import { FEEDBACK_TAGS } from '../config/brand'
 import { useKadzu } from '../store/useKadzu'
-import { getUser } from '../services'
+import { getUser, submitCheckin } from '../services'
+
+const STARTERS = [
+  'Thank you for making the time.',
+  'Your advice changed what I’ll do next.',
+]
 import { firstName } from '../lib/util'
 import { Avatar, Button, Chip, Sheet, inputCls } from './ui'
 
@@ -11,15 +16,15 @@ import { Avatar, Button, Chip, Sheet, inputCls } from './ui'
 export default function CheckInSheet() {
   const checkin = useKadzu((s) => s.checkin)
   const set = useKadzu((s) => s.set)
-  const submit = useKadzu((s) => s.submitFeedback)
   const other = checkin ? getUser(checkin.otherId) : undefined
   const [met, setMet] = useState<Feedback['met'] | null>(null)
   const [rating, setRating] = useState<'up' | 'down' | undefined>()
   const [tags, setTags] = useState<string[]>([])
   const [note, setNote] = useState('')
+  const [thanks, setThanks] = useState('')
 
   useEffect(() => {
-    if (checkin) { setMet(null); setRating(undefined); setTags([]); setNote('') }
+    if (checkin) { setMet(null); setRating(undefined); setTags([]); setNote(''); setThanks('') }
   }, [checkin])
 
   const name = other ? firstName(other.name) : ''
@@ -33,7 +38,7 @@ export default function CheckInSheet() {
             <Avatar user={other} size={48} />
             <div>
               <div className="font-semibold">Your coffee chat with {name}</div>
-              <div className="flex items-center gap-1 text-xs text-ink/55"><Lock size={12} /> Private. {name} will never see this.</div>
+              <div className="flex items-center gap-1 text-xs text-ink/55"><Lock size={12} /> Private. {name} won’t see your answers.</div>
             </div>
           </div>
 
@@ -72,14 +77,35 @@ export default function CheckInSheet() {
           <div className={h}>Private note <span className="font-normal text-ink/45">Optional</span></div>
           <textarea className={`${inputCls} h-20 resize-none`} placeholder="Only our team sees this." value={note} onChange={(e) => setNote(e.target.value)} />
 
+          {met === 'yes' && rating !== 'down' && (
+            <div className="mt-5 rounded-2xl border border-coffee-200 bg-coffee-100/60 p-4">
+              <div className="flex items-center gap-2 text-sm font-semibold text-coffee-700"><HeartHandshake size={17} /> Send {name} a thank-you</div>
+              <p className="mt-1 text-xs leading-relaxed text-ink/60">
+                This is the only part {name} will see. One line about what helped is what makes people glad they said yes.
+              </p>
+              <textarea
+                className={`${inputCls} mt-3 h-20 resize-none`}
+                placeholder={`Thanks for… It helped me…`}
+                value={thanks}
+                onChange={(e) => setThanks(e.target.value)}
+                aria-label={`Thank-you note to ${name}`}
+              />
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {STARTERS.map((st) => (
+                  <Chip key={st} small tone="plain" onClick={() => setThanks(st)}>{st}</Chip>
+                ))}
+              </div>
+            </div>
+          )}
+
           <Button
             className="mt-5 w-full" disabled={!met}
-            onClick={() => met && submit({ otherId: checkin.otherId, met, rating: met === 'yes' ? rating : undefined, tags: met === 'yes' ? tags : [], note }, checkin.msgId)}
+            onClick={() => met && submitCheckin({ otherId: checkin.otherId, met, rating: met === 'yes' ? rating : undefined, tags: met === 'yes' ? tags : [], note }, checkin.msgId, rating === 'down' ? '' : thanks)}
           >
-            Submit
+            {met === 'yes' && rating !== 'down' && thanks.trim() ? 'Submit and send thank-you' : 'Submit'}
           </Button>
           <p className="mt-3 text-center text-[11px] leading-relaxed text-ink/45">
-            Feedback is used to improve matching and keep the community healthy. It never appears on profiles.
+            Your answers above the thank-you are used to improve matching and keep the community healthy. They never appear on profiles.
           </p>
         </>
       )}

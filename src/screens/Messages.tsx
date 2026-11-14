@@ -11,6 +11,7 @@ function preview(c: Conversation): string {
   const m = c.messages[c.messages.length - 1]
   if (!m) return ''
   const who = m.from === 'me' ? 'You: ' : ''
+  if (m.thanks) return m.from === 'me' ? 'You sent a thank-you note' : 'Sent you a thank-you note'
   if (m.proposal) return m.proposal.acceptedSlot ? '☕ Coffee chat confirmed' : `${who}☕ Proposed a coffee chat`
   return who + (m.text ?? '')
 }

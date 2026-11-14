@@ -283,7 +283,8 @@ export const useKadzu = create<KadzuState>()(
       say: (text) => set({ toast: { id: uid(), text } }),
     }),
     {
-      name: 'kadzu-demo-v1',
+      // bump this when the saved shape changes, so old browsers start from fresh seed data
+      name: 'kadzu-demo-v2',
       partialize: (s) => {
         const { matchWith, checkin, toast, demoOpen, typing, ...rest } = s
         void matchWith, checkin, toast, demoOpen, typing
