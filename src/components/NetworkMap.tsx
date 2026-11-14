@@ -6,7 +6,7 @@ import { Coffee, MessageCircle, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { Strength, User } from '../types'
 import { STRENGTH_META, STRENGTH_ORDER } from '../config/brand'
-import { CITIES } from '../lib/util'
+import { hash } from '../lib/util'
 import { LeafIcon, StrengthBadge } from './brand'
 import { Avatar } from './ui'
 import { roleLine } from './ProfileView'
@@ -65,6 +65,83 @@ function vinePath(a: LatLng, b: LatLng, seed: number, n = 72): LatLng[] {
     pts.push(unproject(p.x + dx * t + nx * off, p.y + dy * t + ny * off))
   }
   return pts
+}
+
+const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
+
+/**
+ * The most strands a city's vine is drawn with. A city with more people than
+ * this still gets one branch per person, but the vine itself stops thickening,
+ * so a hundred connections in one place do not turn into a solid band.
+ */
+const MAX_STRANDS = 6
+
+/**
+ * One strand of the vine that runs from you to a city.
+ *
+ * Every strand to a city shares the same route to the middle of that city.
+ * Each one weaves from side to side around that route, out of step with the
+ * others, so together they twist into a single tangled vine. More strands and a
+ * slightly wider weave make the vine to a busy city denser, up to MAX_STRANDS.
+ *
+ * `index` and `count` are this strand's place among the city's strands.
+ */
+function strandPath(origin: LatLng, hub: LatLng, seed: number, index: number, count: number): LatLng[] {
+  const p = project(origin)
+  const q = project(hub)
+  const dx = q.x - p.x
+  const dy = q.y - p.y
+  const len = Math.hypot(dx, dy) || 1
+  const nx = -dy / len
+  const ny = dx / len
+  const bend = (seed % 2 === 0 ? 1 : -1) * (0.09 + (seed % 5) * 0.015) * len
+  // how far a strand swings from the shared route, and how many times it crosses over
+  const swing = count > 1 ? clamp(len * 0.012, 0.004, 0.009) * (0.7 + 0.15 * count) : 0
+  const twists = clamp(len * 8, 1.5, 6)
+  const phase = (2 * Math.PI * index) / count
+
+  const pts: LatLng[] = []
+  const n = 84
+  for (let i = 0; i <= n; i++) {
+    const t = i / n
+    const ease = Math.sin(Math.PI * t) ** 2 // strands start together and gather again at the city
+    const off = ease * (bend + Math.sin(t * Math.PI * 6) * len * 0.012 + swing * Math.sin(2 * Math.PI * twists * t + phase))
+    pts.push(unproject(p.x + dx * t + nx * off, p.y + dy * t + ny * off))
+  }
+  return pts
+}
+
+/**
+ * The branch from the middle of a city to one person's leaf. It sets off in the
+ * direction the vine arrived from, then curls round to the leaf.
+ */
+function branchPath(origin: LatLng, hub: LatLng, leaf: LatLng): LatLng[] {
+  const p = project(origin)
+  const q = project(hub)
+  const r = project(leaf)
+  const len = Math.hypot(q.x - p.x, q.y - p.y) || 1
+  const reach = Math.hypot(r.x - q.x, r.y - q.y)
+  if (reach < 1e-9) return []
+  const cx = q.x + ((q.x - p.x) / len) * reach * 0.5
+  const cy = q.y + ((q.y - p.y) / len) * reach * 0.5
+  const pts: LatLng[] = []
+  for (let i = 0; i <= 18; i++) {
+    const t = i / 18
+    const v = 1 - t
+    pts.push(unproject(v * v * q.x + 2 * v * t * cx + t * t * r.x, v * v * q.y + 2 * v * t * cy + t * t * r.y))
+  }
+  return pts
+}
+
+/**
+ * Picks who the strands of a city's vine stand for. With few people, everyone
+ * gets a strand. With many, it takes an even sample down the list (which is
+ * sorted by strength), so the colours of the vine keep the same proportions as
+ * the people there.
+ */
+function strandPeople<T>(list: T[]): T[] {
+  if (list.length <= MAX_STRANDS) return list
+  return Array.from({ length: MAX_STRANDS }, (_, i) => list[Math.floor(((i + 0.5) * list.length) / MAX_STRANDS)])
 }
 
 const leafIcon = (level: Strength, selected: boolean) =>
@@ -158,7 +235,8 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
     return [...m.entries()].map(([city, list]) => ({
       city,
       list: [...list].sort((a, b) => STRENGTH_ORDER.indexOf(a.level) - STRENGTH_ORDER.indexOf(b.level)),
-      center: CITIES[city] ?? list[0].user.coords,
+      // the middle of where these people actually are, so a cluster sits where its vines end
+      center: [list.reduce((s, p) => s + p.user.coords[0], 0) / list.length, list.reduce((s, p) => s + p.user.coords[1], 0) / list.length] as LatLng,
     }))
   }, [people])
 
@@ -166,14 +244,34 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
   const origin = me.coords
   const selCity = sel && 'city' in sel ? sel.city : null
   const selId = sel && 'id' in sel ? sel.id : null
+  const selInCity = selId ? people.find((p) => p.user.id === selId)?.user.city ?? null : null
   const selPeople = selCity ? cities.find((c) => c.city === selCity)?.list ?? [] : selId ? people.filter((p) => p.user.id === selId) : []
   const allPoints = useMemo<LatLng[]>(() => [origin, ...people.map((p) => p.user.coords)], [origin, people])
 
-  const vines = detailed
-    ? people.map((p, i) => ({ key: p.user.id, to: p.user.coords, level: p.level, seed: i, active: !sel || selId === p.user.id || selCity === p.user.city }))
-    : cities
-        .filter((c) => c.city !== me.city)
-        .map((c, i) => ({ key: c.city, to: c.center, level: c.list[0].level, seed: i, active: !sel || selCity === c.city || c.list.some((p) => p.user.id === selId) }))
+  // One strand per person. The strands to a city twist together into one vine,
+  // then branch to each leaf. The shapes are the same at every zoom level, so
+  // nothing jumps when you zoom.
+  const strands = useMemo(() => {
+    // `id` is set when a line belongs to one person, so it can be picked out when they are selected
+    const out: { key: string; id?: string; city: string; level: Strength; pts: LatLng[] }[] = []
+    for (const c of cities) {
+      if (c.city === me.city) {
+        // your own city: a short vine straight from you to each person
+        for (const p of c.list) out.push({ key: p.user.id, id: p.user.id, city: c.city, level: p.level, pts: vinePath(origin, p.user.coords, hash(p.user.id) % 10, 40) })
+        continue
+      }
+      const shown = strandPeople(c.list)
+      const capped = shown.length < c.list.length
+      shown.forEach((p, index) =>
+        out.push({ key: `${c.city}-strand-${index}`, id: capped ? undefined : p.user.id, city: c.city, level: p.level, pts: strandPath(origin, c.center, hash(c.city) % 10, index, shown.length) }),
+      )
+      for (const p of c.list) {
+        const pts = branchPath(origin, c.center, p.user.coords)
+        if (pts.length) out.push({ key: `${p.user.id}-branch`, id: p.user.id, city: c.city, level: p.level, pts })
+      }
+    }
+    return out.sort((a, b) => STRENGTH_ORDER.indexOf(b.level) - STRENGTH_ORDER.indexOf(a.level)) // strongest drawn last, on top
+  }, [cities, origin, me.city])
 
   return (
     <div className="relative z-0 h-full w-full overflow-hidden">
@@ -184,13 +282,14 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
         <ZoomWatcher onZoom={setZoom} onMapClick={() => setSel(null)} />
         <FitTo points={allPoints} token={`${me.schoolIds[0]}-${people.length}`} />
 
-        {vines.map((v) => {
-          const pts = vinePath(origin, v.to, v.seed)
-          const shown = pts.slice(0, Math.max(2, Math.ceil(pts.length * grow)))
+        {strands.map((v) => {
+          // a shared strand (no id) lights up whenever anyone in its city is selected
+          const active = !sel || selCity === v.city || (v.id ? selId === v.id : selInCity === v.city)
+          const shown = v.pts.slice(0, Math.max(2, Math.ceil(v.pts.length * grow)))
           const style = VINE[v.level]
           return (
             <Polyline
-              key={`${v.key}-${v.level}-${v.active}`}
+              key={`${v.key}-${v.level}-${active}`}
               positions={shown}
               interactive={false}
               // keep every point: the default simplification turns short curves into visible corners
@@ -198,7 +297,7 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
               pathOptions={{
                 color: STRENGTH_META[v.level].color,
                 weight: style.weight,
-                opacity: v.active ? style.opacity : 0.12,
+                opacity: active ? style.opacity : 0.12,
                 dashArray: style.dash,
                 lineCap: 'round',
               }}
@@ -212,7 +311,7 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
             ))
           : cities.map((c) =>
               c.list.length === 1 ? (
-                <Marker key={c.city} position={c.center} icon={leafIcon(c.list[0].level, selId === c.list[0].user.id)} eventHandlers={{ click: () => setSel({ id: c.list[0].user.id }) }} />
+                <Marker key={c.city} position={c.list[0].user.coords} icon={leafIcon(c.list[0].level, selId === c.list[0].user.id)} eventHandlers={{ click: () => setSel({ id: c.list[0].user.id }) }} />
               ) : (
                 <Marker
                   key={c.city}
@@ -237,7 +336,7 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
                 {selCity ? `${selCity} · ${selPeople.length} connections` : selPeople[0].user.city}
               </div>
               <div className="flex items-center gap-2">
-                {selCity && !detailed && <FlyButton to={CITIES[selCity] ?? origin} label="Zoom in" />}
+                {selCity && !detailed && <FlyButton to={cities.find((c) => c.city === selCity)?.center ?? origin} label="Zoom in" />}
                 <button onClick={() => setSel(null)} className="rounded-full p-1 text-ink/50 hover:bg-sage-100" aria-label="Close"><X size={16} /></button>
               </div>
             </div>

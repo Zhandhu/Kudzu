@@ -55,7 +55,8 @@ function CohortCard({ to, icon: Icon, title, people, connected }: { to: string; 
 export default function Network() {
   const s = useKudzu()
   const now = useNow()
-  const [view, setView] = useState<'list' | 'map'>('list')
+  // the map is the signature view, so the tab opens on it
+  const [view, setView] = useState<'list' | 'map'>('map')
   const [q, setQ] = useState('')
   const [sort, setSort] = useState<'strength' | 'recent' | 'name'>('strength')
   const [mode, setMode] = useState<Mode | null>(null)
@@ -121,7 +122,7 @@ export default function Network() {
           <div className="flex items-center gap-2">
             <SchoolChip />
             <div className="flex rounded-full bg-sage-100 p-0.5">
-              {([['list', List], ['map', MapIcon]] as const).map(([v, Icon]) => (
+              {([['map', MapIcon], ['list', List]] as const).map(([v, Icon]) => (
                 <button key={v} onClick={() => setView(v)} className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold capitalize ${view === v ? 'bg-white text-vine-700 shadow-sm' : 'text-ink/50'}`} aria-pressed={view === v}>
                   <Icon size={14} /> {v}
                 </button>

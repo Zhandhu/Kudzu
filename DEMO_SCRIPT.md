@@ -45,14 +45,15 @@ The demo controls are referred to below as **Demo**.
 
 "This is the signature feature. Your network is a living thing."
 
-1. Open the **Network** tab. Read out one or two **nudges**: Jordan is in town this week, Sam just started at Google.
-2. Tap **Message** on the Sam nudge. The chat opens with a congratulation already drafted. Go back.
-3. Scroll the list. Connections are grouped by strength with **leaf icons**: Strong, Steady, Fading, Dormant. Each also carries a tag for the kind of relationship: **Learning from**, **Trading notes** or **Giving back**. Tap **Giving back** in the chip row to show Diego, a first-year Riley has helped. At the top, open **Class of 2028** to show where the class has ended up and the class event, then tap **I know them** on a classmate and say when you last talked. They join the network with the right leaf.
-4. Tap **Map**. Vines grow out from your root marker to each city. Stronger connections get thicker, greener vines. Fading ones are thin and dashed.
-5. Tap the **Seattle cluster**. The other vines dim and a card lists the people there, with message and coffee buttons. Tap **Zoom in** to see individual leaf pins.
-6. Switch back to **List**. Point out **Not in your web yet**: Nina and Kwame have matched with Riley but not met, so they are not connections. "A match isn't a relationship."
-7. Open **Devon Brooks**. Tap **What this is based on**: closeness adds up every interaction, a good coffee chat counts most, and each one fades with time. Below it, **Keeping in touch** shows the monthly rhythm Riley chose.
-8. **Demo → Fast-forward one month.** Back on Network, the counts at the top shift toward Fading, and the first nudge is the monthly catch-up with Devon.
+1. Open the **Network** tab. It opens on the **map**. A vine grows from your root marker to each city. Each vine is a tangle of strands, one per person there, coloured by how close you are: deep green for strong, pale and dashed for fading.
+2. Tap the **Seattle cluster**. The other vines dim and a card lists the people there, with message and coffee buttons. Tap **Zoom in**: the vine arrives at the city and splits into a branch for each person's leaf.
+3. Point to the **three leaves** in the bottom-right corner. The purple blossom on each shows how many things are waiting, and it darkens as the number rises.
+4. Tap the top leaf, **Reach out**. Read out one or two nudges: Jordan is in town this week, Sam just started at Google. Tap **Message** on the Sam nudge. The chat opens with a congratulation already drafted. Go back.
+5. Tap the middle leaf, **Not yet met**: Nina and Kwame have matched with Riley but not met, so they are not connections. "A match isn't a relationship."
+6. Tap the bottom leaf, **Grow**. Open **Class of 2028** to show where the class has ended up and the class event, then tap **I know them** on a classmate and say when you last talked. They join the network with the right leaf. Go back.
+7. Switch to **List**. Connections are grouped by strength with leaf icons, and each carries a tag for the kind of relationship: **Learning from**, **Trading notes** or **Giving back**. Tap **Giving back** in the chip row to show Diego, a first-year Riley has helped.
+8. Open **Devon Brooks**. Tap **What this is based on**: closeness adds up every interaction, a good coffee chat counts most, and each one fades with time. Below it, **Keeping in touch** shows the monthly rhythm Riley chose.
+9. **Demo → Fast-forward one month.** Back on Network, the counts at the top shift toward Fading. Open **Reach out**: the first nudge is the monthly catch-up with Devon.
 
 ## 4:00 Events and groups (40 seconds)
 
