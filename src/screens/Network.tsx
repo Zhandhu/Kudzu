@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Coffee, List, Map as MapIcon, MessageCircle, Search, X } from 'lucide-react'
+import { ChevronRight, Coffee, GraduationCap, List, Map as MapIcon, MapPin, MessageCircle, Search, UserPlus, X } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
-import type { Mode, Nudge, Strength } from '../types'
+import type { Mode, Nudge, Strength, User } from '../types'
 import { MODES, MODE_META, STRENGTH_META, STRENGTH_ORDER } from '../config/brand'
 import { useKudzu, useNow } from '../store/useKudzu'
-import { computeNudges, getUser, matchInfo, schoolConnections, strengthOf } from '../services'
+import { cityCohort, classCohort, classLabel, computeNudges, getSchool, getUser, matchInfo, schoolConnections, strengthOf, suggestKnown } from '../services'
 import { LeafIcon } from '../components/brand'
 import { Avatar, Chip, EmptyState, SchoolChip, inputCls } from '../components/ui'
 import { ModeIcon, ModeTag, roleLine } from '../components/ProfileView'
@@ -37,6 +37,18 @@ function NudgeCard({ n }: { n: Nudge }) {
   )
 }
 
+/** One of the automatic slices of your school: your class, or your city. */
+function CohortCard({ to, icon: Icon, title, people, connected }: { to: string; icon: typeof MapPin; title: string; people: User[]; connected: Set<string> }) {
+  const known = people.filter((u) => connected.has(u.id)).length
+  return (
+    <Link to={to} className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-sage-200">
+      <div className="flex items-center gap-1.5 text-[13px] font-semibold leading-tight"><Icon size={15} className="shrink-0 text-coffee-500" /> <span className="truncate">{title}</span></div>
+      <div className="mt-2 flex -space-x-2">{people.slice(0, 5).map((u) => <Avatar key={u.id} user={u} size={26} ring />)}</div>
+      <div className="mt-1.5 text-[11px] text-ink/55">{people.length} {people.length === 1 ? 'person' : 'people'} · {known} in your network</div>
+    </Link>
+  )
+}
+
 export default function Network() {
   const s = useKudzu()
   const now = useNow()
@@ -54,6 +66,10 @@ export default function Network() {
     [s.connections, s.schoolId, s.blocked, s.timeOffsetDays],
   )
   const nudges = computeNudges(s, now).slice(0, 3)
+  const connectedIds = new Set(s.connections.map((c) => c.otherId))
+  const classmates = classCohort(s)
+  const neighbours = cityCohort(s, s.me.city)
+  const suggestionCount = suggestKnown(s).length
   const counts = STRENGTH_ORDER.map((l) => [l, people.filter((p) => p.level === l).length] as [Strength, number])
 
   const filtered = people.filter((p) => {
@@ -101,8 +117,11 @@ export default function Network() {
       </header>
 
       {people.length === 0 ? (
-        <EmptyState title="Your network starts here" body="People you match with appear here, and each connection grows the more you keep in touch.">
-          <Link to="/meet" className="inline-flex rounded-full bg-vine-700 px-5 py-3 text-sm font-semibold text-cream">Meet people</Link>
+        <EmptyState title="Your network starts here" body="Add the people you already know, and meet new ones. Each connection grows the more you keep in touch.">
+          <div className="flex flex-col gap-2">
+            <Link to="/known" className="inline-flex justify-center rounded-full bg-vine-700 px-5 py-3 text-sm font-semibold text-cream">Add people you know</Link>
+            <Link to="/meet" className="inline-flex justify-center rounded-full border border-sage-200 bg-white px-5 py-3 text-sm font-semibold text-vine-800">Meet new people</Link>
+          </div>
         </EmptyState>
       ) : view === 'map' ? (
         <div className="min-h-0 flex-1 px-3 pb-3">
@@ -112,6 +131,22 @@ export default function Network() {
         </div>
       ) : (
         <div className="app-scroll min-h-0 flex-1 overflow-y-auto px-3 pb-4">
+          <div className="mb-4 px-1">
+            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink/50">Your cohorts</div>
+            <div className="grid grid-cols-2 gap-2">
+              <CohortCard to="/cohorts/class" icon={GraduationCap} title={classLabel(s.me)} people={classmates} connected={connectedIds} />
+              <CohortCard to="/cohorts/city" icon={MapPin} title={`${getSchool(s.schoolId).shortName} in ${s.me.city}`} people={neighbours} connected={connectedIds} />
+            </div>
+            <Link to="/known" className="mt-2 flex items-center gap-3 rounded-2xl border border-dashed border-vine-300 bg-vine-50 px-3.5 py-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-vine-700 text-cream"><UserPlus size={17} /></span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold">Add people you know</span>
+                <span className="block truncate text-xs text-ink/55">{suggestionCount > 0 ? `${suggestionCount} classmates and contacts you may know` : 'Search your school by name'}</span>
+              </span>
+              <ChevronRight size={18} className="text-ink/30" />
+            </Link>
+          </div>
+
           {nudges.length > 0 && (
             <div className="mb-4 space-y-2 px-1">
               <div className="text-xs font-semibold uppercase tracking-wide text-ink/50">Nudges</div>

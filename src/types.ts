@@ -76,6 +76,8 @@ export interface KEvent {
   industries: string[]
   attendeeIds: string[]
   myRsvp?: 'going' | 'interested'
+  /** Set for class events such as reunions: the graduation years it is for. */
+  cohortYears?: [number, number]
 }
 
 export interface Group {
@@ -86,7 +88,11 @@ export interface Group {
   color: string
 }
 
-export type InteractionType = 'matched' | 'messaged' | 'coffee' | 'event'
+/** "known" marks a relationship that existed before the app and was added by hand. */
+export type InteractionType = 'matched' | 'messaged' | 'coffee' | 'event' | 'known'
+
+/** How recently someone last talked to a person they already know. */
+export type LastTalked = 'recent' | 'months' | 'year' | 'unsure'
 
 export interface Interaction {
   type: InteractionType

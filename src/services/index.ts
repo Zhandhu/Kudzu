@@ -247,9 +247,76 @@ export function schoolEvents(s: Pick<KudzuState, 'events' | 'schoolId' | 'me'>, 
     .sort((a, b) => a.start - b.start)
 }
 
+/* ---------------- cohorts and people you already know ---------------- */
+
+/** Your class cohort: your own year for students, two years either side for alumni. */
+export function classSpan(me: User): [number, number] {
+  return me.role === 'student' ? [me.gradYear, me.gradYear] : [me.gradYear - 2, me.gradYear + 2]
+}
+
+export function classLabel(me: User): string {
+  const [a, b] = classSpan(me)
+  return a === b ? `Class of ${a}` : `Classes of ${a}–${b}`
+}
+
+const inSpan = (year: number, [a, b]: [number, number]) => year >= a && year <= b
+
+type CohortState = Pick<KudzuState, 'me' | 'schoolId' | 'blocked'>
+
+/** Everyone at the school who graduated with you (or around when you did). */
+export function classCohort(s: CohortState): User[] {
+  const span = classSpan(s.me)
+  return schoolUsers(s.schoolId).filter((u) => inSpan(u.gradYear, span) && !s.blocked.includes(u.id))
+}
+
+/** Everyone at the school living in a city. */
+export function cityCohort(s: CohortState, city: string): User[] {
+  return schoolUsers(s.schoolId).filter((u) => u.city === city && !s.blocked.includes(u.id))
+}
+
+/** How many people in a list live in each city, largest first. */
+export function byCity(users: User[]): [string, number][] {
+  const m = new Map<string, number>()
+  for (const u of users) m.set(u.city, (m.get(u.city) ?? 0) + 1)
+  return [...m.entries()].sort((a, b) => b[1] - a[1])
+}
+
+export const isClassEvent = (e: KEvent, me: User) => !!e.cohortYears && inSpan(me.gradYear, e.cohortYears)
+
+export interface Suggestion {
+  user: User
+  reasons: string[]
+  score: number
+}
+
+/**
+ * People you probably already know: your class, your major, and people several of
+ * your connections know. Used at sign-up and from the Network tab.
+ */
+export function suggestKnown(s: Pick<KudzuState, 'me' | 'schoolId' | 'blocked' | 'connections'>): Suggestion[] {
+  const span = classSpan(s.me)
+  const connected = new Set(s.connections.map((c) => c.otherId))
+  return schoolUsers(s.schoolId)
+    .filter((u) => !connected.has(u.id) && !s.blocked.includes(u.id))
+    .map((user) => {
+      const reasons: string[] = []
+      let score = 0
+      if (inSpan(user.gradYear, span)) { score += 3; reasons.push(user.gradYear === s.me.gradYear ? 'Same class year' : 'Graduated around when you did') }
+      if (user.major === s.me.major) { score += 2; reasons.push(`Also studied ${user.major}`) }
+      const mutual = mutualConnections(s, user).length
+      if (mutual > 0) { score += Math.min(mutual, 3); reasons.push(`${mutual} mutual ${mutual === 1 ? 'connection' : 'connections'}`) }
+      if (user.groupIds.some((g) => s.me.groupIds.includes(g))) { score += 1; reasons.push('In one of your groups') }
+      if (user.city === s.me.city) score += 0.5
+      return { user, reasons, score }
+    })
+    .filter((x) => x.score >= 2)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 12)
+}
+
 export function isForYou(e: KEvent, me: User, prefs: Prefs): boolean {
   const interests = prefs.industries.length ? prefs.industries : [me.industry]
-  return e.city === me.city || (e.groupId ? me.groupIds.includes(e.groupId) : false) || e.industries.some((i) => interests.includes(i))
+  return isClassEvent(e, me) || e.city === me.city ||(e.groupId ? me.groupIds.includes(e.groupId) : false) || e.industries.some((i) => interests.includes(i))
 }
 
 export const eventGuests = (e: KEvent, me: User): User[] => [

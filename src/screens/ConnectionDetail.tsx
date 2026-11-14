@@ -14,6 +14,7 @@ const KIND: Record<InteractionType, { label: string; icon: typeof Coffee }> = {
   messaged: { label: 'Exchanged messages', icon: MessageCircle },
   coffee: { label: 'Had a coffee chat', icon: Coffee },
   event: { label: 'Attended an event together', icon: CalendarDays },
+  known: { label: 'Knew each other before Kudzu', icon: UserRound },
 }
 
 export default function ConnectionDetail() {

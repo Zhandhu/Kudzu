@@ -17,6 +17,8 @@ import GroupDetail from './screens/GroupDetail'
 import Profile from './screens/Profile'
 import UserProfile from './screens/UserProfile'
 import Guidelines from './screens/Guidelines'
+import Cohort from './screens/Cohort'
+import Known from './screens/Known'
 import Onboarding from './screens/Onboarding'
 import CheckInSheet from './components/CheckInSheet'
 import DemoPanel from './components/DemoPanel'
@@ -91,6 +93,8 @@ export default function App() {
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/u/:id" element={<UserProfile />} />
                 <Route path="/guidelines" element={<Guidelines />} />
+                <Route path="/cohorts/:kind" element={<Cohort />} />
+                <Route path="/known" element={<Known />} />
                 <Route path="*" element={<Navigate to="/meet" replace />} />
               </Routes>
             )}

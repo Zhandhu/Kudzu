@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Connection, Conversation, Feedback, Group, InteractionType, KEvent, Message, Prefs, Proposal, User } from '../types'
+import type { Connection, Conversation, Feedback, Group, InteractionType, KEvent, LastTalked, Message, Prefs, Proposal, User } from '../types'
 import { ALUM_PERSONA, ALWAYS_MATCH, DEFAULT_PREFS, SEED_GROUPS, STUDENT_PERSONA, seedConnections, seedConversations, seedEvents } from '../data/seed'
 import { SCHOOLS } from '../data/schools'
 import { CITIES, DAY, uid } from '../lib/util'
@@ -54,6 +54,7 @@ interface Actions {
   setTyping: (otherId: string, on: boolean) => void
   submitFeedback: (fb: Omit<Feedback, 'at'>, msgId: string) => void
   setNote: (otherId: string, note: string) => void
+  addKnown: (otherId: string, when: LastTalked, quiet?: boolean) => void
   rsvp: (eventId: string, status: 'going' | 'interested' | undefined) => void
   addEvent: (e: KEvent) => void
   toggleGroup: (groupId: string) => void
@@ -97,6 +98,14 @@ const fresh = (): Data => {
 }
 
 export const nowOf = (s: { timeOffsetDays: number }) => Date.now() + s.timeOffsetDays * DAY
+
+/** Turns "when did you last talk?" into a date and a timeline note. */
+const LAST_TALKED: Record<LastTalked, { days: number; note: string }> = {
+  recent: { days: 10, note: 'Last talked within the past month' },
+  months: { days: 120, note: 'Last talked a few months ago' },
+  year: { days: 400, note: 'Last talked over a year ago' },
+  unsure: { days: 60, note: 'Added from people you know' },
+}
 
 function touch(connections: Connection[], otherId: string, type: InteractionType, at: number, note?: string): Connection[] {
   const existing = connections.find((c) => c.otherId === otherId)
@@ -260,6 +269,19 @@ export const useKudzu = create<KudzuState>()(
       setNote: (otherId, note) =>
         set((s) => ({ connections: s.connections.map((c) => (c.otherId === otherId ? { ...c, note } : c)) })),
 
+      // Adds someone the user already knew. The answer to "when did you last talk?"
+      // dates the tie, so it starts with the right strength instead of looking brand new.
+      addKnown: (otherId, when, quiet) =>
+        set((s) => {
+          if (s.connections.some((c) => c.otherId === otherId)) return {}
+          const { days, note } = LAST_TALKED[when]
+          return {
+            connections: [...s.connections, { otherId, note: '', interactions: [{ type: 'known', at: nowOf(s) - days * DAY, note }] }],
+            swiped: { ...s.swiped, [otherId]: 'like' },
+            ...(quiet ? {} : { toast: { id: uid(), text: 'Added to your network' } }),
+          }
+        }),
+
       rsvp: (eventId, status) =>
         set((s) => ({ events: s.events.map((e) => (e.id === eventId ? { ...e, myRsvp: status } : e)) })),
 
@@ -284,7 +306,7 @@ export const useKudzu = create<KudzuState>()(
     }),
     {
       // bump this when the saved shape changes, so old browsers start from fresh seed data
-      name: 'kudzu-demo-v2',
+      name: 'kudzu-demo-v3',
       partialize: (s) => {
         const { matchWith, checkin, toast, demoOpen, typing, ...rest } = s
         void matchWith, checkin, toast, demoOpen, typing

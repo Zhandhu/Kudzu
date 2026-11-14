@@ -6,14 +6,15 @@ import type { Prefs, School, User } from '../types'
 import { TAGLINE } from '../config/brand'
 import { DEFAULT_PREFS } from '../data/seed'
 import { useKudzu } from '../store/useKudzu'
-import { listSchools, schoolForEmail } from '../services'
+import { listSchools, schoolForEmail, suggestKnown } from '../services'
 import { CITIES } from '../lib/util'
 import { Logo, Tendril } from '../components/brand'
-import { Button, Field, Sheet, inputCls } from '../components/ui'
+import { Avatar, Button, Field, Sheet, inputCls } from '../components/ui'
+import { roleLine } from '../components/ProfileView'
 import { PrefsForm } from '../components/PrefsForm'
 import { AsksOffersFields, BasicsFields, PromptEditor } from '../components/ProfileEditor'
 
-const STEPS = ['Join your school', 'About you', 'The basics', 'What you’re here for', 'Your prompts', 'Who you’ll meet']
+const STEPS = ['Join your school', 'About you', 'The basics', 'People you already know', 'What you’re here for', 'Your prompts', 'Who you’ll meet']
 
 const blank: User = {
   id: 'me', schoolIds: [], role: 'student', gradYear: 2028, name: '', major: '', title: '', company: undefined,
@@ -34,16 +35,21 @@ export default function Onboarding() {
   const [alumPath, setAlumPath] = useState(false)
   const [requesting, setRequesting] = useState(false)
   const [requested, setRequested] = useState('')
+  const [known, setKnown] = useState<string[]>([])
+  const addKnown = useKudzu((s) => s.addKnown)
   const up = (patch: Partial<User>) => setMe((m) => ({ ...m, ...patch }))
 
   const suggested = schoolForEmail(email)
   const schools = listSchools().filter((s) => s.name.toLowerCase().includes(query.trim().toLowerCase()))
   const filledPrompts = me.prompts.filter((p) => p.promptId && p.answer.trim()).length
+  // suggestions for "people you already know", from the chosen school, class year and major
+  const mayKnow = school ? suggestKnown({ me: { ...me, schoolIds: [school.id] }, schoolId: school.id, blocked: [], connections: [] }).slice(0, 8) : []
 
   const canNext = [
     !!school,
     me.gradYear >= 1970 && me.gradYear <= 2032,
     !!me.name.trim() && !!me.major.trim() && (me.role === 'student' || !!me.title?.trim()),
+    true,
     me.asks.length + me.offers.length > 0,
     filledPrompts === 3,
     true,
@@ -62,6 +68,7 @@ export default function Onboarding() {
       },
       prefs,
     )
+    for (const id of known) addKnown(id, 'unsure', true)
     say(`Welcome to ${school!.name} on Kudzu`)
     nav('/meet')
   }
@@ -167,6 +174,35 @@ export default function Onboarding() {
             {step === 2 && <BasicsFields value={me} onChange={up} />}
 
             {step === 3 && (
+              <div className="space-y-3">
+                <p className="text-sm text-ink/60">
+                  Tap anyone you already know from {school?.name}. They join your network straight away, so you start with people to keep in touch with. You can add more later.
+                </p>
+                {mayKnow.length === 0 ? (
+                  <p className="rounded-2xl border border-dashed border-sage-300 p-4 text-center text-sm text-ink/50">No suggestions yet. You can search for people from the Network tab.</p>
+                ) : (
+                  <div className="divide-y divide-sage-200 rounded-2xl bg-white ring-1 ring-sage-200">
+                    {mayKnow.map(({ user: u, reasons }) => {
+                      const on = known.includes(u.id)
+                      return (
+                        <button key={u.id} onClick={() => setKnown(on ? known.filter((x) => x !== u.id) : [...known, u.id])} className="flex w-full items-center gap-3 px-3 py-2.5 text-left" aria-pressed={on}>
+                          <Avatar user={u} size={40} />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-semibold">{u.name}</span>
+                            <span className="block truncate text-xs text-ink/55">{roleLine(u)}</span>
+                            <span className="block truncate text-[11px] text-vine-600">{reasons.join(' · ')}</span>
+                          </span>
+                          <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border ${on ? 'border-vine-700 bg-vine-700 text-cream' : 'border-sage-300 text-transparent'}`}><Check size={15} /></span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+                <p className="text-center text-xs text-ink/45">{known.length === 0 ? 'Optional. Skip if you don’t know anyone here yet.' : `${known.length} selected`}</p>
+              </div>
+            )}
+
+            {step === 4 && (
               <div className="space-y-4">
                 <p className="text-sm text-ink/60">
                   You don’t pick a role. Tell us what you want and what you can give, and we’ll match you with people to learn from, people to help, and peers to trade notes with.
@@ -178,7 +214,7 @@ export default function Onboarding() {
               </div>
             )}
 
-            {step === 4 && (
+            {step === 5 && (
               <div className="space-y-3">
                 <p className="text-sm text-ink/60">Choose three prompts and answer them. People can like a specific answer to start a conversation.</p>
                 <PromptEditor value={me.prompts} onChange={(prompts) => up({ prompts })} />
@@ -186,7 +222,7 @@ export default function Onboarding() {
               </div>
             )}
 
-            {step === 5 && <PrefsForm prefs={prefs} onChange={(patch) => setPrefs((p) => ({ ...p, ...patch }))} homeCity={me.city} />}
+            {step === 6 && <PrefsForm prefs={prefs} onChange={(patch) => setPrefs((p) => ({ ...p, ...patch }))} homeCity={me.city} />}
           </motion.div>
         </AnimatePresence>
       </div>

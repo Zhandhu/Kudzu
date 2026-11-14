@@ -50,7 +50,7 @@ Demo controls:
 | --- | --- |
 | **Meet** | Swipeable profile cards that say why each person is shown, likes on a specific prompt with a comment, match celebration, filters, monthly chat capacity, "bring a friend" group chats |
 | **Events** | For You / All feeds, type filters, event detail with map and guest list, RSVP, host an event, community groups |
-| **Network** | Connection strength shown as leaf states, nudges, searchable list, and a map where vines run from you to each connection |
+| **Network** | Connection strength shown as leaf states, nudges, searchable list, and a map where vines run from you to each connection. Class and city cohorts, and a way to add people you already know |
 | **Messages** | New-match row, chat with mock auto-replies, coffee-chat proposals that become confirmed chats, post-chat check-in with a thank-you note |
 | **Profile** | Edit profile and prompts, thank-you notes you've received, matching preferences, groups, events, settings |
 

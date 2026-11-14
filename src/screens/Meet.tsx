@@ -20,7 +20,7 @@ function SwipeCard({ user, onSwipe, onLikePrompt }: { user: User; onSwipe: (d: D
   const passOpacity = useTransform(x, [-130, -30], [1, 0])
   return (
     <motion.div
-      className="absolute inset-0 overflow-hidden rounded-3xl bg-cream shadow-card ring-1 ring-sage-200"
+      className="absolute inset-0 overflow-hidden bg-cream"
       style={{ x, rotate, touchAction: 'pan-y' }}
       drag="x"
       dragConstraints={{ left: 0, right: 0 }}
@@ -48,7 +48,7 @@ function BringFriendCard({ alums, onDone }: { alums: User[]; onDone: (requested:
   const me = useKudzu((s) => s.me)
   const friend = { id: 'friend', name: 'Avery Brooks' }
   return (
-    <div className="absolute inset-0 flex flex-col overflow-hidden rounded-3xl bg-vine-700 p-6 text-cream shadow-card">
+    <div className="absolute inset-3 flex flex-col overflow-hidden rounded-3xl bg-vine-700 p-6 text-cream shadow-card">
       <div className="text-xs font-semibold uppercase tracking-[0.2em] text-vine-200">Bring a friend</div>
       <h2 className="mt-2 font-display text-2xl font-semibold leading-tight">A double coffee chat with {alums.map((a) => firstName(a.name)).join(' & ')}</h2>
       <p className="mt-2 text-sm text-vine-100">You and a friend meet two alumni together. Less pressure, twice the perspective.</p>
@@ -97,7 +97,6 @@ export default function Meet() {
     [s.me, s.prefs, s.schoolId, s.swiped, s.connections, s.blocked, s.feedback, s.groups],
   )
   const top = deck[0]
-  const next = deck[1]
   const groupAlums = useMemo(() => deck.filter((u) => u.role === 'alum').slice(1, 3), [deck])
   const showFriendCard = s.bringFriend && !friendDone && groupAlums.length === 2
 
@@ -138,7 +137,7 @@ export default function Meet() {
       {accountStanding(s) === 'warning' && <div className="px-4 pb-2"><AccountNotice compact /></div>}
       {s.prefs.travelingTo && <div className="px-4 pb-1 text-center text-xs font-medium text-coffee-600">Showing people near {s.prefs.travelingTo}</div>}
 
-      <div className="relative mx-3 mb-3 mt-1 min-h-0 flex-1">
+      <div className="relative min-h-0 flex-1 overflow-hidden border-t border-sage-200">
         {s.paused ? (
           <EmptyState title="Your profile is paused" body="You won’t be shown to anyone, and you won’t see new people until you turn it back on.">
             <Button onClick={() => s.set({ paused: false })}>Unpause my profile</Button>
@@ -160,7 +159,6 @@ export default function Meet() {
           </EmptyState>
         ) : (
           <>
-            {next && <div className="absolute inset-0 translate-y-2 scale-[0.97] rounded-3xl bg-sage-100 ring-1 ring-sage-200" />}
             <AnimatePresence custom={dir} mode="popLayout">
               <SwipeCard key={top.id} user={top} onSwipe={(d) => act(d)} onLikePrompt={(p) => { setComment(''); setLiking(p) }} />
             </AnimatePresence>

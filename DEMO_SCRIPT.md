@@ -18,7 +18,7 @@ The demo controls are referred to below as **Demo**.
 
 1. Tap **Verify with your .edu email**.
 2. Type `riley@gatech.edu`. Point out that Georgia Tech is detected and selected from the email domain. Mention the other schools in the list, the alum verification path, and **My school isn't here yet**.
-3. Tap **Continue** once to show the Student / Alum step.
+3. Tap **Continue** once to show the Student / Alum step. Mention that sign-up also asks who you **already know**, so nobody starts with an empty network.
 4. Say that the remaining steps collect basics, **what you're looking for and what you can offer**, three prompts and preferences. Nobody picks "mentor" or "mentee": the app works that out. Then tap **Skip** (top right) to load the prefilled demo user, Riley, a third-year Industrial Engineering student.
 
 ## 0:40 Meet (70 seconds)
@@ -47,7 +47,7 @@ The demo controls are referred to below as **Demo**.
 
 1. Open the **Network** tab. Read out one or two **nudges**: Jordan is in town this week, Sam just started at Google.
 2. Tap **Message** on the Sam nudge. The chat opens with a congratulation already drafted. Go back.
-3. Scroll the list. Connections are grouped by strength with **leaf icons**: Strong, Steady, Fading, Dormant. Each also carries a tag for the kind of relationship: **Learning from**, **Trading notes** or **Giving back**. Tap **Giving back** in the chip row to show Diego, a first-year Riley has helped.
+3. Scroll the list. Connections are grouped by strength with **leaf icons**: Strong, Steady, Fading, Dormant. Each also carries a tag for the kind of relationship: **Learning from**, **Trading notes** or **Giving back**. Tap **Giving back** in the chip row to show Diego, a first-year Riley has helped. At the top, open **Class of 2028** to show where the class has ended up and the class event, then tap **I know them** on a classmate and say when you last talked. They join the network with the right leaf.
 4. Tap **Map**. Vines grow out from your root marker to each city. Stronger connections get thicker, greener vines. Fading ones are thin and dashed.
 5. Tap the **Seattle cluster**. The other vines dim and a card lists the people there, with message and coffee buttons. Tap **Zoom in** to see individual leaf pins.
 6. Switch back to **List** and open **Jordan Alvarez**: strength, interaction timeline and a private note.

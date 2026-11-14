@@ -6,6 +6,7 @@ import { getUser, promptText } from '../services'
 import { firstName } from '../lib/util'
 import { BackHeader, Button, Sheet, inputCls } from '../components/ui'
 import { ProfileView } from '../components/ProfileView'
+import { KnowButton } from '../components/KnowButton'
 
 /** Full profile page, reached from guest lists, groups, chats and the network. */
 export default function UserProfile() {
@@ -43,6 +44,7 @@ export default function UserProfile() {
         ) : (
           <Button className="w-full" onClick={() => connect()}><Coffee size={17} /> Connect with {name}</Button>
         )}
+        {!connected && <KnowButton user={user} variant="link" />}
       </div>
 
       <Sheet open={!!liking} onClose={() => setLiking(null)} title={`Like ${name}’s answer`}>

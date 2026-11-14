@@ -132,6 +132,12 @@ export function seedEvents(now: number): KEvent[] {
     ev('ev11', 'gt', 'Class of 2024 Trivia Night', 'g9', 'Social', false, at(25, 19), 'Queen City Taproom', 'Charlotte', 40,
       'Teams of four. Winning team picks the next city.',
       ['g9'], { groupId: 'grp-24' }),
+    ev('ev12', 'gt', 'Class of 2028 Study Break', 'g14', 'Social', false, at(8, 16), 'Library lawn', 'Atlanta', 60,
+      'Snacks, lawn games and an hour off before finals. Bring a classmate you haven’t seen since first year.',
+      ['g14', 'g29'], { cohortYears: [2028, 2028] }),
+    ev('ev13', 'gt', 'Classes of 2013–2017 Reunion Weekend', 'g11', 'Social', false, at(18, 17), 'Midtown Innovation Hall', 'Atlanta', 150,
+      'Ten years on, give or take. A Friday mixer, a Saturday campus walk and plenty of time to catch up.',
+      ['g11', 'g3', 'g31', 'g17', 'g28', 'g2'], { cohortYears: [2013, 2017] }),
 
     ev('eev1', 'emory', 'Healthcare Careers Coffee', 'e1', 'Networking', false, at(3, 8), 'Druid Hills Coffee House', 'Atlanta', 25,
       'Meet alumni working in hospitals, research and public health.', ['e1', 'e3'], { industries: ['Healthcare'], groupId: 'egrp-health' }),

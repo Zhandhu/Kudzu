@@ -42,12 +42,37 @@ This is a smaller gap than the other two.
 | # | Step | Serves goal | Status |
 | --- | --- | --- | --- |
 | 1 | **Run a pilot by hand.** Pair about twenty students with ten alumni from one school on a spreadsheet, introduce them by email, and ask both sides how it went | All | Not started. Do this before building more |
-| 2 | **Give alumni something for themselves.** Class-year and city cohorts, "who from your year is in Seattle," and reunion-style events. Community groups are the starting point | 1 | **Agreed. Keep on the plan** |
-| 3 | **Bring in existing relationships.** Let people add classmates and contacts they already know, so the Network tab is useful on the first day | 1 | Proposed |
+| 2 | **Give alumni something for themselves.** Class-year and city cohorts, "who from your year is in Seattle," and reunion-style events. Community groups are the starting point | 1 | **Built.** Class and city cohorts on the Network tab, with class events such as reunions |
+| 3 | **Bring in existing relationships.** Let people add classmates and contacts they already know, so the Network tab is useful on the first day | 1 | **Built.** "I know them" at sign-up, on the Network tab, in cohorts and on profiles |
 | 4 | **Let a pair opt into a rhythm.** After a good chat, offer a regular check-in and a shared goal, and mark the relationship as ongoing | 3 | Proposed. Lowest priority of the four |
 | 5 | **Measure the goals directly.** Count active alumni-to-alumni ties and pairs who meet more than once, not matches | All | Proposed |
 
 The pilot comes first because everything so far rests on research from other settings. It tests the assumption the product depends on: that alumni say yes.
+
+## What was built for steps 2 and 3
+
+**Cohorts.** Two slices of your school that you belong to without joining anything:
+
+- **Your class.** Your own year for students. Two years either side for alumni, because a single graduating year is too small a group once people scatter.
+- **Your city.** Everyone from your school living where you do, with a switcher for other cities.
+
+Each shows who is there, how many are already in your network, where your class has ended up, and events for that group. Events can now be tagged for a range of class years, which is how reunions appear.
+
+**People you already know.** A person can mark someone as "I know them" and say roughly when they last talked. That answer dates the relationship, so it starts with the right leaf instead of looking brand new.
+
+- Offered during sign-up, from the Network tab, inside cohorts and on any profile.
+- Suggestions come from your class, your major, shared groups and mutual connections.
+
+### Decisions made, and why
+
+- **No LinkedIn import.** As far as we know, LinkedIn does not let outside apps read a user's connections. This was not re-checked. It would also bring in mostly people from outside the school, which Kudzu is not for.
+- **Asking "when did you last talk?"** A list of names with no dates would all look the same. One question gives the Network tab something true to show on the first day.
+
+### Limits
+
+- **No confirmation step.** In the demo, marking someone as known adds them at once. A real app must ask the other person to confirm, or anyone could claim to know anyone and gain the ability to message them.
+- **Cohorts are only as good as the school's membership.** With few people from a class on the app, a class cohort is nearly empty. This is the cold-start problem again.
+- **Only class and city.** Major, sports teams, clubs and dorms are other natural cohorts. Community groups cover some of this by hand.
 
 ## An open question that shapes all of this
 
