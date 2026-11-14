@@ -292,6 +292,8 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
   const radPerPx = (2 * Math.PI) / (256 * 2 ** zoom)
   // Lines are drawn lighter the further out you are, so a whole continent of vines does not look heavy.
   const thin = clamp(0.35 + 0.115 * zoom, 0.5, 1)
+  // Close to a city the strands run together, so each wears its own style again.
+  const closeUp = zoom >= 7
 
   // One strand per person. The strands to a city twist together into one vine,
   // then branch to each leaf. The shapes are the same at every zoom level, so
@@ -315,7 +317,10 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
         if (pts.length) out.push({ key: `${p.user.id}-branch`, id: p.user.id, city: c.city, level: p.level, pts })
       }
     }
-    return out.sort((a, b) => STRENGTH_ORDER.indexOf(b.level) - STRENGTH_ORDER.indexOf(a.level)) // strongest drawn last, on top
+    // Strongest drawn first, so it sits underneath. Where strands meet near a city,
+    // the thinner dashed ones are then laid over the solid one and stay visible,
+    // instead of being covered by it.
+    return out.sort((a, b) => STRENGTH_ORDER.indexOf(a.level) - STRENGTH_ORDER.indexOf(b.level))
   }, [cities, origin, me.city, radPerPx])
 
   return (
@@ -341,12 +346,13 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
               smoothFactor={0}
               pathOptions={{
                 color: STRENGTH_META[v.level].color,
-                // Thinner when zoomed out. Inside a rope every strand is solid and a similar
-                // weight, so each colour shows in the tangle. The dashed, faint styling that
-                // marks a fading or dormant tie is kept for the branch to that person's leaf.
-                weight: (v.inRope ? clamp(style.weight, 1.9, 2.6) * 0.8 : style.weight) * thin,
-                opacity: active ? (v.inRope ? Math.max(style.opacity, 0.8) : style.opacity) : 0.12,
-                dashArray: v.inRope ? undefined : style.dash,
+                // Thinner when zoomed out. From a distance every strand in a vine is solid and
+                // a similar weight, so each colour shows in the tangle. Close up, fading and
+                // dormant strands go back to dashed, kept dark enough to read where they lie
+                // over a solid strand.
+                weight: (v.inRope ? clamp(style.weight, 1.9, 2.6) * (closeUp ? 1 : 0.8) : style.weight) * thin,
+                opacity: active ? (v.inRope ? Math.max(style.opacity, closeUp ? 0.95 : 0.8) : style.opacity) : 0.12,
+                dashArray: v.inRope && !closeUp ? undefined : style.dash,
                 lineCap: 'round',
               }}
             />
