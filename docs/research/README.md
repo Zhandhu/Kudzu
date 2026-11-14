@@ -6,7 +6,7 @@ This folder holds the evidence behind Kudzu. It answers three questions, in this
 | --- | --- | --- |
 | 1 | Why should this app exist? | [01-need.md](01-need.md) |
 | 2 | What evidence is there for each design choice? | [02-choices.md](02-choices.md) |
-| 3 | Where does the research disagree with us, and what should we do? | [03-divergences.md](03-divergences.md) |
+| 3 | Where did the research disagree with us, and what did we change? | [03-divergences.md](03-divergences.md) |
 | | Every source, with its grade and how far it was read | [sources.md](sources.md) |
 
 Records of two design decisions (the move from swiping to search, and the simpler "Keep in touch" app) are in [`../design/`](../design/). They describe what was built and why. They are not evidence.
@@ -26,13 +26,13 @@ Records of two design decisions (the move from swiping to search, and the simple
 - **Partly supported:** the idea has evidence but the details do not. The numbers we chose are our own: the 60-day fade, "about four people", five open requests, the ten-day expiry and the 50-person chat limit.
 - **Our bets:** the network map, dropping the mentor and mentee labels, the three ways to answer a coffee proposal, one-way announcements, the three required sign-up steps, and avoiding the words "match", "swipe" and "like".
 
-**In 15 places the research disagrees with us or offers a more defensible choice.** Three have a strong case for change:
+**In 15 places the research disagreed with us or offered a more defensible choice. We changed ten and kept five.** The three with the strongest case were:
 
-1. Closeness fades too fast, and at one rate for everyone. A friend seen once a year shows as dormant for more than half the year.
-2. Dormant ties are drawn as dead. Research finds they are among the most valuable to revive.
-3. We sometimes promise outcomes the evidence does not show.
+1. Closeness faded too fast, and at one rate for everyone. A friend seen once a year showed as dormant for more than half the year. It now fades against the rhythm set for each person, with a slower default.
+2. Dormant ties were drawn as dead. Research finds they are among the most valuable to revive. They are now called "resting", and the app keeps suggesting them.
+3. We sometimes promised outcomes the evidence does not show. The wording is now limited to what we can support.
 
-[03-divergences.md](03-divergences.md) sets out each of the 15 as a decision, with options, cost and a recommendation.
+[03-divergences.md](03-divergences.md) lists what changed for all 15, and keeps the reasoning for each: what the app did, what the research says, the options, and the recommendation.
 
 ## How strong is the evidence?
 
@@ -66,7 +66,11 @@ Earlier rounds also built and then shelved a set of safeguards against people us
 
 ## What to do with it
 
-1. Decide the 15 items in [03-divergences.md](03-divergences.md). Nine of them are small changes to wording or numbers.
-2. Stop making the claims listed at the top of that file. Each has safer wording beside it.
-3. Before acting on the three strong items, read the papers behind them in full. They were read as summaries.
-4. Plan to measure. The last section of [03-divergences.md](03-divergences.md) lists what to record with the first real users.
+1. When presenting the app, use the wording in "Claims to stop making" in [03-divergences.md](03-divergences.md). Each claim has a safer version beside it.
+2. Read the papers behind the three strongest items in full. They were read as summaries, and the changes made on their strength are worth confirming.
+3. Plan to measure. The last section of [03-divergences.md](03-divergences.md) lists what to record with the first real users. Nothing here can show that the app works until that is done.
+4. Treat the numbers as provisional. The fade rates, "about four people", five open requests, the ten-day mark and the 50-person limit are our own guesses, and the first real data should replace them.
+
+## If you only have five minutes
+
+Read "The short version" above, then the table "What was changed" at the top of [03-divergences.md](03-divergences.md), then "What the evidence does not show" in [01-need.md](01-need.md).

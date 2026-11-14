@@ -4,6 +4,19 @@ This file takes the 21 main design choices in Kudzu and asks one question of eac
 
 The short answer: 2 choices are well supported, 13 are partly supported, and 6 are our own bets. In most "partly supported" rows the idea has evidence and the exact numbers do not. The 60-day half-life, "about four people", the ten-day expiry and the 50-person limit are all our own guesses. In several places the evidence points against us. Those places are listed near the end and are not hidden.
 
+**Changed since this review.** This file describes the 21 choices as they stood when the evidence was gathered. Six of them were then changed because of what it found. Where the tables below differ from this list, this list is right.
+
+| Choice | As reviewed below | As built now |
+| --- | --- | --- |
+| 1. Closeness state | Each contact halves about every 60 days, for everyone. The quietest state was called "dormant" | Fades against the rhythm set for each person (monthly, each semester, once a year), with a slower default. The quietest state is "resting", drawn as a bud |
+| 3. Reminders | Three kinds, and no reminder for anyone quiet for over nine months | The two kinds the user does not time can each be switched off. One long-quiet person is always suggested, a different one each week |
+| 4. "We caught up" | A call counted three quarters of a meeting, and logged contact counted less than in-app contact | A call counts almost the same as meeting, and logged contact counts in full |
+| 7. Verification | The pitch said verification is why people answer a stranger | The badge stays. The claim is only that every member is a real student or graduate |
+| 10. Limits | A request closed after ten days | The expiry is soft: the sender is told at ten days, and the other person can still answer |
+| 16. Events | The event page led with the details | The event page leads with the people you know who are going |
+
+The reasons are in [03-divergences.md](03-divergences.md).
+
 Grades follow the [README](README.md#how-strong-is-the-evidence): A, B, C or H. After each source, square brackets say how far it was read in this round: Full text, Abstract, Summary, or Not re-checked. "Not re-checked" means the finding was handed over from an earlier round and not opened again. Full citations for new sources are in [sources.md](sources.md). Sources already used in [01-need.md](01-need.md) are in [sources.md](sources.md).
 
 Much of this evidence comes from dating platforms, online job markets, workplaces and health reminders. Almost none comes from alumni or from friendship apps. Each area says where its evidence comes from.

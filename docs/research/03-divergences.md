@@ -1,6 +1,28 @@
-# 03. Where the research disagrees with us, and what to do
+# 03. Where the research disagreed with us, and what we changed
 
-How to use this file. Each item below is one decision, written so it can be made in about a minute: read "What we do now", the strength of the case, and the recommendation. The summary table lists every item with the strongest cases first, and the items follow in the same order. Several choices were made for safety, product identity or to keep the demo simple, and a missing study is not treated here as a reason to change.
+**Status, 14 November 2026: every recommendation in this file was accepted and has been built into the demo.** The table below says what changed for each item. The rest of the file is kept as the record of why: for each item it gives what the app did before, what the research says, the options that were weighed, and the recommendation. Where an item says "what we do now", read it as what the app did before the change.
+
+## What was changed
+
+| # | Issue | What the app does now |
+| --- | --- | --- |
+| 1 | Closeness faded too fast, at one rate for everyone | Each person is judged against the rhythm set for them: monthly, each semester, or the new "once a year". One good catch-up reads as strong for about one period. With no rhythm set, the fade is three times slower than before. The default rate is still our own guess |
+| 2 | Dormant ties were drawn as dead | The state is called "resting" and drawn as a calm grey bud. The nine-month cut-off is gone: the app suggests one long-quiet person at a time, a different one each week, with the line "Old friends are usually glad to hear from you" |
+| 3 | We promised outcomes the evidence does not show | The README, the walkthrough and the demo script use the safer wording from "Claims to stop making". They promise easier contact, not better lives |
+| 4 | The Verified badge carried the pitch | The badge stays. The claim now rests on the closed, school-checked membership: "a message always comes from a real student or graduate" |
+| 5 | A call counted less than meeting, and off-app less than in-app | Contact logged by hand counts the same as contact arranged in the app. A logged call counts almost the same as meeting. A text counts what an in-app message does |
+| 6 | The reason we gave for a short list | The list is unchanged. Nothing in the app or the pitch says fewer options feel better. The reason given is that a short list spreads requests |
+| 7 | Written requests to strangers | The request is unchanged. The walkthrough no longer says requests "are answered". It says "nobody is flooded" |
+| 8 | Events were assumed to create new ties | An event's page now starts with the people you know who are going. Events are described as a reason to see people again |
+| 9 | Requests expired after ten days | The expiry is soft. At ten days the sender is told and shown who else could help, and the request stops counting toward their five. The other person can still answer it |
+| 10 | Reminders are untested | Reminders stay. The two kinds the user does not time (a timely reason, and "it's been a while") each have an off switch in settings. Comparing users with and without reminders needs real users and is not done |
+| 11 to 15 | Closeness state, announcements, the 50-person chat limit, the required sign-up step, the map | Kept as they were, as recommended |
+
+Two things the recommendations asked for cannot be done in a demo and remain open: the comparison of users with and without reminders (item 10), and everything under "What we should measure first" at the end of this file.
+
+## How to read the rest of this file
+
+Each item below is one decision, written so it could be made in about a minute: what the app did, the strength of the case, and the recommendation. The summary table lists every item with the strongest cases first, and the items follow in the same order. Several choices were made for safety, product identity or to keep the demo simple, and a missing study is not treated here as a reason to change.
 
 Grades follow the [README](README.md#how-strong-is-the-evidence): A, B, C or H. All sources are in [01-need.md](01-need.md), [02-choices.md](02-choices.md) and their source lists. No new sources were added. Facts about the app were checked against the demo code and its tour text.
 
@@ -26,7 +48,7 @@ Grades follow the [README](README.md#how-strong-is-the-evidence): A, B, C or H. 
 
 ## Claims to stop making
 
-The first four are in the demo today. The rest are claims a pitch could easily make, and the evidence does not support them.
+The first five were in the demo and have been reworded as shown. The rest are claims a pitch could easily make, and the evidence does not support them. Anyone presenting the app should use the safer wording.
 
 | Where | What we say now | Why it is not supported | Safer wording |
 | --- | --- | --- | --- |
