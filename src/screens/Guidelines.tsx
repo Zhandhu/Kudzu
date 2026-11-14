@@ -1,4 +1,4 @@
-import { CalendarCheck, HeartHandshake, MessageCircle, ShieldCheck } from 'lucide-react'
+import { CalendarCheck, HeartHandshake, MessageCircle, ShieldCheck, UserPlus } from 'lucide-react'
 import { APP_NAME } from '../config/brand'
 import { VineDivider } from '../components/brand'
 import { BackHeader } from '../components/ui'
@@ -6,6 +6,7 @@ import { BackHeader } from '../components/ui'
 const RULES = [
   { icon: CalendarCheck, title: 'Show up', body: 'If you confirm a chat, be there. If something comes up, reschedule in the app at least a few hours ahead.' },
   { icon: HeartHandshake, title: 'Be generous', body: 'Everyone here is giving their time. Come with real questions, and offer help where you can.' },
+  { icon: UserPlus, title: 'Don’t lead with a referral', body: 'Nobody here owes you an introduction. Have the conversation first. If it goes well, the other person can offer one. Opening with “can you refer me?” is the most common reason people get reported.' },
   { icon: MessageCircle, title: 'No pitches', body: `${APP_NAME} is for conversations, not selling. Recruiting for your company is fine; pushing a product is not.` },
   { icon: ShieldCheck, title: 'Keep it respectful', body: 'Harassment, discrimination and unwanted advances lead to removal. Report anything that feels off.' },
 ]

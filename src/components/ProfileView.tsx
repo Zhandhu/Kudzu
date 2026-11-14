@@ -1,13 +1,13 @@
 import { useState } from 'react'
-import { ArrowLeftRight, Briefcase, Compass, Flag, GraduationCap, HandHeart, Heart, MapPin, MoreHorizontal, ShieldOff, Sparkles, Users } from 'lucide-react'
+import { ArrowLeftRight, Briefcase, Compass, Flag, GraduationCap, HandHeart, Heart, MapPin, MoreHorizontal, ShieldOff, Sparkles, Sprout, Users } from 'lucide-react'
 import type { Mode, User } from '../types'
 import { MODE_META, topicLabel } from '../config/brand'
 import { useKadzu } from '../store/useKadzu'
-import { distanceLabel, inCommon, matchInfo, promptText, spotsLeft } from '../services'
+import { distanceLabel, inCommon, matchInfo, mutualConnections, networkGap, promptText, spotsLeft } from '../services'
 import { avatarGradient, firstName, initials } from '../lib/util'
-import { Chip, Sheet } from './ui'
+import { Avatar, Chip, Sheet } from './ui'
 
-const REPORT_REASONS = ['Inappropriate messages', 'Fake profile or impersonation', 'Harassment', 'Soliciting or spam', 'Something else']
+const REPORT_REASONS = ['Only wanted a referral or a job', 'Soliciting or spam', 'Inappropriate messages', 'Harassment', 'Fake profile or impersonation', 'Something else']
 
 /** Report / Block. Separate from private chat feedback; this is for safety issues. */
 export function MoreMenu({ user, light = false, onBlocked }: { user: User; light?: boolean; onBlocked?: () => void }) {
@@ -99,6 +99,12 @@ export function ProfileView({ user, onLikePrompt, showMenu = true, onBlocked }: 
   const common = isMe ? [] : inCommon(me, user, groups)
   const info = isMe ? null : matchInfo(me, user)
   const spots = spotsLeft(user)
+  const connections = useKadzu((s) => s.connections)
+  const schoolId = useKadzu((s) => s.schoolId)
+  const blocked = useKadzu((s) => s.blocked)
+  const net = { connections, schoolId, blocked }
+  const mutuals = isMe ? [] : mutualConnections(net, user)
+  const gap = isMe || connections.some((c) => c.otherId === user.id) ? null : networkGap(net, user)
 
   return (
     <div>
@@ -147,10 +153,29 @@ export function ProfileView({ user, onLikePrompt, showMenu = true, onBlocked }: 
           {spots > 0 ? `${spots} of ${user.capacity} chat spots left this month` : `Full this month (${user.capacity} chats)`}
         </div>
 
-        {common.length > 0 && (
-          <div className="rounded-xl border border-sage-200 bg-sage-50 p-3">
-            <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-vine-700"><Sparkles size={13} /> In common</div>
-            <div className="flex flex-wrap gap-1.5">{common.map((c) => <Chip key={c} small tone="plain">{c}</Chip>)}</div>
+        {(common.length > 0 || mutuals.length > 0 || gap) && (
+          <div className="space-y-2.5 rounded-xl border border-sage-200 bg-sage-50 p-3">
+            {common.length > 0 && (
+              <div>
+                <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-vine-700"><Sparkles size={13} /> In common</div>
+                <div className="flex flex-wrap gap-1.5">{common.map((c) => <Chip key={c} small tone="plain">{c}</Chip>)}</div>
+              </div>
+            )}
+            {mutuals.length > 0 && (
+              <div className="flex items-center gap-2 text-[13px] text-ink/75">
+                <div className="flex shrink-0 -space-x-1.5">{mutuals.slice(0, 3).map((m) => <Avatar key={m.id} user={m} size={22} ring />)}</div>
+                <span>
+                  You both know <b className="font-semibold text-ink">{mutuals.slice(0, 2).map((m) => firstName(m.name)).join(' and ')}</b>
+                  {mutuals.length > 2 && ` and ${mutuals.length - 2} more`}
+                </span>
+              </div>
+            )}
+            {gap && (
+              <div className="flex items-center gap-2 text-[13px] text-ink/75">
+                <Sprout size={15} className="shrink-0 text-vine-600" />
+                <span>Would be your first connection in <b className="font-semibold text-ink">{gap}</b></span>
+              </div>
+            )}
           </div>
         )}
 

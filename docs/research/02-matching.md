@@ -12,10 +12,15 @@ The Meet deck is built by `buildDeck` in `src/services/index.ts`.
 2. **Score** each remaining person:
 
    ```
-   score = 1.5 × (number of things in common)
+   score = 2.5 × (need-to-offer fit, 0 to 1)
+         + 1.5 × (number of things in common)
          + 4.0 × (hidden trust score, 0 to 1)
+         + 1.5 × (mutual connections value, 0 to 1)
+         + 1.0 × (how much they widen your network, 0 to 1)
          + 1.0 if they have chat spots left this month
    ```
+
+   The first, fourth and fifth terms were added after this review. See [section 9](#9-using-the-network-you-already-have).
 
 3. **Sort** by score and show everyone, one card at a time.
 4. **Match by coin flip.** A right swipe matches 40% of the time, regardless of who is involved.
@@ -236,3 +241,67 @@ For the demo, the 40% coin flip could be replaced with the reciprocal score as t
 4. **How hard should capacity bite?** Holding back a full alum protects them, but hides the best match from a student who would have waited.
 5. **Should the weekly match be automatic or opt-in?**
 6. **How much should a new user be protected?** The reliability formula starts everyone at 0.8. Higher is kinder to newcomers and riskier for the people they meet.
+
+## 9. Using the network you already have
+
+The first version of this proposal ignored a user's existing connections, apart from removing them from the deck. That was a gap. A person's network says a lot about who they should meet next, and no dating app has an equivalent.
+
+### What the research supports
+
+- **A few people in common is better than none or many.** The LinkedIn experiment measured tie strength by mutual connections and found an inverted U: moderately weak ties did the most for job mobility, more than close ties or strangers. **[A]** (Rajkumar et al., 2022)
+- **A good network is varied as well as strong.** The developmental-network view says who supports your career should differ in both closeness and background. **[B]** (Higgins and Kram, 2001)
+- **Past chats are evidence of what works for you.** This is ordinary recommender logic applied to data the check-in already collects. **[H]** for our setting.
+- **Warm introductions** through a mutual connection would plausibly lower the fear of asking, given how much people underestimate others' willingness to help. No study of this was found. **[H]**
+
+The first two pull in opposite directions. One favours people close to your network, the other people outside it. The LinkedIn result suggests where to settle: one step beyond who you know.
+
+### What is now built
+
+| Term | How it works | Shown on the card as |
+| --- | --- | --- |
+| **Mutual connections** | Counts your connections who also know this person. Worth 0 for none, rises to its peak at two or three, then falls for four or more | "You both know Nina and Mei" |
+| **Network novelty** | The share of your connections who are *not* in this person's industry. Highest when you know nobody in their field | "Would be your first connection in Healthcare" |
+
+Two limits:
+
+- **The demo has no real connection graph.** Who knows whom among the seed profiles is a fixed guess based on shared groups, city, industry and class year. A real app would read this from its own data.
+- **The shape of the mutual-connections curve is our guess.** The research supports "moderate is best." Where the peak sits, and how fast it falls, is untested.
+
+### Not built
+
+- Learning from a user's own rated chats.
+- Introductions through a mutual connection.
+- Novelty on anything other than industry, such as city or career stage.
+
+## 10. How this compares with dating apps
+
+Most of the matching evidence in this file comes from dating apps, because that is where two-sided matching has been studied most. It is worth being clear about where the comparison holds.
+
+### Where it holds
+
+| Shared problem | Shared answer |
+| --- | --- |
+| Both people have to say yes | Reciprocal scores |
+| Popular people are swamped | Limits on exposure |
+| Too much choice lowers satisfaction | A small daily set |
+| A like is cheap and so means little | A scarce signal, such as a priority request |
+| Each person sorted separately gives a poor overall result | Stable matching across everyone |
+
+### Where it does not
+
+These three differences are our reasoning. No study compares the two settings directly. **[H]**
+
+| | Dating | Kadzu |
+| --- | --- | --- |
+| **What makes a match** | Mutual attraction, largely similarity | Complementarity: one person's need meets another's offer |
+| **How many** | One partner, after which both leave | Many relationships, and both stay |
+| **Your existing network** | Irrelevant or avoided | Central to who you should meet next |
+
+What follows from them:
+
+- **Fit comes before similarity.** Shared values still matter (Eby et al., 2013 **[A]**), but the reason for the chat is that one person can help the other.
+- **Capacity is a number.** A dating match takes someone off the market. A mentor can take several chats a month, which is why this proposal uses capacity-aware matching.
+- **Success builds the product.** A dating app loses its users when it works. Here every good match makes the Network tab more useful, so there is no reason to hold back the best matches.
+- **The two sides are unequal.** Mentors are scarce and are giving time. This is the case for mentees requesting and mentors choosing.
+- **The outcome can be measured.** Dating apps seldom learn how a date went. The check-in tells us, which makes learning from results far easier.
+- **One risk is specific to us: transactional use.** Someone who wants only a referral is using the other person. See [03-efficacy.md](03-efficacy.md#referral-seeking-and-transactional-use).

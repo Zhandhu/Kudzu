@@ -1,5 +1,5 @@
 import type { Role, User } from '../types'
-import { coordsFor } from '../lib/util'
+import { coordsFor, hash } from '../lib/util'
 
 /** All people here are fictional. */
 
@@ -24,7 +24,8 @@ function topicsFor(role: Role, gradYear: number, codes: string): { asks: string[
   return {
     asks: pick(
       [true, 'industry'], [has('A'), 'decision'], [has('M'), 'path'], [has('J') || has('C'), 'interview'],
-      [has('C'), 'resume'], [has('J'), 'referral'], [gradYear >= 2028, 'recruiting'], [gradYear >= 2029, 'campus'],
+      // referrals are never an ask: they are something a person offers once they know you
+      [has('C'), 'resume'], [gradYear >= 2028, 'recruiting'], [gradYear >= 2029, 'campus'],
     ),
     offers: pick([gradYear <= 2029, 'campus'], [gradYear <= 2028, 'path'], [gradYear <= 2027, 'recruiting'], [gradYear <= 2027, 'interview']),
   }
@@ -308,3 +309,22 @@ export const USERS: User[] = [
 ]
 
 export const USERS_BY_ID: Record<string, User> = Object.fromEntries(USERS.map((u) => [u.id, u]))
+
+/**
+ * Whether two seed people already know each other. A real app would read this
+ * from its connection graph. Here it is a fixed, repeatable guess that is more
+ * likely for people who share a group, city, industry or class year.
+ */
+export function knows(a: string, b: string): boolean {
+  const ua = USERS_BY_ID[a]
+  const ub = USERS_BY_ID[b]
+  if (a === b || !ua || !ub || ua.schoolIds[0] !== ub.schoolIds[0]) return false
+  const [x, y] = a < b ? [a, b] : [b, a]
+  const chance =
+    1 +
+    (ua.groupIds.some((g) => ub.groupIds.includes(g)) ? 7 : 0) +
+    (ua.city === ub.city ? 3 : 0) +
+    (ua.industry === ub.industry ? 8 : 0) +
+    (Math.abs(ua.gradYear - ub.gradYear) <= 2 ? 5 : 0)
+  return hash(`${x}~${y}`) % 100 < chance
+}

@@ -4,7 +4,7 @@
  */
 import type { Connection, Feedback, KEvent, Mode, Nudge, Prefs, Proposal, Strength, User } from '../types'
 import { MODE_META, topicLabel } from '../config/brand'
-import { USERS, USERS_BY_ID } from '../data/users'
+import { USERS, USERS_BY_ID, knows } from '../data/users'
 import { SCHOOLS, PROMPTS } from '../data/schools'
 import { SEED_NUDGES } from '../data/seed'
 import { useKadzu, nowOf, type KadzuState } from '../store/useKadzu'
@@ -101,6 +101,37 @@ export function matchInfo(me: User, other: User): MatchInfo {
   return { mode, topics, fit, reason, headline: `${MODE_META[mode].verb} ${name}` }
 }
 
+/* ---------------- using the network you already have ---------------- */
+
+type NetworkState = Pick<KadzuState, 'connections' | 'schoolId' | 'blocked'>
+
+/** People you are connected to who also know `other`. */
+export function mutualConnections(s: NetworkState, other: User): User[] {
+  return schoolConnections(s)
+    .filter((c) => c.otherId !== other.id && knows(c.otherId, other.id))
+    .map((c) => getUser(c.otherId))
+    .filter((u): u is User => !!u)
+}
+
+/**
+ * How much mutual connections should count. Research on weak ties found the most
+ * useful new contacts are a moderate distance away: a few people in common, not
+ * none and not everyone. So the value rises, peaks at two or three, then falls.
+ */
+export const mutualValue = (n: number) => (n === 0 ? 0 : n === 1 ? 0.6 : n <= 3 ? 1 : n <= 5 ? 0.6 : 0.3)
+
+/** 0–1: how under-represented this person's industry is among your connections. */
+export function noveltyValue(s: NetworkState, other: User): number {
+  const mine = schoolConnections(s).map((c) => getUser(c.otherId)).filter((u): u is User => !!u && u.id !== other.id)
+  if (mine.length < 3) return 0
+  return 1 - mine.filter((u) => u.industry === other.industry).length / mine.length
+}
+
+/** The industry this person would add to your network, if you know nobody in it yet. */
+export function networkGap(s: NetworkState, other: User): string | null {
+  return noveltyValue(s, other) === 1 ? other.industry : null
+}
+
 /** Private reliability/quality score, 0–1. Never shown in the UI; only used for ranking. */
 export function trustScore(userId: string, feedback: Feedback[]): number {
   let score = userId === 'g1' ? 0.98 : 0.7 + (hash(userId) % 25) / 100
@@ -110,6 +141,7 @@ export function trustScore(userId: string, feedback: Feedback[]): number {
     if (f.rating === 'up') score += 0.05
     if (f.rating === 'down') score -= 0.15
     if (f.tags.includes('Felt like a sales pitch') || f.tags.includes('Not a good fit')) score -= 0.05
+    if (f.tags.includes('Only wanted a referral')) score -= 0.2
   }
   return Math.max(0, Math.min(1, score))
 }
@@ -132,8 +164,14 @@ export function buildDeck(s: Pick<KadzuState, 'me' | 'prefs' | 'schoolId' | 'swi
     .filter(({ info }) => prefs.modes.length === 0 || prefs.modes.includes(info.mode))
     .map(({ u, info }, i) => ({
       u,
-      // need-to-offer fit is weighted alongside common ground and the private trust score
-      score: info.fit * 2.5 + inCommon(me, u, s.groups).length * 1.5 + trustScore(u.id, s.feedback) * 4 + (spotsLeft(u) > 0 ? 1 : 0) - i * 0.02,
+      score:
+        info.fit * 2.5 + // their offers meet your asks (or the reverse)
+        inCommon(me, u, s.groups).length * 1.5 + // common ground
+        trustScore(u.id, s.feedback) * 4 + // private reliability
+        mutualValue(mutualConnections(s, u).length) * 1.5 + // a few people in common
+        noveltyValue(s, u) * 1.0 + // widens your network
+        (spotsLeft(u) > 0 ? 1 : 0) -
+        i * 0.02,
     }))
     .sort((a, b) => b.score - a.score)
     .map((x) => x.u)
@@ -325,6 +363,22 @@ export function receiveThanks(s: KadzuState): string | null {
   s.addMessage(pick.id, { from: pick.id, text, thanks: true })
   s.say(`${firstName(pick.name)} sent you a thank-you note`)
   return pick.id
+}
+
+/* ---------------- referral safeguards ---------------- */
+
+const REFERRAL_PATTERN = /\brefer(ral|rals|red|ring)?\b|\brefer me\b|put in a (good )?word|recommend me|pass (along|on) my resume|get me (a|an) (job|interview)|are you hiring|any openings/i
+
+/** True when a draft message reads as a request for a referral or a job. */
+export const looksLikeReferralAsk = (text: string) => REFERRAL_PATTERN.test(text)
+
+/** The right way round: after a chat, the person who helped offers the introduction. */
+export function offerIntroduction(otherId: string) {
+  useKadzu.getState().addMessage(otherId, {
+    from: 'me',
+    text: 'I’d be glad to introduce you to someone I know who works on this. Send me a short note about yourself and I’ll pass it along.',
+  })
+  replyLater(otherId, 'Thank you, that’s more than I hoped for. I’ll send it over tonight.', 2200)
 }
 
 /** Finds a confirmed chat that has not had its check-in yet (used by the demo panel). */

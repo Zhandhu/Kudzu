@@ -72,3 +72,9 @@ Searches in rounds 1 and 2 turned up nothing usable on these. They are listed so
 - One-off conversations compared with ongoing mentoring.
 - Group or paired mentoring formats ("bring a friend").
 - The best experience gap between mentor and mentee.
+
+## Added in round 3
+
+| Source | Grade | Finding used | Checked |
+| --- | --- | --- | --- |
+| Casciaro, Gino and Kouchaki (2014). "The contaminating effects of building instrumental ties: How networking can make us feel dirty." *Administrative Science Quarterly* 59(4), 705–735. [HBS](https://hbswk.hbs.edu/item/the-contaminating-effects-of-building-instrumental-ties-how-networking-can-make-us-feel-dirty) | A | Instrumental networking for professional goals makes people feel morally dirty. Those who feel it network less. Lower-power people feel it more | Abstract and summaries. Effect sizes not retrieved |

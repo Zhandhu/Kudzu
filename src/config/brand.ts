@@ -9,13 +9,14 @@ export const TAGLINE = 'Coffee chats, matched.'
  * looking for, and what they can offer. A match is strongest where one
  * person's ask meets the other's offer.
  */
-export const TOPICS: { id: string; label: string }[] = [
+export const TOPICS: { id: string; label: string; offerOnly?: boolean }[] = [
   { id: 'industry', label: 'An inside look at an industry' },
   { id: 'decision', label: 'Talking through a decision' },
   { id: 'path', label: 'Someone who’s been where I am' },
   { id: 'interview', label: 'Interview practice' },
   { id: 'resume', label: 'Resume or portfolio feedback' },
-  { id: 'referral', label: 'Referrals and introductions' },
+  // Offer-only: nobody can list a referral as something they are looking for.
+  { id: 'referral', label: 'Introductions, once we’ve talked', offerOnly: true },
   { id: 'recruiting', label: 'Recruiting tips and timelines' },
   { id: 'campus', label: 'Classes, clubs and campus life' },
 ]
@@ -56,5 +57,6 @@ export const FEEDBACK_TAGS = [
   'Generous with time',
   'Great listener',
   'Not a good fit',
+  'Only wanted a referral',
   'Felt like a sales pitch',
 ]

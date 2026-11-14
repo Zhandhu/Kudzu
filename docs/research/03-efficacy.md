@@ -156,3 +156,43 @@ Published research gets us to good guesses. Only our users can confirm them. A f
 - Whether any alumni platform's outcomes have been independently measured. We found only vendor reports.
 - Whether "bring a friend" helps.
 - Whether findings from dating apps and workplace mentoring carry over to students and alumni at all. This is the largest uncertainty, and the reason the experiment backlog matters more than the citations.
+
+## Referral-seeking and transactional use
+
+The biggest misuse risk for this app is people who want a referral and nothing else. It wastes mentors' time, and it is the kind of experience that makes alumni stop saying yes.
+
+### What the research says
+
+- **Networking for gain feels wrong to the people doing it.** Experiments found that instrumental networking for professional goals made people feel morally dirty, where personal or spontaneous connection did not. In a survey of lawyers, those who felt this way networked less and performed worse. People with less power felt it more. **[A]** (Casciaro, Gino and Kouchaki, 2014)
+- **Helpers return when they feel valued, not used.** **[A]** (Grant and Gino, 2010)
+- **Public ratings would not catch this.** They inflate because people avoid harming each other. Private feedback is where a mentor will say "they only wanted a referral." **[A]** (Filippas, Horton and Golden, 2022)
+
+No study was found on referral-seeking in a mentoring app specifically. The design below is our reasoning from these findings. **[H]**
+
+### The principle
+
+A referral is something a person **offers** once they know you. It is never something to **ask for** on first contact. The app should make the first easy and the second awkward, without banning any words.
+
+### What is now built
+
+| Safeguard | How it works |
+| --- | --- |
+| **Referrals cannot be an ask** | The topic appears only under "I can offer," worded "Introductions, once we've talked." Nobody can list it as what they are looking for |
+| **A nudge before sending** | If someone types a referral request to a person they have not yet had a chat with, a note appears above the message box suggesting they ask about the person's experience first. It does not block the message |
+| **Offering is one tap** | After a completed chat, the person who gave the help sees "Offer an introduction" |
+| **A private check-in tag** | "Only wanted a referral." It lowers the hidden trust score more than any other tag, so repeat offenders are shown to fewer people |
+| **A report reason** | "Only wanted a referral or a job" is the first option when reporting someone |
+| **A guideline** | "Don't lead with a referral" in the community guidelines |
+
+### Not built, and worth considering
+
+- **Limits on first messages.** A cap on new requests per week would make each one count. The priority-request idea in [02-matching.md](02-matching.md#step-6-change-who-makes-the-first-move) does part of this.
+- **A mentor setting:** "Not open to referral requests," shown on the profile.
+- **Human review.** Reports are recorded but nothing acts on them in the demo. A real app needs a person to look at them, and a rule for what happens after several.
+- **Escalation.** The account notice exists for missed chats. The same notice could cover repeated "only wanted a referral" feedback.
+
+### What to watch
+
+- **The nudge could shame honest students.** A first-generation student may not know the unwritten rule. The wording explains the norm and never accuses. Test whether people who see it go on to send a better message or give up.
+- **Word-matching is crude.** It will miss rephrasings and flag innocent uses. It is a prompt to think, never a basis for penalising anyone.
+- **Measure it:** the share of check-ins tagged "Only wanted a referral," and the mentor return rate among those who received one.
