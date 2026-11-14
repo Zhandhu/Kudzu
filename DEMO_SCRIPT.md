@@ -34,7 +34,7 @@ The demo controls are referred to below as **Demo**.
 5. Type **consult** in the search bar and tap the **Consulting** chip it offers. Results **grow on branches**, grouped by city. Tap **Level** to regroup them. (Search for one city and the app stops grouping by city on its own.) Leaves are tinted by relationship: learn from, trade notes, give back. Outlined leaves are people already in Riley's network. The corner of each leaf shows how far away they are: **1st**, **2nd** (someone Riley knows knows them) or **3rd**.
 6. Tap the **+** in the search bar to show the other ways to narrow: field, city, level and **Can help with**. Tap one: it applies and the sheet closes by itself. Tap the chip to remove it.
 7. Point to the two leaves in the bottom-right corner. Tap the **tendril**, which is **Requests**:
-   - **Asked of you** are requests from others. Each can be answered in one tap: **Accept**, **Later on** or **Not right now**.
+   - **Asked of you** are requests from others. Each can be answered in one tap: **Accept**, **Later on** or **Not right now**, which is light brown so it reads as a no.
    - **Waiting on** are Riley's own. One reads "Rachel couldn't get to this one," with a button to **see who else can help**. "A request never just goes quiet."
 8. Tap the **brown leaf**, **Not yet met**: Nina and Kwame have accepted but Riley has not met them yet, so they are not in the network. Tapping a name or the cup opens the chat.
 
@@ -52,12 +52,12 @@ The demo controls are referred to below as **Demo**.
 "This is the signature feature. Your network is a living thing."
 
 1. Open the **Network** tab. It opens on the **map**. A vine grows from your root marker to each city. Each vine is a tangle of strands, one per person there, coloured by how close you are: deep green for strong, pale and dashed for fading.
-2. Tap the **Seattle cluster**. The other vines dim and a card lists the people there, with message and coffee buttons. Tap **Zoom in**: the vine arrives at the city and splits into a branch for each person's leaf.
+2. Tap the **Seattle cluster**. The map flies in on its own: the vine arrives at the city and splits into a branch for each person, and a card lists them with message and coffee buttons. Tap the **X** and the map flies back out to the whole network. (If you drag the map or tap a person while zoomed in, it stays where you put it.)
 3. Point to the **two leaves** in the bottom-right corner. The purple blossom shows how many things are waiting, and it darkens as the number rises.
 4. Tap the first leaf, **Reach out**. Read out one or two nudges: Jordan is in town this week, Sam just started at Google. Tap **Message** on the Sam nudge. The chat opens with a congratulation already drafted. Go back.
 5. Tap the second leaf, **Grow**. Open **Class of 2028** to show where the class has ended up and the class event, then tap **I know them** on a classmate and say when you last talked. They join the network with the right leaf. Go back.
 6. Switch to **List**. Connections are grouped by strength with leaf icons, and each carries a tag for the kind of relationship: **Learning from**, **Trading notes** or **Giving back**. Tap **Giving back** in the chip row to show Diego, a first-year Riley has helped.
-7. Open **Devon Brooks**. Tap **What this is based on**: closeness adds up every interaction, a good coffee chat counts most, and each one fades with time. Below it, **Keeping in touch** shows the monthly rhythm Riley chose.
+7. Open **Devon Brooks**. Tap **What this is based on**: closeness adds up every interaction, a good coffee chat counts most, and each one fades with time. Below it, **Keeping in touch** shows the monthly rhythm Riley chose. Tap **We caught up outside Kudzu** to show how a phone call or a lunch is logged in two taps, so the tie does not look as though it has faded.
 8. **Demo → Fast-forward one month.** Back on Network, the counts at the top shift toward Fading. Open **Reach out**: the first nudge is the monthly catch-up with Devon.
 
 ## 4:00 Events and groups (40 seconds)

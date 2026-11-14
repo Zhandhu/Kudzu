@@ -425,7 +425,17 @@ const WEIGHT: Record<InteractionType, number> = {
   thanks: 0.5,
   messaged: 0.35,
   matched: 0.1,
+  caught: 0.9, // caught up outside the app; scaled by how, below
 }
+
+/**
+ * A catch-up logged by hand counts by how it happened. Meeting is close to a coffee
+ * chat. A call counts for less, and a text for about what a message in the app does.
+ * It counts a little less than the same thing done through the app, since nobody
+ * else confirms it.
+ */
+const HOW_FACTOR = { person: 1, call: 0.75, text: 0.45 } as const
+export const HOW_LABEL = { person: 'Met in person', call: 'Phone or video call', text: 'Text or email' } as const
 
 /** Every interaction loses half its value in this many days. */
 const HALF_LIFE_DAYS = 60
@@ -442,7 +452,7 @@ export interface ClosenessPart {
 }
 
 function partValue(i: Connection['interactions'][number], now: number): number {
-  const quality = i.type === 'coffee' ? (i.quality === 'up' ? 1.3 : i.quality === 'down' ? 0.5 : 1) : 1
+  const quality = i.type === 'coffee' ? (i.quality === 'up' ? 1.3 : i.quality === 'down' ? 0.5 : 1) : i.type === 'caught' ? HOW_FACTOR[i.how ?? 'call'] : 1
   const ageDays = Math.max(0, (now - i.at) / DAY)
   return WEIGHT[i.type] * quality * Math.pow(0.5, ageDays / HALF_LIFE_DAYS)
 }
@@ -475,7 +485,7 @@ export function schoolConnections(s: Pick<KudzuState, 'connections' | 'schoolId'
  * A match is not yet a relationship. Someone joins your web once there has been
  * a real exchange: a coffee chat, an event together, or knowing them already.
  */
-export const isEstablished = (c: Connection) => c.interactions.some((i) => i.type === 'coffee' || i.type === 'event' || i.type === 'known')
+export const isEstablished = (c: Connection) => c.interactions.some((i) => i.type === 'coffee' || i.type === 'event' || i.type === 'known' || i.type === 'caught')
 
 /** Your web: connections with a real exchange behind them. */
 export function webConnections(s: Pick<KudzuState, 'connections' | 'schoolId' | 'blocked'>): Connection[] {

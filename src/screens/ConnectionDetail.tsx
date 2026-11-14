@@ -1,14 +1,15 @@
 import { useState } from 'react'
-import { CalendarDays, ChevronDown, Coffee, Handshake, HeartHandshake, MessageCircle, Repeat, StickyNote, UserRound } from 'lucide-react'
+import { CalendarDays, CheckCheck, ChevronDown, Coffee, Handshake, HeartHandshake, MessageCircle, Repeat, StickyNote, UserRound } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import type { InteractionType } from '../types'
 import { STRENGTH_META } from '../config/brand'
 import { useKudzu, useNow } from '../store/useKudzu'
-import { RHYTHMS, closeness, getUser, isEstablished, matchInfo, strengthOf } from '../services'
+import { HOW_LABEL, RHYTHMS, closeness, getUser, isEstablished, matchInfo, strengthOf } from '../services'
 import { ago, firstName, fmtDate } from '../lib/util'
 import { LeafIcon, StrengthBadge } from '../components/brand'
 import { Avatar, BackHeader, Chip, inputCls } from '../components/ui'
 import { ModeTag, MoreMenu, roleLine } from '../components/ProfileView'
+import { CatchUpSheet } from '../components/CatchUpSheet'
 
 const KIND: Record<InteractionType, { label: string; icon: typeof Coffee }> = {
   matched: { label: 'Connected on Kudzu', icon: Handshake },
@@ -17,6 +18,7 @@ const KIND: Record<InteractionType, { label: string; icon: typeof Coffee }> = {
   event: { label: 'Attended an event together', icon: CalendarDays },
   known: { label: 'Knew each other before Kudzu', icon: UserRound },
   thanks: { label: 'Exchanged a thank-you', icon: HeartHandshake },
+  caught: { label: 'Caught up outside Kudzu', icon: CheckCheck },
 }
 
 /** The score at which the closeness bar reads as full. */
@@ -32,6 +34,7 @@ export default function ConnectionDetail() {
   const setRhythm = useKudzu((s) => s.setRhythm)
   const me = useKudzu((s) => s.me)
   const [showWhy, setShowWhy] = useState(false)
+  const [logging, setLogging] = useState(false)
   if (!user || !conn) return <><BackHeader title="Connection" /><p className="p-8 text-center text-sm text-ink/60">You’re not connected with this person yet.</p></>
 
   const st = strengthOf(conn, now)
@@ -113,6 +116,11 @@ export default function ConnectionDetail() {
         <Link to={`/messages/${user.id}?coffee=1`} className="flex flex-col items-center gap-1 rounded-2xl bg-coffee-500 py-3 text-xs font-semibold text-cream"><Coffee size={18} /> Propose coffee</Link>
         <Link to={`/u/${user.id}`} className="flex flex-col items-center gap-1 rounded-2xl border border-sage-200 bg-white py-3 text-xs font-semibold"><UserRound size={18} /> Profile</Link>
       </div>
+      {/* most catching up happens off the app: a call, a lunch. This records it. */}
+      <button onClick={() => setLogging(true)} className="mx-4 mt-2 flex w-[calc(100%-2rem)] items-center justify-center gap-2 rounded-2xl border border-vine-200 bg-vine-50 py-3 text-[13px] font-semibold text-vine-800">
+        <CheckCheck size={17} /> We caught up outside Kudzu
+      </button>
+      <CatchUpSheet user={user} open={logging} onClose={() => setLogging(false)} />
 
       {inWeb && (
         <section className="mx-4 mt-6">
@@ -151,7 +159,7 @@ export default function ConnectionDetail() {
             return (
               <li key={idx} className="relative pb-5 pl-6 last:pb-0">
                 <span className="absolute -left-[15px] top-0 flex h-7 w-7 items-center justify-center rounded-full bg-sage-100 text-vine-700 ring-4 ring-cream"><k.icon size={14} /></span>
-                <div className="text-sm font-medium">{k.label}</div>
+                <div className="text-sm font-medium">{i.type === 'caught' && i.how ? `Caught up: ${HOW_LABEL[i.how].toLowerCase()}` : k.label}</div>
                 {i.note && <div className="text-[13px] text-ink/60">{i.note}</div>}
                 <div className="text-xs text-ink/45">{fmtDate(i.at)} · {ago(i.at, now)}</div>
               </li>

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ChevronRight, HandHeart, MessageCircle, Search } from 'lucide-react'
+import { CheckCheck, ChevronRight, HandHeart, MessageCircle, Search } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { STRENGTH_META, topicLabel } from '../config/brand'
 import { useKudzu, useNow } from '../store/useKudzu'
@@ -9,6 +9,7 @@ import { LeafIcon, Logo } from '../components/brand'
 import { Avatar, SchoolChip, Toggle, inputCls } from '../components/ui'
 import { roleLine } from '../components/ProfileView'
 import { ProfilePopup } from '../components/ProfilePopup'
+import { CatchUpSheet } from '../components/CatchUpSheet'
 
 /** "3 weeks", "5 months": how long since two people last talked, in plain words. */
 const since = (days: number) => (days < 14 ? 'recently' : days < 60 ? `${Math.round(days / 7)} weeks ago` : days < 365 ? `${Math.round(days / 30)} months ago` : 'over a year ago')
@@ -27,6 +28,11 @@ export default function Home() {
   const nav = useNavigate()
   const [q, setQ] = useState('')
   const [picked, setPicked] = useState<string | null>(null)
+  // the person a catch-up is being logged for, and the reminder it answers
+  const [caught, setCaught] = useState<{ id: string; nudge: string } | null>(null)
+  const [lastCaught, setLastCaught] = useState<string | null>(null)
+  if (caught && caught.id !== lastCaught) setLastCaught(caught.id)
+  const caughtUser = getUser(caught?.id ?? lastCaught ?? '') // kept while the sheet slides shut
 
   const nudges = computeNudges(s, now).filter((n) => !s.dismissedNudges.includes(n.id)).slice(0, 3)
   const people = useMemo(
@@ -85,6 +91,10 @@ export default function Home() {
                       </button>
                       <button onClick={() => s.dismissNudge(n.id)} className="rounded-full px-4 py-3 text-[15px] font-semibold text-ink/50">Not now</button>
                     </div>
+                    {/* already spoke, by phone or over lunch: say so and the reminder goes away */}
+                    <button onClick={() => setCaught({ id: u.id, nudge: n.id })} className="mt-2 flex w-full items-center justify-center gap-2 rounded-full border border-vine-200 bg-vine-50 py-2.5 text-[14px] font-semibold text-vine-800">
+                      <CheckCheck size={17} /> We already caught up
+                    </button>
                   </div>
                 )
               })}
@@ -118,7 +128,7 @@ export default function Home() {
                     <div className="mt-3 grid grid-cols-3 gap-2">
                       <button onClick={() => { answerRequest(r.id, 'accept'); nav(`/messages/${u.id}`) }} className="rounded-full bg-vine-700 py-3 text-[14px] font-semibold text-cream">Yes</button>
                       <button onClick={() => answerRequest(r.id, 'later')} className="rounded-full border border-vine-700 py-3 text-[14px] font-semibold text-vine-700">Later</button>
-                      <button onClick={() => answerRequest(r.id, 'decline')} className="rounded-full border border-sage-200 bg-white py-3 text-[14px] font-semibold text-ink/60">Not now</button>
+                      <button onClick={() => answerRequest(r.id, 'decline')} className="rounded-full border border-coffee-200 bg-coffee-100 py-3 text-[14px] font-semibold text-coffee-700">No</button>
                     </div>
                   </div>
                 )
@@ -168,6 +178,7 @@ export default function Home() {
       </div>
 
       <ProfilePopup userId={picked} onClose={() => setPicked(null)} />
+      {caughtUser && <CatchUpSheet user={caughtUser} open={!!caught} onClose={() => setCaught(null)} onLogged={() => caught && s.dismissNudge(caught.nudge)} />}
     </div>
   )
 }

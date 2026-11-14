@@ -135,7 +135,10 @@ export interface Group {
 }
 
 /** "known" marks a relationship that existed before the app and was added by hand. */
-export type InteractionType = 'matched' | 'messaged' | 'coffee' | 'event' | 'known' | 'thanks'
+export type InteractionType = 'matched' | 'messaged' | 'coffee' | 'event' | 'known' | 'thanks' | 'caught'
+
+/** How two people caught up when it happened outside the app. */
+export type CaughtUpHow = 'person' | 'call' | 'text'
 
 /** How recently someone last talked to a person they already know. */
 export type LastTalked = 'recent' | 'months' | 'year' | 'unsure'
@@ -144,6 +147,8 @@ export interface Interaction {
   type: InteractionType
   at: number
   note?: string
+  /** Set on a catch-up logged by hand: how it happened. Meeting counts for more than a text. */
+  how?: CaughtUpHow
   /** How a coffee chat went, from the private check-in. Feeds closeness. */
   quality?: 'up' | 'down'
 }

@@ -97,7 +97,7 @@ function RequestsSheet({ open, onClose, incoming, outgoing }: { open: boolean; o
               <div className="mt-3 grid grid-cols-3 gap-2">
                 <button onClick={() => { answerRequest(r.id, 'accept'); onClose(); nav(`/messages/${u.id}`) }} className="rounded-full bg-vine-700 py-2 text-xs font-semibold text-cream">Accept</button>
                 <button onClick={() => { answerRequest(r.id, 'later'); onClose(); nav(`/messages/${u.id}`) }} className="rounded-full border border-vine-700 py-2 text-xs font-semibold text-vine-700">Later on</button>
-                <button onClick={() => answerRequest(r.id, 'decline')} className="rounded-full border border-sage-200 bg-white py-2 text-xs font-semibold text-ink/60">Not right now</button>
+                <button onClick={() => answerRequest(r.id, 'decline')} className="rounded-full border border-coffee-200 bg-coffee-100 py-2 text-xs font-semibold text-coffee-700">Not right now</button>
               </div>
             </div>
           )

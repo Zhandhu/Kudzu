@@ -73,5 +73,5 @@ These are decisions, not details. Each changes what gets built next.
 
 1. Decide question 2. It changes what "help" means for the people asking.
 2. A weekly summary: "three people to write to this week", as a mock email. This group is the least likely to open an app unprompted.
-3. One-tap "we caught up", so a phone call or a lunch counts without sending a message in the app.
+3. Done: "We caught up" records a call, a lunch or a text that happened outside the app. It is on each person’s page and on the Home cards.
 4. Larger text as a setting, separate from which app is chosen.

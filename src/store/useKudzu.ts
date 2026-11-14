@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Connection, Conversation, Degree, Feedback, Group, InteractionType, KEvent, LastTalked, Message, Prefs, Proposal, Request, User } from '../types'
+import type { CaughtUpHow, Connection, Conversation, Degree, Feedback, Group, InteractionType, KEvent, LastTalked, Message, Prefs, Proposal, Request, User } from '../types'
 import { ALUM_PERSONA, DEFAULT_PREFS, SEED_GROUPS, STUDENT_PERSONA, seedConnections, seedConversations, seedEvents, seedRequests } from '../data/seed'
 import { SCHOOLS } from '../data/schools'
 import { CITIES, DAY, uid } from '../lib/util'
@@ -83,6 +83,8 @@ interface Actions {
   setNote: (otherId: string, note: string) => void
   setRhythm: (otherId: string, rhythmDays: number | undefined) => void
   addKnown: (otherId: string, when: LastTalked, quiet?: boolean) => void
+  /** Records a catch-up that happened outside the app: a call, a lunch, a text. */
+  logCatchUp: (otherId: string, how: CaughtUpHow, daysAgo: number, note?: string) => void
   rsvp: (eventId: string, status: 'going' | 'interested' | undefined) => void
   addEvent: (e: KEvent) => void
   toggleGroup: (groupId: string) => void
@@ -354,6 +356,20 @@ export const useKudzu = create<KudzuState>()(
 
       // Adds someone the user already knew. The answer to "when did you last talk?"
       // dates the tie, so it starts with the right strength instead of looking brand new.
+      // Most of keeping in touch happens off the app. Logging it keeps the tie from
+      // looking as though it has faded, and resets any rhythm that was due.
+      logCatchUp: (otherId, how, daysAgo, note) =>
+        set((s) => {
+          const entry = { type: 'caught' as const, how, at: nowOf(s) - daysAgo * DAY, note: note?.trim() || undefined }
+          const existing = s.connections.find((c) => c.otherId === otherId)
+          return {
+            connections: existing
+              ? s.connections.map((c) => (c.otherId === otherId ? { ...c, interactions: [...c.interactions, entry] } : c))
+              : [...s.connections, { otherId, note: '', interactions: [entry] }],
+            toast: { id: uid(), text: 'Logged. Your network is up to date.' },
+          }
+        }),
+
       addKnown: (otherId, when, quiet) =>
         set((s) => {
           const { days, note } = LAST_TALKED[when]

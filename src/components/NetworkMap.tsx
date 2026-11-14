@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import L from 'leaflet'
 import { AttributionControl, MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from 'react-leaflet'
@@ -223,13 +223,39 @@ function FitTo({ points, token }: { points: LatLng[]; token: string }) {
   return null
 }
 
-function FlyButton({ to, label }: { to: LatLng; label: string }) {
+/** Shared between the map and its pilot: whether the current close-up was the app's doing. */
+type Pilot = { auto: boolean; flying: boolean }
+
+/**
+ * Tapping a bundle flies in to that city. Closing its card flies back out to the
+ * whole map, because the close-up was only there to show the bundle. If you took
+ * over in the meantime (dragged, zoomed, or tapped a person) the map stays where
+ * you put it.
+ */
+function MapPilot({ pilot, target, points }: { pilot: { current: Pilot }; target: LatLng | null; points: LatLng[] }) {
   const map = useMap()
-  return (
-    <button onClick={() => map.flyTo(to, 11, { duration: 0.8 })} className="rounded-full bg-vine-700 px-3 py-1.5 text-xs font-semibold text-cream">
-      {label}
-    </button>
-  )
+  useMapEvents({
+    dragstart: () => { pilot.current.auto = false },
+    zoomstart: () => { if (!pilot.current.flying) pilot.current.auto = false },
+    moveend: () => { pilot.current.flying = false },
+  })
+  const key = target ? target.join(',') : ''
+  useEffect(() => {
+    if (target) {
+      const z = 10
+      // the card covers the lower part of the map, so the city is placed a little above the middle
+      const shifted = map.unproject(map.project(target, z).add([0, map.getSize().y * 0.18]), z)
+      pilot.current.flying = true
+      map.flyTo(shifted, z, { duration: 0.9 })
+      map.once('moveend', () => { pilot.current.auto = true })
+    } else if (pilot.current.auto) {
+      pilot.current.auto = false
+      pilot.current.flying = true
+      map.flyToBounds(L.latLngBounds(points), { padding: [40, 40], maxZoom: 11, duration: 0.9 })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key])
+  return null
 }
 
 function PersonRow({ p }: { p: MapPerson }) {
@@ -252,8 +278,16 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
   const [sel, setSel] = useState<{ city: string } | { id: string } | null>(null)
   const [grow, setGrow] = useState(0)
 
+  // the bundle the map flew in to, if any, and whether the user has since taken over
+  const [flyCity, setFlyCity] = useState<string | null>(null)
+  const pilot = useRef<Pilot>({ auto: false, flying: false })
+  // tapping a person means you are looking around for yourself: the map stays put afterwards
+  const pickPerson = (id: string) => { pilot.current.auto = false; setFlyCity(null); setSel({ id }) }
+
   // lets the page hide floating controls while a person or city card is open
   useEffect(() => { onSelection?.(!!sel) }, [sel, onSelection])
+  // closing the card ends the close-up
+  useEffect(() => { if (!sel) setFlyCity(null) }, [sel])
 
   // vines grow outward from the root marker when the map opens
   useEffect(() => {
@@ -331,6 +365,7 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
         <AttributionControl position="bottomleft" />
         <ZoomWatcher onZoom={setZoom} onMapClick={() => setSel(null)} />
         <FitTo points={allPoints} token={`${me.schoolIds[0]}-${people.length}`} />
+        <MapPilot pilot={pilot} target={flyCity ? cities.find((c) => c.city === flyCity)?.center ?? null : null} points={allPoints} />
 
         {strands.map((v) => {
           // a shared strand (no id) lights up whenever anyone in its city is selected
@@ -361,17 +396,18 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
 
         {detailed
           ? people.map((p) => (
-              <Marker key={p.user.id} position={p.user.coords} icon={leafIcon(p.level, selId === p.user.id)} eventHandlers={{ click: () => setSel({ id: p.user.id }) }} />
+              <Marker key={p.user.id} position={p.user.coords} icon={leafIcon(p.level, selId === p.user.id)} eventHandlers={{ click: () => pickPerson(p.user.id) }} />
             ))
           : cities.map((c) =>
               c.list.length === 1 ? (
-                <Marker key={c.city} position={c.list[0].user.coords} icon={leafIcon(c.list[0].level, selId === c.list[0].user.id)} eventHandlers={{ click: () => setSel({ id: c.list[0].user.id }) }} />
+                <Marker key={c.city} position={c.list[0].user.coords} icon={leafIcon(c.list[0].level, selId === c.list[0].user.id)} eventHandlers={{ click: () => pickPerson(c.list[0].user.id) }} />
               ) : (
                 <Marker
                   key={c.city}
                   position={c.center}
                   icon={clusterIcon(c.list.map((p) => p.level), c.list.length, selCity === c.city, c.city === me.city)}
-                  eventHandlers={{ click: () => setSel({ city: c.city }) }}
+                  // a bundle opens its card and flies in to show the people in it
+                  eventHandlers={{ click: () => { setSel({ city: c.city }); setFlyCity(c.city) } }}
                 />
               ),
             )}
@@ -390,7 +426,6 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
                 {selCity ? `${selCity} · ${selPeople.length} connections` : selPeople[0].user.city}
               </div>
               <div className="flex items-center gap-2">
-                {selCity && !detailed && <FlyButton to={cities.find((c) => c.city === selCity)?.center ?? origin} label="Zoom in" />}
                 <button onClick={() => setSel(null)} className="rounded-full p-1 text-ink/50 hover:bg-sage-100" aria-label="Close"><X size={16} /></button>
               </div>
             </div>

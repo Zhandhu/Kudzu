@@ -90,7 +90,7 @@ Screens read data through `src/services`, never straight from the seed files, so
 
 ### How a few things work
 
-- **Closeness is a score, not a rule.** Every interaction adds to it according to what kind it was (a coffee chat counts most, a message least) and how it went (a chat rated well counts for more). Each contribution halves about every 60 days. The four leaf states are bands of that score. See `closeness` in `src/services`.
+- **Closeness is a score, not a rule.** Every interaction adds to it according to what kind it was (a coffee chat counts most, a message least) and how it went (a chat rated well counts for more). Each contribution halves about every 60 days. The four leaf states are bands of that score. See `closeness` in `src/services`. A catch-up outside the app can be logged by hand ("We caught up"): meeting in person counts almost as much as a coffee chat, a call for less, a text for least.
 - **Requests, not matches.** You ask someone for a chat, about a topic and with a line of your own. They accept, suggest a later time, or decline, each in one tap. There is no swiping and no two-sided match.
 - **Requests are kept from going unanswered.** People who are full this month cannot be asked. Each person can have five requests open. A request lapses after ten days, and the sender is told and shown who else can help. Someone who lets two requests lapse is paused for new ones until they return. See the request functions in `src/services`.
 - **An accepted request is not yet a connection.** Someone joins your web only after a real exchange: a coffee chat, an event together, or marking them as someone you already know. Until then they sit under "Not yet met" on Find.
