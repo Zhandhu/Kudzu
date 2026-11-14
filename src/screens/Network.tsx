@@ -10,7 +10,7 @@ import { LeafIcon } from '../components/brand'
 import { Avatar, Chip, EmptyState, SchoolChip, Sheet, inputCls } from '../components/ui'
 import { ModeIcon, ModeTag, roleLine } from '../components/ProfileView'
 import NetworkMap, { type MapPerson } from '../components/NetworkMap'
-import { LeafDock, LeafRow, type LeafItem, type LeafKey } from '../components/NetworkLeaves'
+import { LeafSprig, type LeafItem, type LeafKey } from '../components/NetworkLeaves'
 
 function NudgeCard({ n }: { n: Nudge }) {
   const nav = useNavigate()
@@ -80,7 +80,6 @@ export default function Network() {
   const neighbours = cityCohort(s, s.me.city)
   const suggestionCount = suggestKnown(s).length
   const counts = STRENGTH_ORDER.map((l) => [l, people.filter((p) => p.level === l).length] as [Strength, number])
-  const layout = s.networkLayout === 'row' ? 'row' : 'dock'
 
   // The page opens on the network. Everything else sits behind three leaves.
   const leaves: LeafItem[] = [
@@ -135,7 +134,6 @@ export default function Network() {
             <span key={l} className="flex items-center gap-1"><LeafIcon level={l} size={14} /> <b className="text-ink">{n}</b> {STRENGTH_META[l].label.toLowerCase()}</span>
           ))}
         </div>
-        {!empty && layout === 'row' && <LeafRow items={leaves} />}
       </header>
 
       {empty ? (
@@ -152,7 +150,7 @@ export default function Network() {
           </div>
         </div>
       ) : (
-        <div className={`app-scroll min-h-0 flex-1 overflow-y-auto px-3 ${layout === 'dock' ? 'pb-32' : 'pb-4'}`}>
+        <div className="app-scroll min-h-0 flex-1 overflow-y-auto px-3 pb-28">
           <div className="flex items-center gap-2 px-1 pt-1">
             <div className="relative flex-1">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40" />
@@ -199,7 +197,7 @@ export default function Network() {
         </div>
       )}
 
-      {!empty && layout === 'dock' && !(view === 'map' && mapBusy) && <LeafDock items={leaves} />}
+      {!empty && !(view === 'map' && mapBusy) && <LeafSprig items={leaves} />}
 
       <Sheet open={open === 'reach'} onClose={() => setOpen(null)} title="Reach out">
         {nudges.length === 0 ? (

@@ -25,8 +25,6 @@ interface Data {
   showWarning: boolean
   paused: boolean
   bringFriend: boolean
-  /** Which of the two Network layouts to show. Switchable from the demo panel. */
-  networkLayout: 'dock' | 'row'
   settings: { notifications: boolean; privateMode: boolean }
   // transient UI state (not persisted)
   matchWith: string | null
@@ -91,7 +89,6 @@ const fresh = (): Data => {
     showWarning: false,
     paused: false,
     bringFriend: false,
-    networkLayout: 'dock',
     settings: { notifications: true, privateMode: false },
     matchWith: null,
     checkin: null,

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import L from 'leaflet'
-import { MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from 'react-leaflet'
+import { AttributionControl, MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import { Coffee, MessageCircle, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { Strength, User } from '../types'
@@ -162,8 +162,10 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
 
   return (
     <div className="relative z-0 h-full w-full overflow-hidden">
-      <MapContainer center={origin} zoom={4} zoomControl={false} attributionControl className="h-full w-full" minZoom={3} maxZoom={14}>
+      <MapContainer center={origin} zoom={4} zoomControl={false} attributionControl={false} className="h-full w-full" minZoom={3} maxZoom={14}>
         <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
+        {/* bottom-left, so the leaves in the bottom-right corner never cover the map credit */}
+        <AttributionControl position="bottomleft" />
         <ZoomWatcher onZoom={setZoom} onMapClick={() => setSel(null)} />
         <FitTo points={allPoints} token={`${me.schoolIds[0]}-${people.length}`} />
 

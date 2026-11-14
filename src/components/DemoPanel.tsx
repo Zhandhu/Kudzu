@@ -75,13 +75,6 @@ export default function DemoPanel() {
           <Toggle on={s.showWarning} onChange={(showWarning) => s.set({ showWarning })} label="Show account warning" />
         </div>
 
-        <div className={`${item} flex-col !items-start`}>
-          <span>Network layout<span className={sub}>Two designs to compare. Both keep your network first.</span></span>
-          <div className="flex flex-wrap gap-2">
-            <Chip active={s.networkLayout !== 'row'} onClick={() => { s.set({ networkLayout: 'dock' }); close(); nav('/network') }}>Floating leaves</Chip>
-            <Chip active={s.networkLayout === 'row'} onClick={() => { s.set({ networkLayout: 'row' }); close(); nav('/network') }}>Row under the header</Chip>
-          </div>
-        </div>
 
         <button className={`${item} !border-red-200 text-red-700`} onClick={() => { s.reset(); nav('/') }}>
           <RotateCcw size={19} />
