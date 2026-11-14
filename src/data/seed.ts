@@ -286,17 +286,17 @@ export const SEED_NUDGES: (Nudge & { schoolId: string })[] = [
 export function seedAnnouncements(now: number): Announcement[] {
   const at = (days: number) => now + days * DAY
   return [
-    { id: 'an1', schoolId: 'gt', years: [2028, 2028], fromId: 'g14', at: at(-2), eventId: 'ev12',
+    { id: 'an1', schoolId: 'gt', years: [2028, 2028], at: at(-2), eventId: 'ev12',
       title: 'Study break on the library lawn', body: 'One hour off before finals, a week from now. Snacks and lawn games. Bring a classmate you haven’t seen since first year.' },
-    { id: 'an2', schoolId: 'gt', city: 'Atlanta', fromId: 'g5', at: at(-6),
-      title: 'Atlanta alumni volunteer morning', body: 'We’re helping at the campus food pantry on the first Saturday of next month. Students welcome. Reply to me if you’d like to come and I’ll send the details.' },
-    { id: 'an3', schoolId: 'gt', years: [2013, 2017], fromId: 'g11', at: at(-3), eventId: 'ev13',
+    { id: 'an2', schoolId: 'gt', city: 'Atlanta', at: at(-6),
+      title: 'Atlanta alumni volunteer morning', body: 'We’re helping at the campus food pantry on the first Saturday of next month. Students welcome. Tell us you’re interested and we’ll send the details.' },
+    { id: 'an3', schoolId: 'gt', years: [2013, 2017], at: at(-3), eventId: 'ev13',
       title: 'Reunion weekend: registration is open', body: 'Ten years on, give or take. A Friday mixer and a Saturday campus walk. Tell us you’re coming so we can plan numbers.' },
-    { id: 'an4', schoolId: 'gt', years: [2028, 2028], fromId: 'g29', at: at(12),
+    { id: 'an4', schoolId: 'gt', years: [2028, 2028], at: at(12),
       title: 'Class gift: vote on what we fund', body: 'Three ideas are on the table: a study-room refresh, an emergency fund, or bike racks by the library. Voting is open for two weeks.' },
-    { id: 'an5', schoolId: 'gt', years: [2013, 2017], fromId: 'g3', at: at(15),
+    { id: 'an5', schoolId: 'gt', years: [2013, 2017], at: at(15),
       title: 'Reunion weekend: hotel block closes soon', body: 'The group rate at the hotel near campus ends at the end of the month. Book before then if you are travelling in.' },
-    { id: 'an6', schoolId: 'gt', city: 'Atlanta', fromId: 'g24', at: at(20),
-      title: 'Who’s around over the break?', body: 'A few of us are getting together for a walk on the BeltLine while campus is quiet. Reply if you’re in town.' },
+    { id: 'an6', schoolId: 'gt', city: 'Atlanta', at: at(20),
+      title: 'Who’s around over the break?', body: 'A few of us are getting together for a walk on the BeltLine while campus is quiet. Tell us if you’re in town.' },
   ]
 }

@@ -41,7 +41,7 @@ Demo controls:
 | Receive a request | Someone asks you for a chat. It appears under the tendril on Find |
 | Trigger a post-chat check-in | Opens the private feedback form, which ends with a thank-you note |
 | Receive a thank-you note | Someone you helped thanks you. It appears on your profile and in the chat |
-| Receive a class announcement | A notice to your class arrives. It is counted on the lighter green leaf on Network |
+| Receive a class announcement | Alumni services send a notice to your class. It arrives as a phone-style notification at the top of the screen; tapping it opens the announcement |
 | Show account-warning notice | Shows the notice a user gets after missed chats |
 | Reset all demo data | Clears everything and returns to onboarding |
 
@@ -99,7 +99,7 @@ Screens read data through `src/services`, never straight from the seed files, so
 - **"Something else" is matched on words.** What you type is cut down to its meaningful words. Each person is read as a short document, and a word found in their role or field counts for more than one found in a prompt answer. People who cover more of what you typed come first. See `suggestForText` in `src/services`. A real product would use a language model or embeddings here.
 - **Grouping follows the search.** Results are grouped by city, field or level. A search narrowed to one city is not grouped by city, since everyone would sit on one branch.
 - **Event chats are small and short-lived.** Only people going to an event are in its chat. It opens three days before, closes a week after, and events with more than 50 people going do not get one. Tapping someone in it opens their profile, which is how it becomes one-to-one. Other guests’ messages and replies are mocked.
-- **Cohorts get announcements, not chats.** A class or a city is too many people for a conversation. Announcements go one way, a few times a year, and a reply goes only to the person who posted it. Some are dated ahead, so fast-forwarding a month brings new ones in.
+- **Cohorts get announcements, not chats.** A class or a city is too many people for a conversation. Announcements come from the school’s alumni services, go one way, and come a few times a year. A member cannot reply to everyone: the most they do is tap “I’m interested”. Each one arrives as a notification (mocked: nothing is really pushed). Some are dated ahead, so fast-forwarding a month brings a new one in. How alumni services write and send them is not built.
 - **The Find front door fills itself in.** What you said you are looking for comes first. If that is fewer than four things, the list is topped up with what people at your stage usually want. "Or look around" is built from your own fields, city, what you studied and the career level most useful to you. See `needsFor` and `lookAround` in `src/services`.
 - **Rhythms.** After a good chat you can choose to check in monthly or each semester. A nudge appears when that is due, before the tie has started to fade.
 - **Calendars are mocked.** Linking one sets a flag. Who is busy when is made up from each person's id and the hour, so it is the same every time you look. About two in three people have "linked" theirs. Jordan answers a first coffee proposal with other times, so that case can be shown.

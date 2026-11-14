@@ -683,7 +683,10 @@ export function lookAround(me: User, prefs: Prefs): { label: string; query: Part
 
 /* ---------------- announcements ---------------- */
 
-type AnnounceState = Pick<KudzuState, 'announcements' | 'schoolId' | 'me' | 'blocked'>
+type AnnounceState = Pick<KudzuState, 'announcements' | 'schoolId' | 'me'>
+
+/** Who announcements come from: the school's alumni services, by name. */
+export const alumniServices = (schoolId: string) => `${getSchool(schoolId).name} Alumni Services`
 
 /** Which cohort an announcement is for, in words: "Class of 2028", "GT in Atlanta". */
 export function announcementAudience(a: Announcement): string {
@@ -694,11 +697,11 @@ export function announcementAudience(a: Announcement): string {
 /**
  * The announcements meant for this person: their class years, or their city.
  * Only ones already posted, newest first. A class or a city is too many people for
- * a chat, so these are one-way notices, a few a year, and a reply goes to the poster.
+ * a chat, so these are one-way notices from alumni services, a few a year.
  */
 export function myAnnouncements(s: AnnounceState, now: number): Announcement[] {
   return s.announcements
-    .filter((a) => a.schoolId === s.schoolId && a.at <= now && !s.blocked.includes(a.fromId))
+    .filter((a) => a.schoolId === s.schoolId && a.at <= now)
     .filter((a) => (a.years ? inSpan(s.me.gradYear, a.years) : a.city === s.me.city))
     .sort((a, b) => b.at - a.at)
 }
@@ -706,17 +709,26 @@ export function myAnnouncements(s: AnnounceState, now: number): Announcement[] {
 export const unreadAnnouncements = (s: AnnounceState & Pick<KudzuState, 'readAnnouncements'>, now: number) =>
   myAnnouncements(s, now).filter((a) => !s.readAnnouncements.includes(a.id))
 
-/** Demo control: a notice arrives for the user's class, right now. */
+/**
+ * Shows an announcement the way a phone would: a notification that drops in from
+ * the top. Tapping it opens the announcements. Mocked: nothing is really pushed.
+ */
+export function notifyAnnouncement(a: Announcement) {
+  useKudzu.getState().set({
+    push: { id: a.id, from: alumniServices(a.schoolId), title: a.title, body: `${announcementAudience(a)} · ${a.body}` },
+  })
+}
+
+/** Demo control: alumni services send a notice to the user's class, right now. */
 export function receiveAnnouncement() {
   const s = useKudzu.getState()
   const now = nowOf(s)
-  const from = schoolUsers(s.schoolId).find((u) => inSpan(u.gradYear, classSpan(s.me))) ?? schoolUsers(s.schoolId)[0]
-  if (!from) return
-  s.addAnnouncement({
-    id: `an-${now}`, schoolId: s.schoolId, years: classSpan(s.me), fromId: from.id, at: now,
-    title: 'Save the date: class dinner', body: 'A few of us are organising a dinner next month for anyone who can make it. More soon. Reply to me if you want to help plan it.',
-  })
-  s.say(`New announcement for ${classLabel(s.me)}. It’s on the Network tab.`)
+  const a: Announcement = {
+    id: `an-${now}`, schoolId: s.schoolId, years: classSpan(s.me), at: now,
+    title: 'Save the date: class dinner', body: 'We’re planning a dinner next month for anyone who can make it. Tell us you’re interested and we’ll send the details.',
+  }
+  s.addAnnouncement(a)
+  notifyAnnouncement(a)
 }
 
 /* ---------------- event chats ---------------- */

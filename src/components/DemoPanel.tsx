@@ -1,7 +1,7 @@
 import { AlertTriangle, ClipboardCheck, FastForward, GraduationCap, HeartHandshake, Megaphone, RotateCcw, UserRoundCog } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { nowOf, useKudzu } from '../store/useKudzu'
-import { findCheckinTarget, listSchools, receiveAnnouncement, receiveRequest, receiveThanks } from '../services'
+import { findCheckinTarget, listSchools, notifyAnnouncement, receiveAnnouncement, receiveRequest, receiveThanks, unreadAnnouncements } from '../services'
 import { TendrilIcon } from './brand'
 import { Chip, Sheet, Toggle } from './ui'
 
@@ -42,7 +42,7 @@ export default function DemoPanel() {
           </div>
         </div>
 
-        <button className={item} onClick={() => { s.fastForward(30); close(); nav('/network') }}>
+        <button className={item} onClick={() => { const seen = unreadAnnouncements(s, nowOf(s)).map((a) => a.id); s.fastForward(30); close(); nav('/network'); const st = useKudzu.getState(); const fresh = unreadAnnouncements(st, nowOf(st)).find((a) => !seen.includes(a.id)); if (fresh) setTimeout(() => notifyAnnouncement(fresh), 1200) }}>
           <FastForward size={19} className="text-coffee-500" />
           <span className="flex-1">Fast-forward one month<span className={sub}>Connections fade, nudges appear, and unanswered requests lapse.{s.timeOffsetDays > 0 ? ` Currently +${s.timeOffsetDays} days.` : ''}</span></span>
         </button>
@@ -69,9 +69,9 @@ export default function DemoPanel() {
           <span className="flex-1">Receive a thank-you note<span className={sub}>Someone you helped thanks you. Shows on your profile and in the chat.</span></span>
         </button>
 
-        <button className={item} onClick={() => { receiveAnnouncement(); close(); nav('/network') }}>
+        <button className={item} onClick={() => { receiveAnnouncement(); close() }}>
           <Megaphone size={19} className="text-vine-600" />
-          <span className="flex-1">Receive a class announcement<span className={sub}>A notice to your class. It appears on the lighter green leaf on Network.</span></span>
+          <span className="flex-1">Receive a class announcement<span className={sub}>Alumni services send a notice to your class. It arrives as a notification.</span></span>
         </button>
 
         <div className={item}>

@@ -29,6 +29,8 @@ interface Data {
   announcements: Announcement[]
   /** Ids of the announcements the user has seen. The rest are counted on the leaf. */
   readAnnouncements: string[]
+  /** Announcements the user said they are interested in. Alumni services are told. */
+  interestedIn: string[]
   /** Messages in event chats, by event id: the user's own and the mocked replies. */
   eventChats: Record<string, GroupMessage[]>
   groups: Group[]
@@ -58,6 +60,10 @@ interface Data {
   typing: Record<string, boolean>
   /** The event shown as a floating card, if any. */
   eventOpen: string | null
+  /** A phone-style notification on screen now, if any. Mocked: nothing is really pushed. */
+  push: { id: string; from: string; title: string; body: string } | null
+  /** Set to open the announcements as soon as the Network screen shows. */
+  openNews: boolean
 }
 
 interface Actions {
@@ -124,6 +130,7 @@ const fresh = (): Data => {
     events: seedEvents(now),
     announcements: seedAnnouncements(now),
     readAnnouncements: [],
+    interestedIn: [],
     eventChats: {},
     groups: SEED_GROUPS,
     feedback: [],
@@ -142,6 +149,8 @@ const fresh = (): Data => {
     demoOpen: false,
     typing: {},
     eventOpen: null,
+    push: null,
+    openNews: false,
   }
 }
 
@@ -427,10 +436,10 @@ export const useKudzu = create<KudzuState>()(
     }),
     {
       // bump this when the saved shape changes, so old browsers start from fresh seed data
-      name: 'kudzu-demo-v8',
+      name: 'kudzu-demo-v9',
       partialize: (s) => {
-        const { checkin, toast, demoOpen, typing, eventOpen, ...rest } = s
-        void checkin, toast, demoOpen, typing, eventOpen
+        const { checkin, toast, demoOpen, typing, eventOpen, push, openNews, ...rest } = s
+        void checkin, toast, demoOpen, typing, eventOpen, push, openNews
         return rest as KudzuState
       },
     },

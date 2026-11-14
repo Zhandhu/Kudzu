@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronRight, Coffee, GraduationCap, List, Map as MapIcon, MapPin, MessageCircle, Repeat, Search, UserPlus, X } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -93,6 +93,8 @@ export default function Network() {
   ]
   // seen once the sheet is closed, so "New" stays visible while you read
   const closeGrow = () => { s.markAnnouncementsRead(news.map((a) => a.id)); setOpen(null) }
+  // a tapped notification lands here and opens the announcements straight away
+  useEffect(() => { if (s.openNews) { setOpen('grow'); s.set({ openNews: false }) } }, [s.openNews, s])
 
   const filtered = people.filter((p) => {
     const t = q.trim().toLowerCase()

@@ -14,6 +14,7 @@ import ConnectionDetail from './screens/ConnectionDetail'
 import Events from './screens/Events'
 import EventDetail, { EventPopup } from './screens/EventDetail'
 import EventChat from './screens/EventChat'
+import { PushBanner } from './components/Announcements'
 import GroupDetail from './screens/GroupDetail'
 import Profile from './screens/Profile'
 import UserProfile from './screens/UserProfile'
@@ -117,6 +118,7 @@ export default function App() {
           {showTabs && <TabBar tabs={tabs} />}
           <div ref={setOverlay} className="pointer-events-none absolute inset-0 z-[1500]" />
           {onboarded && <EventPopup />}
+          {onboarded && <PushBanner />}
           <CheckInSheet />
           <DemoPanel />
           <Toast />

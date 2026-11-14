@@ -213,7 +213,8 @@ export interface Nudge {
 /**
  * A notice to a whole class or city. Announcements are for the few times a year
  * something concerns everyone: a reunion, a city-wide meet-up. They are not a chat.
- * Nobody replies to all; a reply goes to the person who posted it.
+ * They come from the school's alumni services, never from an individual member.
+ * Nobody replies to all; the most a member does is say they are interested.
  */
 export interface Announcement {
   id: string
@@ -221,8 +222,6 @@ export interface Announcement {
   /** Which cohort it is for: a span of class years, or one city. */
   years?: [number, number]
   city?: string
-  /** Who posted it, so a reply has somewhere to go. */
-  fromId: string
   title: string
   body: string
   at: number
