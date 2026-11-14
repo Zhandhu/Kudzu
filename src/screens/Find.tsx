@@ -223,6 +223,9 @@ export default function Find() {
     { key: 'pending', label: 'Not yet met', count: pending.length, onClick: () => setSheet('pending') },
   ]
 
+  // nothing asked for and nothing to announce: the page holds still
+  const still = empty && !ask && accountStanding(s) !== 'warning' && !quietPaused(s, now) && !s.paused
+
   const leaf = (f: Found, i: number) => (
     <PersonLeaf key={f.user.id} f={f} index={i} requested={isRequested(f.user.id)} degree={f.connected ? 1 : mutualConnections(s, f.user).length ? 2 : 3} onPick={() => setPicked(f.user.id)} />
   )
@@ -288,7 +291,9 @@ export default function Find() {
         )}
       </header>
 
-      <div className="app-scroll min-h-0 flex-1 overflow-y-auto px-3 pb-36">
+      {/* The front door is one still page: everything on it fits, so there is nothing to scroll.
+          It becomes a scrolling page once it has something to show: a need was tapped, or a search ran. */}
+      <div data-find-body className={`app-scroll min-h-0 flex-1 px-3 ${still ? 'overflow-hidden pb-3' : 'overflow-y-auto pb-36'}`}>
         {accountStanding(s) === 'warning' && <div className="mb-3 px-1"><AccountNotice compact /></div>}
         {quietPaused(s, now) && (
           <div className="mx-1 mb-3 rounded-2xl border border-amber-200 bg-amber-50 p-3.5 text-[13px] leading-relaxed text-amber-900">
@@ -330,8 +335,9 @@ export default function Find() {
               </div>
             </div>
 
+            {/* one row that slides sideways, so it takes the same height however many there are */}
             <h2 className="mb-2 mt-6 text-sm font-semibold">Or look around</h2>
-            <div className="flex flex-wrap gap-2">
+            <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto pl-4 pr-24">
               {s.prefs.industries.map((i) => <Chip key={i} tone="plain" onClick={() => setQ({ ...EMPTY_QUERY, industries: [i] })}>{i}</Chip>)}
               {s.prefs.cities.map((c) => <Chip key={c} tone="plain" onClick={() => setQ({ ...EMPTY_QUERY, cities: [c] })}>{c}</Chip>)}
               <Chip tone="plain" onClick={() => setQ({ ...EMPTY_QUERY, levels: ['senior'] })}>Senior alumni</Chip>
