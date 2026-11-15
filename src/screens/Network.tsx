@@ -8,6 +8,7 @@ import { useKudzu, useNow } from '../store/useKudzu'
 import { cityCohort, classCohort, classLabel, computeNudges, getSchool, getUser, matchInfo, rhythmLabel, strengthOf, suggestKnown, unreadAnnouncements, webConnections } from '../services'
 import { AnnouncementList } from '../components/Announcements'
 import { LeafIcon } from '../components/brand'
+import { AwaitingTag, KnownAsks } from '../components/KnownAsks'
 import { Avatar, Chip, EmptyState, SchoolChip, Sheet, inputCls } from '../components/ui'
 import { ModeIcon, ModeTag, roleLine } from '../components/ProfileView'
 import NetworkMap, { type MapPerson } from '../components/NetworkMap'
@@ -39,7 +40,7 @@ function NudgeCard({ n }: { n: Nudge }) {
   )
 }
 
-type Person = MapPerson & { rhythmDays?: number }
+type Person = MapPerson & { rhythmDays?: number; unconfirmed?: boolean }
 /** The keep-in-touch app has no search of the school, so links to it are left out. */
 const simpleApp = () => useKudzu.getState().experience === 'simple'
 
@@ -71,7 +72,7 @@ export default function Network() {
   const people = useMemo<Person[]>(
     () =>
       webConnections(s)
-        .map((c) => ({ user: getUser(c.otherId)!, ...strengthOf(c, now), rhythmDays: c.rhythmDays }))
+        .map((c) => ({ user: getUser(c.otherId)!, ...strengthOf(c, now), rhythmDays: c.rhythmDays, unconfirmed: c.unconfirmed }))
         .filter((p) => p.user),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [s.connections, s.schoolId, s.blocked, s.timeOffsetDays],
@@ -107,7 +108,7 @@ export default function Network() {
     <Link key={p.user.id} to={`/network/${p.user.id}`} data-tour={p.level === "fading" ? "person-quiet" : "person"} className="flex items-center gap-3 rounded-2xl px-2 py-2.5 hover:bg-sage-50">
       <Avatar user={p.user} size={46} />
       <div className="min-w-0 flex-1">
-        <div className="truncate font-semibold">{p.user.name}</div>
+        <div className="flex items-center gap-2"><span className="truncate font-semibold">{p.user.name}</span>{p.unconfirmed && <AwaitingTag />}</div>
         <div className="truncate text-[13px] text-ink/55">{roleLine(p.user)}</div>
         <div className="mt-0.5 flex items-center gap-2 text-[11px] text-ink/45">
           <ModeTag mode={matchInfo(s.me, p.user).mode} />
@@ -186,6 +187,7 @@ export default function Network() {
             </p>
           )}
 
+          {!q.trim() && !mode && <KnownAsks />}
           {sort === 'strength'
             ? STRENGTH_ORDER.map((level) => {
                 const group = sorted.filter((p) => p.level === level)

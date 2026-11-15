@@ -5,6 +5,7 @@ import { useKudzu } from '../store/useKudzu'
 import { firstName } from '../lib/util'
 import { isEstablished } from '../services'
 import { Avatar, Sheet } from './ui'
+import { AwaitingTag } from './KnownAsks'
 
 const OPTIONS: { when: LastTalked; label: string; hint: string }[] = [
   { when: 'recent', label: 'In the past month', hint: 'Starts as a strong connection' },
@@ -20,9 +21,11 @@ export function KnowButton({ user, variant = 'pill' }: { user: User; variant?: '
   const [open, setOpen] = useState(false)
   // "in your network" means in your web, not merely matched
   const connected = useKudzu((s) => s.connections.some((c) => c.otherId === user.id && isEstablished(c)))
+  const waiting = useKudzu((s) => s.connections.some((c) => c.otherId === user.id && c.unconfirmed))
   const addKnown = useKudzu((s) => s.addKnown)
   const name = firstName(user.name)
 
+  if (connected && waiting) return variant === 'link' ? null : <AwaitingTag className="!px-3 !py-1.5 !text-xs" />
   if (connected) {
     return variant === 'link' ? null : (
       <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-sage-100 px-3 py-1.5 text-xs font-semibold text-vine-700"><Check size={13} /> In your network</span>
@@ -54,7 +57,7 @@ export function KnowButton({ user, variant = 'pill' }: { user: User; variant?: '
           ))}
         </div>
         <p className="mt-4 text-center text-[11px] leading-relaxed text-ink/45">
-          In the full app, {name} would be asked to confirm before you appear in each other’s networks.
+          {name} goes on your list straight away. They are asked to confirm, with one tap, before you can message them here or count as connected.
         </p>
       </Sheet>
     </>

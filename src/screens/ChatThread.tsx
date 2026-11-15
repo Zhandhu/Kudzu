@@ -101,6 +101,8 @@ export default function ChatThread() {
   const other = getUser(id)
   const conv = useKudzu((s) => s.conversations.find((c) => c.otherId === id))
   const connection = useKudzu((s) => s.connections.find((c) => c.otherId === id))
+  // someone the user added who has not confirmed yet cannot be messaged from here
+  const locked = !!connection?.unconfirmed
   const typing = useKudzu((s) => !!s.typing[id])
   const me = useKudzu((s) => s.me)
   const { ensureConversation, markRead } = useKudzu.getState()
@@ -211,7 +213,7 @@ export default function ChatThread() {
       </div>
 
       {/* the coffee button sits at the bottom right, just above the message box */}
-      <div className="relative">
+      <div className={locked ? "hidden" : "relative"}>
         <div className="absolute bottom-3 right-3 z-10 flex items-center gap-2">
           <AnimatePresence>
             {hint && (
@@ -230,7 +232,12 @@ export default function ChatThread() {
         </div>
       </div>
 
-      <form onSubmit={(e) => { e.preventDefault(); send() }} className="flex items-center gap-2 border-t border-sage-200 bg-cream px-3 pb-[max(env(safe-area-inset-bottom),10px)] pt-2.5">
+      {locked && (
+        <p className="border-t border-sage-200 bg-slate-100 px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-3 text-center text-[13px] leading-snug text-slate-600" data-tour="chat-locked">
+          You added {firstName(other.name)} as someone you know. Messaging here opens once {firstName(other.name)} confirms, with one tap.
+        </p>
+      )}
+      <form onSubmit={(e) => { e.preventDefault(); send() }} className={`${locked ? "hidden" : "flex"} items-center gap-2 border-t border-sage-200 bg-cream px-3 pb-[max(env(safe-area-inset-bottom),10px)] pt-2.5`}>
         <input ref={inputRef} className={`${inputCls} !rounded-full`} placeholder={`Message ${firstName(other.name)}`} value={text} onChange={(e) => setText(e.target.value)} aria-label="Message" />
         <button type="submit" disabled={!text.trim()} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-vine-700 text-cream disabled:opacity-40" aria-label="Send"><Send size={17} /></button>
       </form>

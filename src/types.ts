@@ -159,6 +159,13 @@ export interface Connection {
   note: string
   /** How often the user wants to keep in touch, in days. Unset means no set rhythm. */
   rhythmDays?: number
+  /**
+   * Set when the user added this person as someone they know and the person has not
+   * confirmed it yet. Until they do, the tie is the user's private note: reminders and
+   * logged catch-ups work, but it gives no way to message them and does not count as
+   * a connection for anyone else.
+   */
+  unconfirmed?: boolean
 }
 
 export interface Proposal {

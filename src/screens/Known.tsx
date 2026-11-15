@@ -3,10 +3,11 @@ import { Search } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { User } from '../types'
 import { useKudzu } from '../store/useKudzu'
-import { getSchool, schoolUsers, suggestKnown } from '../services'
+import { getSchool, getUser, inSchool, schoolUsers, suggestKnown } from '../services'
 import { Avatar, BackHeader, EmptyState, inputCls } from '../components/ui'
 import { roleLine } from '../components/ProfileView'
 import { KnowButton } from '../components/KnowButton'
+import { KnownAsks } from '../components/KnownAsks'
 
 /** Add people you already know: suggestions first, then search across the whole school. */
 export default function Known() {
@@ -14,6 +15,8 @@ export default function Known() {
   const [q, setQ] = useState('')
   const school = getSchool(s.schoolId)
   const suggestions = suggestKnown(s)
+  // people the user has added who have not confirmed yet
+  const waiting = s.connections.filter((c) => c.unconfirmed && inSchool(c.otherId, s.schoolId)).map((c) => getUser(c.otherId)).filter((u): u is User => !!u)
   const term = q.trim().toLowerCase()
   const results = term
     ? schoolUsers(s.schoolId).filter((u) => !s.blocked.includes(u.id) && [u.name, u.company, u.major].some((f) => f?.toLowerCase().includes(term)))
@@ -38,12 +41,20 @@ export default function Known() {
       <BackHeader title="People you know" />
       <div className="px-4 pt-4">
         <p className="text-sm leading-relaxed text-ink/65">
-          Add classmates, teammates and colleagues from {school.name} you already know. They join your network straight away, so you can keep in touch from day one.
+          Add classmates, teammates and colleagues from {school.name} you already know. They go on your list straight away, so you can keep in touch from day one. Each is asked to confirm, with one tap, before you can message them here.
         </p>
         <div className="relative mt-4">
           <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/40" />
           <input className={`${inputCls} !rounded-full pl-10`} placeholder="Search by name, company or major" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search people" />
         </div>
+
+        {!term && <div className="mt-4"><KnownAsks /></div>}
+        {!term && waiting.length > 0 && (
+          <>
+            <h2 className="mb-2 mt-5 text-sm font-semibold">Waiting to confirm</h2>
+            <div className="divide-y divide-sage-200 rounded-2xl bg-white ring-1 ring-sage-200" data-tour="known-waiting">{waiting.map((u) => row(u, 'On your list. Asked to confirm you know each other'))}</div>
+          </>
+        )}
 
         {term ? (
           results.length === 0 ? (

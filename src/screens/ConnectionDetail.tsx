@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CalendarDays, CheckCheck, ChevronDown, Coffee, Handshake, HeartHandshake, MessageCircle, Repeat, StickyNote, UserRound } from 'lucide-react'
+import { CalendarDays, CheckCheck, ChevronDown, Coffee, Handshake, HeartHandshake, Clock, MessageCircle, Repeat, StickyNote, UserRound } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import type { InteractionType } from '../types'
 import { STRENGTH_META } from '../config/brand'
@@ -111,9 +111,15 @@ export default function ConnectionDetail() {
         </div>
       )}
 
-      <div className="mx-4 mt-4 grid grid-cols-3 gap-2">
-        <Link to={`/messages/${user.id}`} className="flex flex-col items-center gap-1 rounded-2xl bg-vine-700 py-3 text-xs font-semibold text-cream"><MessageCircle size={18} /> Message</Link>
-        <Link to={`/messages/${user.id}?coffee=1`} className="flex flex-col items-center gap-1 rounded-2xl bg-coffee-500 py-3 text-xs font-semibold text-cream"><Coffee size={18} /> Propose coffee</Link>
+      {conn.unconfirmed && (
+        <div className="mx-4 mt-4 rounded-2xl bg-slate-100 p-3.5 ring-1 ring-slate-200" data-tour="awaiting">
+          <div className="flex items-center gap-2 text-sm font-semibold text-slate-700"><Clock size={16} /> Waiting for {name} to confirm</div>
+          <p className="mt-1 text-[13px] leading-relaxed text-slate-600">{name} has been asked, with one tap, whether you know each other. Until then this is your own note: reminders and logged catch-ups work, and messaging here opens once {name} says yes.</p>
+        </div>
+      )}
+      <div className={`mx-4 mt-4 grid gap-2 ${conn.unconfirmed ? 'grid-cols-1' : 'grid-cols-3'}`}>
+        {!conn.unconfirmed && <Link to={`/messages/${user.id}`} className="flex flex-col items-center gap-1 rounded-2xl bg-vine-700 py-3 text-xs font-semibold text-cream"><MessageCircle size={18} /> Message</Link>}
+        {!conn.unconfirmed && <Link to={`/messages/${user.id}?coffee=1`} className="flex flex-col items-center gap-1 rounded-2xl bg-coffee-500 py-3 text-xs font-semibold text-cream"><Coffee size={18} /> Propose coffee</Link>}
         <Link to={`/u/${user.id}`} className="flex flex-col items-center gap-1 rounded-2xl border border-sage-200 bg-white py-3 text-xs font-semibold"><UserRound size={18} /> Profile</Link>
       </div>
       {/* most catching up happens off the app: a call, a lunch. This records it. */}

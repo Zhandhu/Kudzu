@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import type { Announcement, CaughtUpHow, Connection, Conversation, Degree, Feedback, Group, GroupMessage, InteractionType, KEvent, LastTalked, Message, Prefs, Proposal, Request, User } from '../types'
 import { ALUM_PERSONA, DEFAULT_PREFS, SEED_GROUPS, STUDENT_PERSONA, seedAnnouncements, seedConnections, seedConversations, seedEvents, seedRequests } from '../data/seed'
 import { SCHOOLS } from '../data/schools'
+import { USERS_BY_ID } from '../data/users'
 import { CITIES, DAY, uid } from '../lib/util'
 
 /** The walkthroughs: one for signing up, two for the full app, one for the keep-in-touch app. */
@@ -28,6 +29,8 @@ interface Data {
   /** How many requests the user let lapse that they have already been told about. */
   quietCleared: number
   connections: Connection[]
+  /** People who have said they know the user, and are waiting for the user to confirm. */
+  knownAsks: string[]
   conversations: Conversation[]
   events: KEvent[]
   /** Notices to the user's class and city. Shown under the lighter green leaf on Network. */
@@ -110,6 +113,10 @@ interface Actions {
   setNote: (otherId: string, note: string) => void
   setRhythm: (otherId: string, rhythmDays: number | undefined) => void
   addKnown: (otherId: string, when: LastTalked, quiet?: boolean) => void
+  /** The other person confirms that the two of you know each other. */
+  confirmKnown: (otherId: string, quiet?: boolean) => void
+  /** Answers someone who says they know the user: yes adds them, no drops it without telling them. */
+  answerKnown: (otherId: string, yes: boolean) => void
   /** Records a catch-up that happened outside the app: a call, a lunch, a text. */
   logCatchUp: (otherId: string, how: CaughtUpHow, daysAgo: number, note?: string) => void
   rsvp: (eventId: string, status: 'going' | 'interested' | undefined) => void
@@ -141,6 +148,7 @@ const fresh = (): Data => {
     requests: seedRequests(now),
     quietCleared: 0,
     connections: seedConnections(now),
+    knownAsks: [KNOWN_ASK.student],
     conversations: seedConversations(now),
     events: seedEvents(now),
     announcements: seedAnnouncements(now),
@@ -173,7 +181,13 @@ const fresh = (): Data => {
   }
 }
 
-export const nowOf = (s: { timeOffsetDays: number }) => Date.now() + s.timeOffsetDays * DAY
+/** In the demo, the person who was added confirms after this long. */
+const CONFIRM_MS = 6000
+const firstNameOf = (id: string) => (USERS_BY_ID[id]?.name ?? 'They').split(' ')[0]
+/** Who has already said they know each demo person: a classmate for the student, a graduate for the alum. */
+const KNOWN_ASK = { student: 'g33', alum: 'g27' }
+
+export const nowOf =(s: { timeOffsetDays: number }) => Date.now() + s.timeOffsetDays * DAY
 
 /** Turns "when did you last talk?" into a date and a timeline note. */
 const LAST_TALKED: Record<LastTalked, { days: number; note: string }> = {
@@ -214,7 +228,7 @@ export const useKudzu = create<KudzuState>()(
         set(id === 'signup'
           ? { ...fresh(), ...keep }
           : id === 'simple'
-            ? { ...fresh(), ...keep, onboarded: true, experience: 'simple', me: ALUM_PERSONA, persona: 'alum' }
+            ? { ...fresh(), ...keep, onboarded: true, experience: 'simple', me: ALUM_PERSONA, persona: 'alum', knownAsks: [KNOWN_ASK.alum] }
             : { ...fresh(), ...keep, onboarded: true, experience: 'full' })
       },
       // the default school comes first in `schoolIds`
@@ -223,7 +237,7 @@ export const useKudzu = create<KudzuState>()(
       // a network, the alum fifteen years out for keeping one.
       skipOnboarding: (experience = 'full', openToHelp = true) =>
         set(experience === 'simple'
-          ? { onboarded: true, experience, openToHelp, me: ALUM_PERSONA, persona: 'alum' }
+          ? { onboarded: true, experience, openToHelp, me: ALUM_PERSONA, persona: 'alum', knownAsks: [KNOWN_ASK.alum] }
           : { onboarded: true, experience, openToHelp, me: STUDENT_PERSONA, persona: 'student' }),
       signOut: () => set({ onboarded: false }),
       updateMe: (patch) =>
@@ -295,6 +309,8 @@ export const useKudzu = create<KudzuState>()(
       fastForward: (days) =>
         set((s) => ({
           timeOffsetDays: s.timeOffsetDays + days,
+          // anyone still waiting to confirm has had time to
+          connections: s.connections.map((c) => (c.unconfirmed ? { ...c, unconfirmed: undefined } : c)),
           // events that would now be in the past roll forward, so the calendar never empties mid-demo
           events: s.events.map((e) => (e.start < nowOf(s) + days * DAY ? { ...e, start: e.start + days * DAY, myRsvp: e.hostId === 'me' ? e.myRsvp : undefined } : e)),
           toast: { id: uid(), text: `Skipped ahead ${days} days` },
@@ -427,12 +443,40 @@ export const useKudzu = create<KudzuState>()(
           const known = { type: 'known' as const, at: nowOf(s) - days * DAY, note }
           const existing = s.connections.find((c) => c.otherId === otherId)
           if (existing?.interactions.some((i) => i.type === 'known')) return {}
+          // Someone you are already in touch with through a request has agreed to that
+          // already, and someone who added you first has said it themselves. Anyone else
+          // goes on your own list straight away and is asked to confirm.
+          const theyAsked = s.knownAsks.includes(otherId)
+          const unconfirmed = !existing && !theyAsked
+          if (unconfirmed) setTimeout(() => get().confirmKnown(otherId, quiet), CONFIRM_MS)
           return {
-            // someone you matched with but already knew joins your web straight away
             connections: existing
               ? s.connections.map((c) => (c.otherId === otherId ? { ...c, interactions: [...c.interactions, known] } : c))
+              : [...s.connections, { otherId, note: '', interactions: [known], ...(unconfirmed ? { unconfirmed } : {}) }],
+            knownAsks: s.knownAsks.filter((x) => x !== otherId),
+            ...(quiet ? {} : { toast: { id: uid(), text: unconfirmed ? `On your list. ${firstNameOf(otherId)} has been asked to confirm` : 'Added to your network' } }),
+          }
+        }),
+      confirmKnown: (otherId, quiet) =>
+        set((s) => {
+          if (!s.connections.some((c) => c.otherId === otherId && c.unconfirmed)) return {}
+          return {
+            connections: s.connections.map((c) => (c.otherId === otherId ? { ...c, unconfirmed: undefined } : c)),
+            ...(quiet ? {} : { toast: { id: uid(), text: `${firstNameOf(otherId)} confirmed you know each other` } }),
+          }
+        }),
+      answerKnown: (otherId, yes) =>
+        set((s) => {
+          const knownAsks = s.knownAsks.filter((x) => x !== otherId)
+          if (!yes) return { knownAsks }
+          const known = { type: 'known' as const, at: nowOf(s) - LAST_TALKED.unsure.days * DAY, note: 'You confirmed you know each other' }
+          const existing = s.connections.find((c) => c.otherId === otherId)
+          return {
+            knownAsks,
+            connections: existing
+              ? s.connections.map((c) => (c.otherId === otherId ? { ...c, unconfirmed: undefined, interactions: c.interactions.some((i) => i.type === 'known') ? c.interactions : [...c.interactions, known] } : c))
               : [...s.connections, { otherId, note: '', interactions: [known] }],
-            ...(quiet ? {} : { toast: { id: uid(), text: 'Added to your network' } }),
+            toast: { id: uid(), text: `${firstNameOf(otherId)} is in your network` },
           }
         }),
 
@@ -466,7 +510,7 @@ export const useKudzu = create<KudzuState>()(
     }),
     {
       // bump this when the saved shape changes, so old browsers start from fresh seed data
-      name: 'kudzu-demo-v10',
+      name: 'kudzu-demo-v11',
       partialize: (s) => {
         const { checkin, toast, demoOpen, typing, eventOpen, push, openNews, tour, ...rest } = s
         void checkin, toast, demoOpen, typing, eventOpen, push, openNews, tour

@@ -4,7 +4,7 @@ import { Coffee, MessageCircle, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { User } from '../types'
 import { useKudzu, useNow } from '../store/useKudzu'
-import { REQUEST_LIMIT, answerRequest, canRequest, daysLeft, getUser, incomingRequests, isEstablished, requestTo } from '../services'
+import { REQUEST_LIMIT, answerRequest, awaitingConfirm, canRequest, daysLeft, getUser, incomingRequests, isEstablished, requestTo } from '../services'
 import { firstName } from '../lib/util'
 import { TendrilIcon } from './brand'
 import { Button, Portal } from './ui'
@@ -39,7 +39,9 @@ export function ProfileBody({ user, onDone }: { user: User; onDone: () => void }
         <ProfileView user={user} onLikePrompt={!isMe && state === 'ok' && !theirs ? (p) => ask(p) : undefined} onBlocked={onDone} />
       </div>
       <div className={isMe ? 'hidden' : 'border-t border-sage-200 bg-cream px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-3'}>
-        {state === 'connected' ? (
+        {state === 'connected' && awaitingConfirm(s, id) ? (
+          <p className="rounded-2xl bg-slate-100 px-4 py-3 text-center text-[13px] leading-snug text-slate-600">You added {name} as someone you know. You can message here once {name} confirms.</p>
+        ) : state === 'connected' ? (
           <div className="flex gap-2.5" data-tour="profile-actions">
             <Link to={`/messages/${id}`} data-tour="go-message" className="flex flex-1 items-center justify-center gap-2 rounded-full bg-vine-700 py-3 text-sm font-semibold text-cream"><MessageCircle size={17} /> Message</Link>
             <Link to={`/messages/${id}?coffee=1`} className="flex flex-1 items-center justify-center gap-2 rounded-full bg-coffee-500 py-3 text-sm font-semibold text-cream"><Coffee size={17} /> Propose coffee</Link>

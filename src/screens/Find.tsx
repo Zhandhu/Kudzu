@@ -9,6 +9,7 @@ import {
   EMPTY_QUERY, LEVELS, REQUEST_LIMIT, accountStanding, answerRequest, daysLeft, findPeople, getUser, incomingRequests, isEmptyQuery,
   levelLabel, levelOf, lookAround, mutualConnections, needsFor, outgoingRequests, pendingConnections, quietPaused, requestState,
   requestTo, spotsLeft, suggestFor, suggestForText, type Found, type Query,
+  awaitingConfirm,
 } from '../services'
 import { CITY_NAMES, ago, firstName } from '../lib/util'
 import { Logo, TendrilIcon } from '../components/brand'
@@ -230,7 +231,7 @@ export default function Find() {
   const still = empty && !ask && accountStanding(s) !== 'warning' && !quietPaused(s, now) && !s.paused
 
   const leaf = (f: Found, i: number) => (
-    <PersonLeaf key={f.user.id} f={f} index={i} requested={isRequested(f.user.id)} degree={f.connected ? 1 : mutualConnections(s, f.user).length ? 2 : 3} onPick={() => setPicked(f.user.id)} />
+    <PersonLeaf key={f.user.id} f={f} index={i} requested={isRequested(f.user.id)} degree={f.connected && !awaitingConfirm(s, f.user.id) ? 1 : mutualConnections(s, f.user).length ? 2 : 3} onPick={() => setPicked(f.user.id)} />
   )
 
   // What drops out from under the need you tapped: a few people, or the reason there are none.

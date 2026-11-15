@@ -107,8 +107,9 @@ type NetworkState = Pick<KudzuState, 'connections' | 'schoolId' | 'blocked'>
 
 /** People you are connected to who also know `other`. */
 export function mutualConnections(s: NetworkState, other: User): User[] {
+  // someone who has not confirmed knowing you is not a way to reach anyone else
   return webConnections(s)
-    .filter((c) => c.otherId !== other.id && knows(c.otherId, other.id))
+    .filter((c) => !c.unconfirmed && c.otherId !== other.id && knows(c.otherId, other.id))
     .map((c) => getUser(c.otherId))
     .filter((u): u is User => !!u)
 }
@@ -508,6 +509,17 @@ export const isEstablished = (c: Connection) => c.interactions.some((i) => i.typ
 /** Your web: connections with a real exchange behind them. */
 export function webConnections(s: Pick<KudzuState, 'connections' | 'schoolId' | 'blocked'>): Connection[] {
   return schoolConnections(s).filter(isEstablished)
+}
+
+/** Whether the user added this person as someone they know and is still waiting for them to confirm. */
+export const awaitingConfirm = (s: Pick<KudzuState, 'connections'>, otherId: string) => s.connections.some((c) => c.otherId === otherId && c.unconfirmed)
+
+/** People who say they know the user and are waiting for an answer, in the school being viewed. */
+export function knownAsks(s: Pick<KudzuState, 'knownAsks' | 'connections' | 'schoolId' | 'blocked'>): User[] {
+  return s.knownAsks
+    .filter((id) => inSchool(id, s.schoolId) && !s.blocked.includes(id) && !s.connections.some((c) => c.otherId === id && isEstablished(c)))
+    .map((id) => getUser(id))
+    .filter((u): u is User => !!u)
 }
 
 /** People you have matched with but not yet met. */

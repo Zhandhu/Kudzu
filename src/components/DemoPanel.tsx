@@ -1,7 +1,7 @@
-import { AlertTriangle, ClipboardCheck, FastForward, Footprints, GraduationCap, HeartHandshake, Megaphone, RotateCcw, UserRoundCog } from 'lucide-react'
+import { AlertTriangle, ClipboardCheck, FastForward, Footprints, GraduationCap, HeartHandshake, Megaphone, RotateCcw, UserRoundCheck, UserRoundCog } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { nowOf, useKudzu } from '../store/useKudzu'
-import { findCheckinTarget, listSchools, notifyAnnouncement, receiveAnnouncement, receiveRequest, receiveThanks, unreadAnnouncements } from '../services'
+import { findCheckinTarget, listSchools, notifyAnnouncement, receiveAnnouncement, receiveRequest, receiveThanks, suggestKnown, unreadAnnouncements } from '../services'
 import { TendrilIcon } from './brand'
 import { Chip, Sheet, Toggle } from './ui'
 
@@ -50,6 +50,21 @@ export default function DemoPanel() {
         <button className={item} onClick={triggerRequest}>
           <TendrilIcon size={20} color="#8b5e3c" />
           <span className="flex-1">Receive a request<span className={sub}>Someone asks you for a chat. It appears under the tendril on Find.</span></span>
+        </button>
+
+        <button
+          className={item}
+          onClick={() => {
+            close()
+            const next = suggestKnown(s).map((x) => x.user.id).find((id) => !s.knownAsks.includes(id))
+            if (!next) return s.say('Nobody left who could say they know you.')
+            s.set({ knownAsks: [...s.knownAsks, next] })
+            nav(s.experience === 'simple' ? '/home' : '/network')
+            s.say('Someone says they know you. They are at the top of your list.')
+          }}
+        >
+          <UserRoundCheck size={19} className="text-vine-600" />
+          <span className="flex-1">Someone says they know you<span className={sub}>They appear in a grey box at the top of your list of people, to confirm or not.</span></span>
         </button>
 
         <button className={item} onClick={triggerCheckin}>

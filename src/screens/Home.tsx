@@ -7,6 +7,7 @@ import { useKudzu, useNow } from '../store/useKudzu'
 import { EMPTY_QUERY, answerRequest, computeNudges, findPeople, getUser, incomingRequests, strengthOf, webConnections } from '../services'
 import { firstName } from '../lib/util'
 import { LeafIcon, Logo } from '../components/brand'
+import { AwaitingTag, KnownAsks } from '../components/KnownAsks'
 import { Face, SchoolChip, Toggle, inputCls } from '../components/ui'
 import { roleLine } from '../components/ProfileView'
 import { ProfilePopup } from '../components/ProfilePopup'
@@ -41,7 +42,7 @@ export default function Home() {
   const people = useMemo(
     () =>
       webConnections(s)
-        .map((c) => ({ user: getUser(c.otherId)!, ...strengthOf(c, now) }))
+        .map((c) => ({ user: getUser(c.otherId)!, ...strengthOf(c, now), unconfirmed: c.unconfirmed }))
         .filter((p) => p.user)
         // the ones you have not talked to for longest come first
         .sort((a, b) => b.days - a.days),
@@ -203,6 +204,7 @@ export default function Home() {
             <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/40" />
             <input className={`${inputCls} !rounded-full !py-3 pl-11 !text-[15px]`} placeholder="Find someone you know" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Find someone you know" />
           </div>
+          {!term && <KnownAsks onOpen={setPicked} />}
           {shown.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-sage-300 p-4 text-center text-[15px] text-ink/55">{term ? `Nobody you know matches “${q.trim()}”.` : 'Nobody here yet.'}</p>
           ) : (
@@ -211,7 +213,7 @@ export default function Home() {
                 <Link key={p.user.id} data-tour="home-person" to={`/network/${p.user.id}`} className="flex items-center gap-3 px-3.5 py-3.5">
                   <Face user={p.user} size={48} />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[16px] font-semibold">{p.user.name}</span>
+                    <span className="flex items-center gap-2"><span className="truncate text-[16px] font-semibold">{p.user.name}</span>{p.unconfirmed && <AwaitingTag />}</span>
                     <span className="block truncate text-[13px] text-ink/55">{roleLine(p.user)}</span>
                     <span className="flex items-center gap-1 text-[13px]" style={{ color: STRENGTH_META[p.level].color }}><LeafIcon level={p.level} size={14} /> Last talked {since(p.days)}</span>
                   </span>
