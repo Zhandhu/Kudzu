@@ -91,28 +91,6 @@ export default function Profile() {
       {accountStanding(s) === 'warning' && <div className="mx-4 mt-5"><AccountNotice /></div>}
       {s.paused && <div className="mx-4 mt-4 rounded-2xl bg-sage-100 p-3 text-center text-sm font-medium text-ink/70">Your profile is paused. Nobody new can see you.</div>}
 
-      {/* The two apps: one for growing a network, one for keeping it. This decides what the whole
-          app is, so it has its own section straight under the profile, in its own colour. */}
-      <section className="mx-4 mt-5 rounded-2xl bg-vine-100 p-4 ring-1 ring-vine-300" data-tour="app-style">
-        <h2 className="font-display text-lg font-semibold leading-tight text-vine-900">What you want from Kudzu</h2>
-        <p className="mt-0.5 text-xs text-vine-800/80">This changes what the whole app looks like. Switch whenever you like.</p>
-        <div className="mt-3 grid grid-cols-2 gap-2" role="group" aria-label="App style">
-          {([['full', Sprout, 'Grow my network', 'Find, events and the map'], ['simple', HeartHandshake, 'Keep in touch', 'One simple home screen']] as const).map(([id, Icon, label, sub]) => (
-            <button key={id} onClick={() => { if (s.experience !== id) { s.set({ experience: id, tourOffered: true }); s.say(id === 'simple' ? 'Switched to the simple app' : 'Switched to the full app') } }} aria-pressed={s.experience === id} className={`rounded-xl border-2 px-3 py-2.5 text-left ${s.experience === id ? 'border-vine-700 bg-white' : 'border-transparent bg-white/55'}`}>
-              <Icon size={18} className={s.experience === id ? 'text-vine-700' : 'text-ink/45'} />
-              <span className="mt-1 block text-[13px] font-semibold">{label}</span>
-              <span className="block text-xs text-ink/55">{sub}</span>
-            </button>
-          ))}
-        </div>
-        {simple && (
-          <div className="mt-3 flex items-center gap-3 rounded-xl bg-white/70 px-3 py-2.5">
-            <span className="flex-1 text-[13px]"><span className="block font-medium">Show people I could help</span><span className="block text-xs text-ink/50">Students and recent graduates looking for what you offer</span></span>
-            <Toggle on={s.openToHelp} onChange={(openToHelp) => s.set({ openToHelp })} label="Show people I could help" />
-          </div>
-        )}
-      </section>
-
       <section className="mx-4 mt-5 rounded-2xl bg-white p-4 ring-1 ring-sage-200">
         <div className="flex items-center justify-between">
           <div>
@@ -164,7 +142,8 @@ export default function Profile() {
         </div>
       </section>
 
-      <VineDivider />
+      {/* in the simple app there are no groups or events, so the leaf line above the app choice does this job */}
+      {!simple && <VineDivider />}
 
       <section className={simple ? 'hidden' : 'mx-4'}>
         <h2 className="mb-2 text-sm font-semibold">Your groups</h2>
@@ -196,7 +175,31 @@ export default function Profile() {
         )}
       </section>
 
-      <section className="mx-4 mt-6">
+      {/* The two apps: one for growing a network, one for keeping it. This decides what the whole
+          app is, so it has its own section above Settings, set off by a leaf line on each side. */}
+      <VineDivider />
+      <section className="mx-4 rounded-2xl bg-vine-100 p-4 ring-1 ring-vine-300" data-tour="app-style">
+        <h2 className="font-display text-lg font-semibold leading-tight text-vine-900">What you want from Kudzu</h2>
+        <p className="mt-0.5 text-xs text-vine-800/80">This changes what the whole app looks like. Switch whenever you like.</p>
+        <div className="mt-3 grid grid-cols-2 gap-2" role="group" aria-label="App style">
+          {([['full', Sprout, 'Grow my network', 'Find, events and the map'], ['simple', HeartHandshake, 'Keep in touch', 'One simple home screen']] as const).map(([id, Icon, label, sub]) => (
+            <button key={id} onClick={() => { if (s.experience !== id) { s.set({ experience: id, tourOffered: true }); s.say(id === 'simple' ? 'Switched to the simple app' : 'Switched to the full app') } }} aria-pressed={s.experience === id} className={`rounded-xl border-2 px-3 py-2.5 text-left ${s.experience === id ? 'border-vine-700 bg-white' : 'border-transparent bg-white/55'}`}>
+              <Icon size={18} className={s.experience === id ? 'text-vine-700' : 'text-ink/45'} />
+              <span className="mt-1 block text-[13px] font-semibold">{label}</span>
+              <span className="block text-xs text-ink/55">{sub}</span>
+            </button>
+          ))}
+        </div>
+        {simple && (
+          <div className="mt-3 flex items-center gap-3 rounded-xl bg-white/70 px-3 py-2.5">
+            <span className="flex-1 text-[13px]"><span className="block font-medium">Show people I could help</span><span className="block text-xs text-ink/50">Students and recent graduates looking for what you offer</span></span>
+            <Toggle on={s.openToHelp} onChange={(openToHelp) => s.set({ openToHelp })} label="Show people I could help" />
+          </div>
+        )}
+      </section>
+      <VineDivider />
+
+      <section className="mx-4">
         <h2 className="mb-2 text-sm font-semibold">Settings</h2>
         <div className="divide-y divide-sage-200 rounded-2xl bg-white text-sm ring-1 ring-sage-200">
           {!simple && <button onClick={() => setPrefsOpen(true)} className={`${row} w-full text-left`}><SlidersHorizontal size={18} className="text-vine-600" /><span className="flex-1 font-medium">Who you want to find</span><ChevronRight size={18} className="text-ink/30" /></button>}
