@@ -1,9 +1,9 @@
 import { useMemo } from 'react'
 import { ClipboardCheck, Coffee, MessagesSquare } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import type { Conversation } from '../types'
+import type { Conversation, User } from '../types'
 import { useKudzu, useNow } from '../store/useKudzu'
-import { dueCheckins, eventChatMessages, eventGuests, getUser, inSchool, openEventChats } from '../services'
+import { dueCheckins, eventChatMessages, eventGuests, getUser, inSchool, openEventChats, pendingConnections } from '../services'
 import { ago, firstName, fmtDateTime } from '../lib/util'
 import { Avatar, EmptyState, SchoolChip } from '../components/ui'
 
@@ -27,6 +27,12 @@ export default function Messages() {
   const threads = convs
     .filter((c) => c.messages.length > 0)
     .sort((a, b) => b.messages[b.messages.length - 1].at - a.messages[a.messages.length - 1].at)
+  // Not yet met: everyone connected through a request who has not become part of the network,
+  // whether or not anything has been said. Those with nothing said yet come first.
+  const notMet = [...new Set([...fresh.map((c) => c.otherId), ...pendingConnections(s).map((c) => c.otherId)])]
+    .map((id) => ({ user: getUser(id), quiet: !threads.some((c) => c.otherId === id) }))
+    .filter((x): x is { user: User; quiet: boolean } => !!x.user && !s.blocked.includes(x.user.id))
+    .sort((a, b) => Number(b.quiet) - Number(a.quiet))
   const due = dueCheckins(s)
   const chats = openEventChats(s, now)
 
@@ -75,25 +81,27 @@ export default function Messages() {
         </section>
       )}
 
-      {fresh.length > 0 && (
-        <section className="pb-2">
-          <div className="px-4 pb-2 text-xs font-semibold uppercase tracking-wide text-ink/50">Say hello</div>
-          <div className="no-scrollbar flex gap-4 overflow-x-auto px-4 pb-2">
-            {fresh.map((c) => {
-              const u = getUser(c.otherId)
-              if (!u) return null
-              return (
-                <Link key={c.id} to={`/messages/${u.id}`} className="flex w-16 shrink-0 flex-col items-center gap-1">
-                  <div className="rounded-full p-0.5 ring-2 ring-coffee-500"><Avatar user={u} size={56} /></div>
-                  <span className="w-full truncate text-center text-xs font-medium">{firstName(u.name)}</span>
-                </Link>
-              )
-            })}
+      {/* People you are connected with but have not met: the ones to say hello to.
+          A brown ring means nothing has been said yet. They join your network after a first coffee. */}
+      {notMet.length > 0 && (
+        <section className="pb-2" data-tour="not-yet-met">
+          <div className="flex items-baseline gap-2 px-4 pb-0.5">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-ink/50">Say hello</h2>
+            <span className="text-xs text-ink/45">{notMet.length} not yet met</span>
+          </div>
+          <p className="px-4 pb-2 text-xs text-ink/50">Connected, but no coffee yet. They join your network after you first meet.</p>
+          <div className="no-scrollbar flex gap-4 overflow-x-auto px-4 pb-2 pt-1">
+            {notMet.map(({ user: u, quiet }) => (
+              <Link key={u.id} to={`/messages/${u.id}`} className="flex w-16 shrink-0 flex-col items-center gap-1" aria-label={`${u.name}, not yet met${quiet ? ', nothing said yet' : ''}`}>
+                <div className={`rounded-full p-0.5 ring-2 ${quiet ? 'ring-coffee-500' : 'ring-sage-300'}`}><Avatar user={u} size={56} /></div>
+                <span className="w-full truncate text-center text-xs font-medium">{firstName(u.name)}</span>
+              </Link>
+            ))}
           </div>
         </section>
       )}
 
-      {threads.length === 0 && fresh.length === 0 ? (
+      {threads.length === 0 && notMet.length === 0 ? (
         <EmptyState title="No conversations yet" body="When someone accepts your request, or you accept theirs, the chat shows up here.">
           <Link to="/find" className="inline-flex items-center gap-2 rounded-full bg-vine-700 px-5 py-3 text-sm font-semibold text-cream"><Coffee size={16} /> Find people</Link>
         </EmptyState>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronRight, Coffee, Plus, Search, X } from 'lucide-react'
+import { ChevronRight, Plus, Search, X } from 'lucide-react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { Level, Request, User } from '../types'
@@ -7,7 +7,7 @@ import { INDUSTRIES, MODE_META, TOPICS, topicLabel } from '../config/brand'
 import { useKudzu, useNow } from '../store/useKudzu'
 import {
   EMPTY_QUERY, LEVELS, REQUEST_LIMIT, accountStanding, answerRequest, daysLeft, findPeople, getUser, incomingRequests, isEmptyQuery,
-  levelLabel, levelOf, lookAround, mutualConnections, needsFor, outgoingRequests, pendingConnections, quietPaused, requestState,
+  levelLabel, levelOf, lookAround, mutualConnections, needsFor, outgoingRequests, quietPaused, requestState,
   requestTo, spotsLeft, suggestFor, suggestForText, type Found, type Query,
   awaitingConfirm,
 } from '../services'
@@ -149,7 +149,7 @@ export default function Find() {
   const [groupChoice, setGroupBy] = useState<GroupBy>('city')
   const [picked, setPicked] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
-  const [sheet, setSheet] = useState<'requests' | 'pending' | null>(null)
+  const [sheet, setSheet] = useState<'requests' | null>(null)
   // nothing is shown until you say what you are looking for: a topic, or your own words
   // both live in the link, so coming back from a profile shows the same people again
   const OTHER = 'other'
@@ -174,7 +174,6 @@ export default function Find() {
   )
   const incoming = incomingRequests(s, now)
   const outgoing = outgoingRequests(s, now)
-  const pending = pendingConnections(s).map((c) => getUser(c.otherId)).filter((u): u is User => !!u)
   const lapsed = outgoing.filter((r) => requestState(r, now) === 'expired').length
   const isRequested = (id: string) => !!requestTo(s, id, now)
   const suggested: (Found & { via?: User; matched?: string[] })[] = useMemo(
@@ -219,7 +218,6 @@ export default function Find() {
 
   const sprig: LeafItem[] = [
     { key: 'requests', label: 'Requests', count: incoming.length + lapsed, onClick: () => setSheet('requests') },
-    { key: 'pending', label: 'Not yet met', count: pending.length, onClick: () => setSheet('pending') },
   ]
 
   // The front door fills itself in from what is known about you, so it never opens on
@@ -429,29 +427,6 @@ export default function Find() {
       </Sheet>
 
       <RequestsSheet open={sheet === 'requests'} onClose={() => setSheet(null)} incoming={incoming} outgoing={outgoing} />
-
-      <Sheet open={sheet === 'pending'} onClose={() => setSheet(null)} title="Not yet met">
-        <p className="mb-3 text-[13px] leading-relaxed text-ink/60">You’ve connected with these people but haven’t met. They join your web after your first coffee chat.</p>
-        {pending.length === 0 ? (
-          <p className="py-6 text-center text-sm text-ink/55">No one is waiting. Everyone you’ve connected with is in your web.</p>
-        ) : (
-          <div className="divide-y divide-sage-200 rounded-2xl border border-dashed border-sage-300 bg-white">
-            {pending.map((u) => (
-              <div key={u.id} className="flex items-center gap-3 px-3 py-2.5">
-                {/* tapping the person opens the chat; the cup proposes coffee */}
-                <Link to={`/messages/${u.id}`} className="flex min-w-0 flex-1 items-center gap-3">
-                  <Avatar user={u} size={38} />
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-semibold">{u.name}</span>
-                    <span className="block truncate text-xs text-ink/55">{roleLine(u)}</span>
-                  </span>
-                </Link>
-                <Link to={`/messages/${u.id}?coffee=1`} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-coffee-100 text-coffee-600" aria-label={`Propose coffee with ${u.name}`}><Coffee size={17} /></Link>
-              </div>
-            ))}
-          </div>
-        )}
-      </Sheet>
     </div>
   )
 }

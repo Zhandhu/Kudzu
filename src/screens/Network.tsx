@@ -86,7 +86,7 @@ export default function Network() {
   const counts = STRENGTH_ORDER.map((l) => [l, people.filter((p) => p.level === l).length] as [Strength, number])
 
   // The page opens on the network. Everything else sits behind two leaves.
-  // (People you have connected with but not yet met live on the Find tab.)
+  // (People you have connected with but not yet met are on Messages, under Say hello.)
   const leaves: LeafItem[] = [
     { key: 'reach', label: 'Reach out', count: nudges.length, onClick: () => setOpen('reach') },
     // the lighter leaf carries news from your class and city: its blossom counts what you have not seen

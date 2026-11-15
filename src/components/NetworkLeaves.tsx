@@ -74,7 +74,7 @@ export function Blossom({ n, className = '' }: { n: number; className?: string }
 /**
  * A few leaves sprouting from the bottom-right corner of a tab. Each opens one
  * part of the page that would otherwise sit above the main content. Used on
- * Network (Reach out, Grow) and on Find (Requests, Not yet met).
+ * Network (Reach out, Grow) and on Find (Requests). Not yet met lives on Messages, under Say hello.
  */
 export function LeafSprig({ items }: { items: LeafItem[] }) {
   const turns = TURNS[items.length] ?? TURNS[3]
