@@ -35,7 +35,7 @@ export default function GroupDetail() {
       <div className="px-5">
         <h2 className="mb-2 mt-5 text-sm font-semibold">Upcoming events</h2>
         {groupEvents.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-sage-300 p-4 text-center text-sm text-ink/50">No events planned yet. Host one from the Events tab.</p>
+          <p className="rounded-2xl border border-dashed border-sage-300 p-4 text-center text-sm text-ink/50">No events planned yet. Host one from the Community tab.</p>
         ) : (
           <div className="space-y-2">
             {groupEvents.map((e) => (

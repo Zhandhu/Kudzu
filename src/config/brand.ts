@@ -3,6 +3,8 @@ import type { Mode, Strength } from '../types'
 /** Change the product name here and it changes everywhere. */
 export const APP_NAME = 'Kudzu'
 export const TAGLINE = 'Keep your alumni network close.'
+/** The tab that holds events and groups: what is on, and who you belong with. */
+export const TAB_NAME = 'Community'
 
 /**
  * One shared menu of help topics. People pick from it twice: what they are

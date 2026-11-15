@@ -2,7 +2,7 @@ import { useContext, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { X } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { APP_NAME } from '../config/brand'
+import { APP_NAME, TAB_NAME } from '../config/brand'
 import { useKudzu, type TourId, type TourIntro } from '../store/useKudzu'
 import { listSchools, receiveAnnouncement } from '../services'
 import { ALUM_PERSONA, STUDENT_PERSONA } from '../data/seed'
@@ -196,7 +196,7 @@ const SCHOOL: Step[] = [
     body: 'Your class is a group you are in without joining, and this is where the school posts to it. A reunion, a city meet-up, a few times a year. Nobody can reply to everyone. You can say you’re interested, and that is all.' },
   { chapter: 'From your school', target: 'back', advance: 'tap', route: '/cohorts/class',
     title: 'Back to your network',
-    body: 'Your class and your city are under Groups on the Events tab, whenever you want them again. Tap the arrow.' },
+    body: `Your class and your city are under Groups on the ${TAB_NAME} tab, whenever you want them again. Tap the arrow.` },
 ]
 
 const REACH: Step[] = [
@@ -247,7 +247,7 @@ const MEET: Step[] = [
 const EVENTS: Step[] = [
   { chapter: 'Events', target: 'tab-events', advance: 'tap', route: '/find',
     title: 'One more place: events',
-    body: 'Meet-ups and reunions are a reason to see people you know again. Tap Events.' },
+    body: `Meet-ups and reunions are a reason to see people you know again. Tap ${TAB_NAME}.` },
   { chapter: 'Events', target: 'event', advance: 'tap', route: '/events',
     title: 'Open one',
     body: 'You’re already going to this one. Its page starts with the people you know who are going too. Tap it.' },

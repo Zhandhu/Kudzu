@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
 import { CalendarDays, Lock, MapPin, MessagesSquare, Plus, Users, Video, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import type { EventType, Group, KEvent } from '../types'
 import { openEvent, useKudzu, useNow } from '../store/useKudzu'
-import { eventChatMessages, eventGuests, getUser, groupMembers, isForYou, openEventChats, schoolEvents } from '../services'
+import { eventChatMessages, eventGuests, getUser, groupMembers, isForYou, openEventChats, schoolEvents, unreadAnnouncements } from '../services'
+import { TAB_NAME } from '../config/brand'
 import { CITIES, CITY_NAMES, DAY, coordsFor, fmtDateTime, uid } from '../lib/util'
 import { Avatar, Button, Chip, EmptyState, Field, SchoolChip, Sheet, Toggle, inputCls } from '../components/ui'
 import { DefaultGroupCard } from '../components/DefaultGroupCard'
@@ -165,7 +166,12 @@ const FILTERS = ['Networking', 'Social', 'Industry', 'Virtual', 'This week'] as 
 export default function Events() {
   const s = useKudzu()
   const now = useNow()
-  const [tab, setTab] = useState<'foryou' | 'all' | 'groups'>('foryou')
+  const [params] = useSearchParams()
+  const [half, setHalf] = useState<'events' | 'groups'>(params.get('half') === 'groups' ? 'groups' : 'events')
+  // events open on the ones that suit you; the chip turns that off to see everything
+  const [forYou, setForYou] = useState(true)
+  // posts from the school that have not been read: shown on the Groups half, where they live
+  const fresh = unreadAnnouncements(s, now).length
   const [active, setActive] = useState<string[]>([])
   const [hosting, setHosting] = useState(false)
   const [creating, setCreating] = useState(false)
@@ -179,7 +185,7 @@ export default function Events() {
   )
   const types = active.filter((a) => a === 'Networking' || a === 'Social' || a === 'Industry')
   const shown = events
-    .filter((e) => tab !== 'foryou' || isForYou(e, s.me, s.prefs))
+    .filter((e) => !forYou || isForYou(e, s.me, s.prefs))
     .filter((e) => types.length === 0 || types.includes(e.type))
     .filter((e) => !active.includes('Virtual') || e.virtual)
     .filter((e) => !active.includes('This week') || e.start < now + 7 * DAY)
@@ -189,22 +195,26 @@ export default function Events() {
     <div className="relative flex h-full flex-col">
       <header className="px-4 pt-4">
         <div className="flex items-center justify-between">
-          <h1 className="font-display text-2xl font-semibold">Events</h1>
+          <h1 className="font-display text-2xl font-semibold">{TAB_NAME}</h1>
           <div className="flex items-center gap-2">
             <SchoolChip />
-            <button onClick={() => (tab === 'groups' ? setCreating(true) : setHosting(true))} className="flex items-center gap-1 rounded-full bg-vine-700 px-3 py-1.5 text-xs font-semibold text-cream">
-              <Plus size={14} /> {tab === 'groups' ? 'New group' : 'Host'}
+            <button onClick={() => (half === 'groups' ? setCreating(true) : setHosting(true))} className="flex items-center gap-1 rounded-full bg-vine-700 px-3 py-1.5 text-xs font-semibold text-cream">
+              <Plus size={14} /> {half === 'groups' ? 'New group' : 'Host'}
             </button>
           </div>
         </div>
-        <div className="mt-3 flex border-b border-sage-200">
-          {([['foryou', 'For You'], ['all', 'All'], ['groups', 'Groups']] as const).map(([v, label]) => (
-            <button key={v} onClick={() => setTab(v)} className={`-mb-px flex-1 border-b-2 pb-2 text-sm font-semibold ${tab === v ? 'border-vine-700 text-vine-700' : 'border-transparent text-ink/45'}`}>{label}</button>
+        {/* the tab is two halves: things to go to, and the groups you belong to */}
+        <div className="mt-3 grid grid-cols-2 gap-1 rounded-full bg-sage-100 p-1" role="tablist" aria-label={TAB_NAME}>
+          {([['events', 'Events', CalendarDays], ['groups', 'Groups', Users]] as const).map(([v, label, Icon]) => (
+            <button key={v} role="tab" aria-selected={half === v} data-tour={`half-${v}`} onClick={() => setHalf(v)} className={`relative flex items-center justify-center gap-2 rounded-full py-2 text-sm font-semibold ${half === v ? 'bg-white text-vine-800 shadow-sm' : 'text-ink/50'}`}>
+              <Icon size={16} /> {label}
+              {v === 'groups' && fresh > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-coffee-500 px-1 text-[10px] font-bold text-white" aria-label={`${fresh} new from your school`}>{fresh}</span>}
+            </button>
           ))}
         </div>
       </header>
 
-      {tab === 'groups' ? (
+      {half === 'groups' ? (
         <div className="app-scroll min-h-0 flex-1 space-y-2.5 overflow-y-auto px-4 py-4">
           {/* Your class and your city are groups too: the two everyone is in without joining.
               The school's alumni services post to them, so they come first. */}
@@ -218,6 +228,7 @@ export default function Events() {
       ) : (
         <>
           <div className="no-scrollbar flex shrink-0 gap-2 overflow-x-auto px-4 py-3">
+            <Chip tone="plain" active={forYou} onClick={() => setForYou(!forYou)}>For you</Chip>
             {FILTERS.map((f) => (
               <Chip key={f} tone="plain" active={active.includes(f)} onClick={() => setActive(active.includes(f) ? active.filter((x) => x !== f) : [...active, f])}>
                 {f === 'This week' && <CalendarDays size={13} />}{f}

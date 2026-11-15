@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { CalendarDays, House, Map as MapIcon, MessageCircle, Search, Sprout, UserRound, Wrench } from 'lucide-react'
+import { House, Map as MapIcon, MessageCircle, Search, Sprout, UserRound, UsersRound, Wrench } from 'lucide-react'
 import { nowOf, useKudzu } from './store/useKudzu'
 import { OverlayContext, Toast } from './components/ui'
-import { APP_NAME, TAGLINE } from './config/brand'
-import { inSchool, incomingRequests } from './services'
+import { APP_NAME, TAB_NAME, TAGLINE } from './config/brand'
+import { inSchool, incomingRequests, unreadAnnouncements } from './services'
 import Find from './screens/Find'
 import Home from './screens/Home'
 import Messages from './screens/Messages'
@@ -29,7 +29,8 @@ import DemoPanel from './components/DemoPanel'
 
 const TABS = [
   { to: '/find', label: 'Find', icon: Search, tour: 'find' },
-  { to: '/events', label: 'Events', icon: CalendarDays, tour: 'events' },
+  // events and groups share one tab: what is on, and who you belong with
+  { to: '/events', label: TAB_NAME, icon: UsersRound, tour: 'events' },
   { to: '/network', label: 'Network', icon: Sprout, tour: 'network' },
   { to: '/messages', label: 'Messages', icon: MessageCircle, tour: 'messages' },
   { to: '/profile', label: 'Profile', icon: UserRound, tour: 'profile' },
@@ -46,6 +47,8 @@ const SIMPLE_TABS = [
 function TabBar({ tabs }: { tabs: typeof TABS }) {
   // unread conversations, plus requests waiting on you, which now live on this tab in the full app
   const unread = useKudzu((s) => s.conversations.filter((c) => c.unread && inSchool(c.otherId, s.schoolId) && !s.blocked.includes(c.otherId)).length + (s.experience === 'simple' ? 0 : incomingRequests(s, nowOf(s)).length))
+  // posts from the school that have not been read: they live in the groups on this tab
+  const news = useKudzu((s) => unreadAnnouncements(s, nowOf(s)).length)
   return (
     <nav className="flex shrink-0 border-t border-sage-200 bg-cream pb-[max(env(safe-area-inset-bottom),6px)] pt-1.5">
       {tabs.map(({ to, label, icon: Icon, tour }) => (
@@ -56,6 +59,9 @@ function TabBar({ tabs }: { tabs: typeof TABS }) {
               {label}
               {to === '/messages' && unread > 0 && (
                 <span className="absolute right-[calc(50%-18px)] top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-coffee-500 px-1 text-[9px] text-white">{unread}</span>
+              )}
+              {to === '/events' && news > 0 && (
+                <span className="absolute right-[calc(50%-18px)] top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-coffee-500 px-1 text-[9px] text-white" aria-label={`${news} new from your school`}>{news}</span>
               )}
             </>
           )}
