@@ -1,0 +1,41 @@
+# Kudzu: what you need to run it
+#
+# This is a JavaScript project, so this file is for people to read. It is not a
+# pip file. The packages below are installed by `npm install`, which reads
+# package.json and the exact versions pinned in package-lock.json.
+#
+# 1. Install Node.js 20 or newer (npm comes with it): https://nodejs.org
+# 2. In this folder, run:   npm install
+# 3. Then run:              npm run dev
+#    and open the address it prints (http://localhost:5173 by default).
+#
+# Nothing else needs installing: there is no backend, database or API key.
+# All data is mocked and kept in the browser.
+#
+# An internet connection is needed while the app runs, for two things that are
+# loaded from the web and not bundled:
+#   - the fonts (Google Fonts: Fraunces and Inter)
+#   - the map tiles on the Network tab (OpenStreetMap)
+# Without one the app still works; text falls back to system fonts and the map
+# background is blank.
+
+# --- Packages the app uses when running ---
+react ^19.3.1
+react-dom ^19.3.1
+react-router-dom ^7.18.5
+zustand ^5.1.0
+framer-motion ^14.14.0
+leaflet ^1.9.4
+react-leaflet ^5.0.0
+lucide-react ^1.73.0
+
+# --- Packages used only to build and type-check ---
+vite ^8.3.8
+@vitejs/plugin-react ^6.3.0
+typescript ^7.0.2
+tailwindcss ^3.4.19
+postcss ^8.5.33
+autoprefixer ^10.6.2
+@types/react ^19.3.0
+@types/react-dom ^19.3.0
+@types/leaflet ^1.9.22
