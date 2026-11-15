@@ -191,12 +191,12 @@ const SCHOOL: Step[] = [
   { chapter: 'From your school', target: 'push', advance: 'tap', before: receiveAnnouncement, route: '/network',
     title: 'News from alumni services',
     body: 'A class is thousands of people, which is too many for a group chat. So the school’s alumni services send the occasional announcement instead. One has just arrived. Tap it.' },
-  { chapter: 'From your school', target: 'announcement', advance: 'next', route: '/network',
-    title: 'Announcements, not chatter',
-    body: 'A reunion, a city meet-up, a few times a year. Nobody can reply to everyone. You can say you’re interested, and that is all.' },
-  { chapter: 'From your school', target: 'sheet-close', advance: 'tap', route: '/network',
-    title: 'Close it',
-    body: 'These live under the green leaf in the corner, whenever you want them again. Tap the X.' },
+  { chapter: 'From your school', target: 'announcement', advance: 'next', route: '/cohorts/class',
+    title: 'Posted to your class group',
+    body: 'Your class is a group you are in without joining, and this is where the school posts to it. A reunion, a city meet-up, a few times a year. Nobody can reply to everyone. You can say you’re interested, and that is all.' },
+  { chapter: 'From your school', target: 'back', advance: 'tap', route: '/cohorts/class',
+    title: 'Back to your network',
+    body: 'Your class and your city are under Groups on the Events tab, whenever you want them again. Tap the arrow.' },
 ]
 
 const REACH: Step[] = [

@@ -77,8 +77,6 @@ interface Data {
   eventOpen: string | null
   /** A phone-style notification on screen now, if any. Mocked: nothing is really pushed. */
   push: { id: string; from: string; title: string; body: string } | null
-  /** Set to open the announcements as soon as the Network screen shows. */
-  openNews: boolean
   /** The walkthrough in progress, if any, and which stop it is on. */
   tour: { id: TourId; step: number; intro?: TourIntro } | null
 }
@@ -176,7 +174,6 @@ const fresh = (): Data => {
     typing: {},
     eventOpen: null,
     push: null,
-    openNews: false,
     tour: null,
   }
 }
@@ -512,8 +509,8 @@ export const useKudzu = create<KudzuState>()(
       // bump this when the saved shape changes, so old browsers start from fresh seed data
       name: 'kudzu-demo-v12',
       partialize: (s) => {
-        const { checkin, toast, demoOpen, typing, eventOpen, push, openNews, tour, ...rest } = s
-        void checkin, toast, demoOpen, typing, eventOpen, push, openNews, tour
+        const { checkin, toast, demoOpen, typing, eventOpen, push, tour, ...rest } = s
+        void checkin, toast, demoOpen, typing, eventOpen, push, tour
         return rest as KudzuState
       },
     },

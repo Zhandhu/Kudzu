@@ -8,6 +8,7 @@ import { EMPTY_QUERY, answerRequest, computeNudges, findPeople, getUser, incomin
 import { firstName } from '../lib/util'
 import { LeafIcon, Logo } from '../components/brand'
 import { AwaitingTag, KnownAsks } from '../components/KnownAsks'
+import { DefaultGroupCard } from '../components/DefaultGroupCard'
 import { Face, SchoolChip, Toggle, inputCls } from '../components/ui'
 import { roleLine } from '../components/ProfileView'
 import { ProfilePopup } from '../components/ProfilePopup'
@@ -223,6 +224,16 @@ export default function Home() {
             </div>
           )}
           <Link to="/known" data-tour="home-add" className="mt-3 block rounded-full border border-sage-200 bg-white py-3 text-center text-[15px] font-semibold text-vine-800">Add someone you know</Link>
+        </section>
+
+        {/* 3. your class and your city: the two groups the school posts to. This app has no
+            Events tab, so they are reached from here. */}
+        <section className="mt-6" data-tour="home-school">
+          <h2 className={h2}>From your school</h2>
+          <div className="space-y-2.5">
+            <DefaultGroupCard kind="class" />
+            <DefaultGroupCard kind="city" />
+          </div>
         </section>
       </div>
 

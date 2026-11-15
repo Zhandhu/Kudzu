@@ -1,45 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronRight, Coffee, List, Map as MapIcon, MessageCircle, Repeat, Search, UserPlus, X } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
-import type { Mode, Nudge, Strength } from '../types'
+import { useMemo, useState } from 'react'
+import { ChevronRight, List, Map as MapIcon, Repeat, Search, UserPlus } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import type { Mode, Strength } from '../types'
 import { MODES, MODE_META, STRENGTH_META, STRENGTH_ORDER } from '../config/brand'
 import { useKudzu, useNow } from '../store/useKudzu'
-import { classLabel, computeNudges, getSchool, getUser, matchInfo, rhythmLabel, strengthOf, suggestKnown, unreadAnnouncements, webConnections } from '../services'
-import { AnnouncementList } from '../components/Announcements'
+import { getUser, matchInfo, rhythmLabel, strengthOf, suggestKnown, webConnections } from '../services'
 import { LeafIcon } from '../components/brand'
 import { AwaitingTag, KnownAsks } from '../components/KnownAsks'
-import { Avatar, Chip, EmptyState, SchoolChip, Sheet, inputCls } from '../components/ui'
+import { Avatar, Chip, EmptyState, SchoolChip, inputCls } from '../components/ui'
 import { ModeIcon, ModeTag, roleLine } from '../components/ProfileView'
 import NetworkMap, { type MapPerson } from '../components/NetworkMap'
-import { LeafSprig, type LeafItem, type LeafKey } from '../components/NetworkLeaves'
-
-function NudgeCard({ n }: { n: Nudge }) {
-  const nav = useNavigate()
-  const dismiss = useKudzu((s) => s.dismissNudge)
-  const u = getUser(n.otherId)
-  if (!u) return null
-  const go = () => {
-    dismiss(n.id)
-    nav(n.action === 'coffee' ? `/messages/${u.id}?coffee=1` : `/messages/${u.id}?draft=${encodeURIComponent(n.draft ?? '')}`)
-  }
-  return (
-    <motion.div layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -40 }} className="rounded-2xl border border-sage-200 bg-white p-3 shadow-sm">
-      <div className="flex items-start gap-3">
-        <Avatar user={u} size={36} />
-        <div className="min-w-0 flex-1 pt-0.5 text-[13.5px] leading-snug">{n.text}</div>
-        <button onClick={() => dismiss(n.id)} className="-mr-1 -mt-1 shrink-0 rounded-full p-1 text-ink/40 hover:bg-sage-100" aria-label="Dismiss"><X size={16} /></button>
-      </div>
-      <div className="mt-2 flex gap-2 pl-12">
-        <button onClick={go} className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${n.action === 'coffee' ? 'bg-coffee-500 text-cream' : 'bg-vine-700 text-cream'}`}>
-          {n.action === 'coffee' ? <><Coffee size={14} /> Propose coffee</> : <><MessageCircle size={14} /> Message</>}
-        </button>
-        <button onClick={() => dismiss(n.id)} className="rounded-full px-3 py-1.5 text-xs font-semibold text-ink/50 hover:bg-sage-100">Not now</button>
-      </div>
-    </motion.div>
-  )
-}
-
 type Person = MapPerson & { rhythmDays?: number; unconfirmed?: boolean }
 /** The keep-in-touch app has no search of the school, so links to it are left out. */
 const simpleApp = () => useKudzu.getState().experience === 'simple'
@@ -52,9 +22,6 @@ export default function Network() {
   const [q, setQ] = useState('')
   const [sort, setSort] = useState<'strength' | 'recent' | 'name'>('strength')
   const [mode, setMode] = useState<Mode | null>(null)
-  const [open, setOpen] = useState<LeafKey | null>(null)
-  const [mapBusy, setMapBusy] = useState(false)
-  const onSelection = useCallback((isOpen: boolean) => setMapBusy(isOpen), [])
 
   // the web: only people there has been a real exchange with
   const people = useMemo<Person[]>(
@@ -65,22 +32,9 @@ export default function Network() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [s.connections, s.schoolId, s.blocked, s.timeOffsetDays],
   )
-  const nudges = computeNudges(s, now)
   const suggestionCount = suggestKnown(s).length
-  const news = unreadAnnouncements(s, now)
   const counts = STRENGTH_ORDER.map((l) => [l, people.filter((p) => p.level === l).length] as [Strength, number])
 
-  // The page opens on the network. Everything else sits behind two leaves.
-  // (People you have connected with but not yet met are on Messages, under Say hello.)
-  const leaves: LeafItem[] = [
-    { key: 'reach', label: 'Reach out', count: nudges.length, onClick: () => setOpen('reach') },
-    // the lighter leaf carries news from your class and city: its blossom counts what you have not seen
-    { key: 'grow', label: 'Your class and city', count: news.length, onClick: () => setOpen('grow') },
-  ]
-  // seen once the sheet is closed, so "New" stays visible while you read
-  const closeGrow = () => { s.markAnnouncementsRead(news.map((a) => a.id)); setOpen(null) }
-  // a tapped notification lands here and opens the announcements straight away
-  useEffect(() => { if (s.openNews) { setOpen('grow'); s.set({ openNews: false }) } }, [s.openNews, s])
 
   const filtered = people.filter((p) => {
     const t = q.trim().toLowerCase()
@@ -140,7 +94,7 @@ export default function Network() {
       ) : view === 'map' ? (
         <div className="min-h-0 flex-1 border-t border-sage-200">
           <div className="h-full">
-            <NetworkMap me={s.me} people={people} onSelection={onSelection} />
+            <NetworkMap me={s.me} people={people} />
           </div>
         </div>
       ) : (
@@ -172,6 +126,17 @@ export default function Network() {
             </p>
           )}
 
+          {/* adding someone you know starts here, beside the people it adds to */}
+          {!q.trim() && !mode && (
+            <Link to="/known" data-tour="network-add" className="mb-2 flex items-center gap-3 rounded-2xl border border-dashed border-vine-300 bg-vine-50 px-3.5 py-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-vine-700 text-cream"><UserPlus size={17} /></span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold">Add people you know</span>
+                <span className="block truncate text-xs text-ink/55">{suggestionCount > 0 ? `${suggestionCount} classmates and contacts you may know` : "Search your school by name"}</span>
+              </span>
+              <ChevronRight size={18} className="text-ink/30" />
+            </Link>
+          )}
           {!q.trim() && !mode && <KnownAsks />}
           {sort === 'strength'
             ? STRENGTH_ORDER.map((level) => {
@@ -192,45 +157,6 @@ export default function Network() {
         </div>
       )}
 
-      {!empty && !(view === 'map' && mapBusy) && <LeafSprig items={leaves} />}
-
-      <Sheet open={open === 'reach'} onClose={() => setOpen(null)} title="Reach out">
-        {nudges.length === 0 ? (
-          <p className="py-6 text-center text-sm text-ink/55">You’re all caught up. Nobody is waiting to hear from you.</p>
-        ) : (
-          <div className="space-y-2">
-            <p className="mb-1 text-[13px] text-ink/60">Catch-ups you planned come first, then timely reasons to say hello, then ties that have gone quiet.</p>
-            <AnimatePresence initial={false}>{nudges.map((n) => <NudgeCard key={n.id} n={n} />)}</AnimatePresence>
-          </div>
-        )}
-      </Sheet>
-
-      <Sheet open={open === 'grow'} onClose={closeGrow} title="Your class and city">
-        <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink/50">Announcements</div>
-        <AnnouncementList onLeave={closeGrow} />
-        {/* Your class and your city are groups now. They are on the Events tab, under Groups,
-            and the keep-in-touch app, which has no Events tab, reaches them from here. */}
-        <div className={simpleApp() ? 'mt-4 grid grid-cols-2 gap-2' : 'hidden'}>
-          <Link to="/cohorts/class" className="rounded-2xl bg-white p-3 text-[13px] font-semibold ring-1 ring-sage-200">{classLabel(s.me)}<span className="block text-[11px] font-normal text-ink/55">Your class group</span></Link>
-          <Link to="/cohorts/city" className="rounded-2xl bg-white p-3 text-[13px] font-semibold ring-1 ring-sage-200">{getSchool(s.schoolId).shortName} in {s.me.city}<span className="block text-[11px] font-normal text-ink/55">Your city group</span></Link>
-        </div>
-        <Link to="/known" className="mt-3 flex items-center gap-3 rounded-2xl border border-dashed border-vine-300 bg-vine-50 px-3.5 py-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-vine-700 text-cream"><UserPlus size={17} /></span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold">Add people you know</span>
-            <span className="block truncate text-xs text-ink/55">{suggestionCount > 0 ? `${suggestionCount} classmates and contacts you may know` : 'Search your school by name'}</span>
-          </span>
-          <ChevronRight size={18} className="text-ink/30" />
-        </Link>
-        <Link to="/find" className={simpleApp() ? "hidden" : "mt-2 flex items-center gap-3 rounded-2xl border border-sage-200 bg-white px-3.5 py-3"}>
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-coffee-100 text-coffee-600"><Search size={17} /></span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold">Find someone new</span>
-            <span className="block truncate text-xs text-ink/55">Search by field, city, level or name</span>
-          </span>
-          <ChevronRight size={18} className="text-ink/30" />
-        </Link>
-      </Sheet>
     </div>
   )
 }

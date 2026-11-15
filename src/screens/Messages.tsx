@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react'
-import { ChevronRight, ClipboardCheck, Coffee, MessagesSquare } from 'lucide-react'
+import { ClipboardCheck, Coffee, MessagesSquare } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import type { Conversation, User } from '../types'
+import type { Connection, Conversation, User } from '../types'
 import { useKudzu, useNow } from '../store/useKudzu'
-import { dueCheckins, eventChatMessages, eventGuests, getUser, inSchool, incomingRequests, openEventChats, outgoingRequests, requestState } from '../services'
+import { computeNudges, strengthOf, dueCheckins, eventChatMessages, eventGuests, getUser, inSchool, incomingRequests, openEventChats, outgoingRequests, requestState } from '../services'
 import { ago, firstName, fmtDateTime } from '../lib/util'
 import { Avatar, EmptyState, SchoolChip } from '../components/ui'
-import { TendrilIcon } from '../components/brand'
+import { LeafIcon, TendrilIcon } from '../components/brand'
+import { ReachOutSheet } from '../components/ReachOutSheet'
+import { STRENGTH_ORDER } from '../config/brand'
 import { RequestsSheet } from '../components/RequestsSheet'
 
 function preview(c: Conversation): string {
@@ -53,6 +55,30 @@ export default function Messages() {
   const outgoing = simple ? [] : outgoingRequests(s, now)
   const waiting = outgoing.filter((r) => requestState(r, now) === 'pending').length
   const [requestsOpen, setRequestsOpen] = useState(false)
+  const [catchUpOpen, setCatchUpOpen] = useState(false)
+  // people it is time to catch up with (the keep-in-touch app shows these on its Home)
+  const nudges = simple ? [] : computeNudges(s, now)
+  const names = (ids: string[]) => ids.map((id) => firstName(getUser(id)?.name ?? '')).filter(Boolean).join(', ')
+  // the leaf on the Catch up box takes the colour of whoever has been quiet longest
+  const stalest = nudges
+    .map((n) => s.connections.find((c) => c.otherId === n.otherId))
+    .filter((c): c is Connection => !!c)
+    .map((c) => strengthOf(c, now).level)
+    .sort((a, b) => STRENGTH_ORDER.indexOf(b) - STRENGTH_ORDER.indexOf(a))[0] ?? 'steady'
+  const boxes = [
+    ...(incoming.length + outgoing.length > 0 ? [{
+      id: 'requests', title: 'Requests', count: incoming.length, open: () => setRequestsOpen(true),
+      icon: <TendrilIcon size={22} />,
+      line: incoming.length > 0 ? `${incoming.length} asked you${waiting > 0 ? ` · ${waiting} waiting` : ''}` : `Waiting on ${waiting} ${waiting === 1 ? 'reply' : 'replies'}`,
+      names: names(incoming.length > 0 ? incoming.map((r) => r.fromId) : outgoing.map((r) => r.toId)),
+    }] : []),
+    ...(nudges.length > 0 ? [{
+      id: 'catch-up-box', title: 'Catch up', count: nudges.length, open: () => setCatchUpOpen(true),
+      icon: <LeafIcon level={stalest} size={22} />,
+      line: `${nudges.length} to write to`,
+      names: names([...new Set(nudges.map((n) => n.otherId))]),
+    }] : []),
+  ]
   const due = dueCheckins(s)
   const chats = openEventChats(s, now)
 
@@ -77,26 +103,23 @@ export default function Messages() {
         )
       })}
 
-      {/* Requests, in both directions: people who asked you, and the ones you are waiting on.
-          A request is the step before a conversation, so it sits at the top of this tab. */}
-      {(incoming.length > 0 || outgoing.length > 0) && (
-        <section className="px-4 pb-3">
-          <h2 className="pb-2 text-xs font-semibold uppercase tracking-wide text-ink/50">Requests</h2>
-          <button onClick={() => setRequestsOpen(true)} data-tour="requests" className="flex w-full items-center gap-3 rounded-2xl bg-vine-50 p-3 text-left ring-1 ring-vine-200">
-            <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-vine-700"><TendrilIcon size={22} color="#faf6ee" />
-              {incoming.length > 0 && <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-coffee-500 px-1 text-[10px] font-bold text-white ring-2 ring-cream">{incoming.length}</span>}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-semibold">
-                {incoming.length > 0 ? `${incoming.length} ${incoming.length === 1 ? 'person' : 'people'} asked you for a chat` : `Waiting on ${waiting} ${waiting === 1 ? 'reply' : 'replies'}`}
+      {/* Two boxes, side by side: people who asked you (and the ones you are waiting on), and
+          people it is time to catch up with. Both are short lists of people waiting on you to
+          write, so they sit together at the top of this tab. Each opens its own sheet, and a
+          box with nothing in it is left out. */}
+      {boxes.length > 0 && (
+        <section className={`grid gap-2.5 px-4 pb-3 ${boxes.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          {boxes.map((b) => (
+            <button key={b.id} onClick={b.open} data-tour={b.id} className="rounded-2xl bg-vine-50 p-3 text-left ring-1 ring-vine-200" aria-label={`${b.title}: ${b.line}`}>
+              <span className="flex items-center justify-between">
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white ring-1 ring-vine-200">{b.icon}</span>
+                {b.count > 0 && <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-coffee-500 px-1.5 text-xs font-bold text-white">{b.count}</span>}
               </span>
-              <span className="block truncate text-[13px] text-ink/60">
-                {incoming.length > 0 ? incoming.map((r) => firstName(getUser(r.fromId)?.name ?? '')).filter(Boolean).join(', ') : 'People you asked, and how long they have to answer'}
-              </span>
-              {incoming.length > 0 && outgoing.length > 0 && <span className="block text-[11px] text-vine-700">You’re waiting on {waiting} {waiting === 1 ? 'reply' : 'replies'}</span>}
-            </span>
-            <ChevronRight size={18} className="shrink-0 text-ink/30" />
-          </button>
+              <span className="mt-2 block font-display text-[17px] font-semibold leading-tight">{b.title}</span>
+              <span className="block truncate text-[13px] text-ink/60">{b.line}</span>
+              <span className="block truncate text-[11px] text-vine-700">{b.names}</span>
+            </button>
+          ))}
         </section>
       )}
 
@@ -173,6 +196,7 @@ export default function Messages() {
         </ul>
       )}
       <RequestsSheet open={requestsOpen} onClose={() => setRequestsOpen(false)} incoming={incoming} outgoing={outgoing} />
+      <ReachOutSheet open={catchUpOpen} onClose={() => setCatchUpOpen(false)} />
     </div>
   )
 }

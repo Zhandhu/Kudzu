@@ -271,11 +271,11 @@ There is a trade-off underneath. Every protection for senders asks something of 
 
 ### How requests are shown
 
-A request is drawn as a **tendril**: the curl a vine sends out before it takes hold, with a bud on the end. It appears on a person's leaf when you have asked them, beside each request you are waiting on, and as one of two leaves in the corner of the Find tab. The other corner leaf, brown, is **Not yet met**: people who have accepted and whom you have not yet had a chat with. So a relationship runs tendril, then leaf, then vine.
+A request is drawn as a **tendril**: the curl a vine sends out before it takes hold, with a bud on the end. It appears on a person's leaf when you have asked them, beside each request you are waiting on, and on the Requests box on Messages. A relationship runs tendril, then leaf, then vine.
 
 ### Different from the proposal
 
-- **Requests have moved to the top of Messages,** as one card that opens both directions. Find has no corner leaves. **Not yet met has moved to Messages.** The Say hello row at the top lists only people you are connected with and have not written to. Anyone you have not had a coffee chat with carries a small cup on their picture, in that row and in the conversation list.
+- **There are no corner leaves any more.** Requests and Catch up are two boxes side by side at the top of Messages, each opening its own sheet. School announcements are posts inside the class and city groups. Find is only search, and Network is only the map and the list. **Not yet met has moved to Messages.** The Say hello row at the top lists only people you are connected with and have not written to. Anyone you have not had a coffee chat with carries a small cup on their picture, in that row and in the conversation list.
 - **Not yet met is simpler.** Tapping a person opens the chat, where the cup proposes coffee. Once anything has been said they leave Say hello and sit in the conversation list.
 - **The Messages tab has no requests section.** An accepted request becomes an ordinary conversation, with the line from the request as its first message.
 

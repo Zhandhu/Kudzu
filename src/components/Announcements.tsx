@@ -62,7 +62,7 @@ export function AnnouncementList({ onLeave, only }: { onLeave?: () => void; /** 
 
 /**
  * What an announcement looks like when it arrives: a notification at the top of
- * the screen, the way a phone shows one. Tapping it opens the announcements. It
+ * the screen, the way a phone shows one. Tapping it opens the group it was posted to. It
  * leaves by itself after a few seconds. Mocked: nothing is really pushed.
  */
 export function PushBanner() {
@@ -83,7 +83,12 @@ export function PushBanner() {
           <motion.button
             key={push.id}
             data-tour="push"
-            onClick={() => { set({ push: null, openNews: true }); nav("/network") }}
+            onClick={() => {
+              // a post goes to the class or to the city, so the notification opens that group
+              const a = useKudzu.getState().announcements.find((x) => x.id === push.id)
+              set({ push: null })
+              nav(a && !a.years ? '/cohorts/city' : '/cohorts/class')
+            }}
             initial={{ y: -120, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -120, opacity: 0 }}
             transition={{ type: 'spring', damping: 24, stiffness: 300 }}
             className="pointer-events-auto absolute inset-x-2.5 top-2.5 z-50 rounded-[22px] bg-white/95 p-3 text-left shadow-2xl ring-1 ring-black/5 backdrop-blur"
