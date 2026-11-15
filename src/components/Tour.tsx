@@ -52,7 +52,7 @@ const WELCOME: Step = { chapter: 'Welcome', advance: 'next',
 /* ---- signing up: where the guide begins, and where it splits by the app the viewer picks ---- */
 
 /** Asks the sign-up screen to fill in whatever is still missing, so the viewer only taps. */
-const fill = (what: 'school' | 'all') => () => window.dispatchEvent(new CustomEvent('kudzu:fill', { detail: what }))
+const fill = (what: 'school' | 'all' | 'extras') => () => window.dispatchEvent(new CustomEvent('kudzu:fill', { detail: what }))
 /** The demo personas study at the first school in the data, so its email domain is the one to type. */
 const DOMAIN = listSchools()[0].domains[0]
 const STUDENT = STUDENT_PERSONA.name.split(' ')[0]
@@ -73,15 +73,21 @@ const SIGNUP_START: Step[] = [
     body: 'A member can change this later in their settings. Tap Continue.' },
 ]
 
-const FINISH_SIGNUP: Step = { chapter: 'Signing up', target: 'signup-finish', advance: 'tap', before: fill('all'),
+/** The optional boxes: what each is for, filled in so the viewer can see them ticked. */
+const OPTIONAL_SIGNUP: Step = { chapter: 'Signing up', target: 'signup-optional', advance: 'next', before: fill('extras'),
+  title: 'The other four are optional',
+  body: 'What you’re here for and the fields you’re interested in decide who the app suggests to you. Hobbies and prompts give people something to start a conversation over. A member can leave these for later. Here they have just been filled in for you.' }
+
+const FINISH_SIGNUP: Step = { chapter: 'Signing up', target: 'signup-finish', advance: 'tap', before: fill('extras'),
   title: 'That’s sign-up',
-  body: 'Everything else is optional and can wait. Tap Get started.' }
+  body: 'Every box is ticked. Tap Get started.' }
 
 /** The short route: the list is shown, filled in. */
 const SIGNUP_QUICK: Step[] = [
   { chapter: 'Signing up', target: 'signup-needed', advance: 'next', before: fill('all'),
     title: 'A short list, not a long form',
     body: 'Three things are needed: who you are and where you studied, what you do now, and the people you already know. For this quick guide they are filled in for you, as a sample member with a verified school email.' },
+  OPTIONAL_SIGNUP,
   FINISH_SIGNUP,
 ]
 
@@ -113,7 +119,8 @@ const SIGNUP_FULL: Step[] = [
     body: 'A member could add more people here, or invite someone by phone. Tap the button to go back.' },
   { chapter: 'Signing up', target: 'signup-needed', advance: 'next', before: fill('all'),
     title: 'All three done',
-    body: 'The last one, your current role, is filled in for you to save typing.' },
+    body: 'The last one, your current role, is the first thing people read about you. It is filled in for you to save typing.' },
+  OPTIONAL_SIGNUP,
   FINISH_SIGNUP,
 ]
 
@@ -341,6 +348,8 @@ export function stepsOf(tour: { id: TourId; intro?: TourIntro }, depth: 'quick' 
 }
 const APP_NAMES = { full: 'Grow my network', simple: 'Keep in touch' } as const
 
+/** How long the whole screen is shown between one stop and the next. */
+const PAUSE_MS = 700
 type Box = { x: number; y: number; w: number; h: number }
 const PAD = 6
 const visible = (name: string) => [...document.querySelectorAll(`[data-tour="${name}"]`)].find((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 })
@@ -365,6 +374,8 @@ export function Tour() {
   const [typed, setTyped] = useState(false)
   /** Set when a stop has waited several seconds without finding what it points at. */
   const [slow, setSlow] = useState(false)
+  /** True for a moment as each stop begins, while the screen is shown with nothing over it. */
+  const [clear, setClear] = useState(false)
   const el = useRef<Element | null>(null)
   const path = useRef(pathname)
   path.current = pathname
@@ -395,6 +406,11 @@ export function Tour() {
     if (!step) return
     if (ran.current !== stepKey) { ran.current = stepKey; step.before?.() }
     setLit(null); setHole(null); setTyped(false); setSlow(false); el.current = null
+    // Between stops the whole screen is shown, undimmed, for a moment, so the viewer
+    // sees what the app looks like and where they have been led before the next caption.
+    setClear(true)
+    const t = setTimeout(() => setClear(false), PAUSE_MS)
+    return () => clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepKey])
 
@@ -514,8 +530,10 @@ export function Tour() {
     )
   }
   if (!step) return null
+  // the pause between stops: nothing is dimmed, and nothing can be tapped by accident
+  if (clear) return <Portal><div className="pointer-events-auto absolute inset-0 z-[60]" data-tour-overlay data-step-target={step.target} data-step-advance={step.advance} data-step-ready="no" data-step-pause /></Portal>
 
-  const waiting = !!step.target && !lit
+  const waiting =!!step.target && !lit
   // The caption goes on whichever side of the lit area has room, and never over it.
   // Something that fills most of the screen (the map) has no side with room, so the caption sits inside it, low down.
   const big = !!lit && lit.h > frameH * 0.55
@@ -529,7 +547,7 @@ export function Tour() {
 
   return (
     <Portal>
-      <div className="absolute inset-0 z-[60]" data-tour-overlay data-step-target={step.target} data-step-lit={step.lit ?? step.target} data-step-advance={step.advance} data-step-ready={lit || !step.target ? 'yes' : 'no'}>
+      <motion.div key={stepKey} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className="absolute inset-0 z-[60]" data-tour-overlay data-step-target={step.target} data-step-lit={step.lit ?? step.target} data-step-advance={step.advance} data-step-ready={lit || !step.target ? 'yes' : 'no'}>
         {lit && hole ? (
           <>
             {/* four panels around the lit area: everything else is dimmed and can't be tapped */}
@@ -586,7 +604,7 @@ export function Tour() {
             </div>
           </motion.div>
         </AnimatePresence>
-      </div>
+      </motion.div>
     </Portal>
   )
 }

@@ -132,8 +132,11 @@ export default function Onboarding() {
   viewNow.current = view
   useEffect(() => {
     const onFill = (e: Event) => {
-      const all = (e as CustomEvent<string>).detail === 'all'
-      const p = viewNow.current === 'simple' ? ALUM_PERSONA : STUDENT_PERSONA
+      const what = (e as CustomEvent<string>).detail
+      // 'school' is the first section, 'all' the three that are needed, 'extras' the optional ones too
+      const extras = what === 'extras'
+      const all = what === 'all' || extras
+      const p =viewNow.current === 'simple' ? ALUM_PERSONA : STUDENT_PERSONA
       const sc = getSchool(p.schoolIds[0])
       setEmail((v) => (schoolForEmail(v) ? v : `${p.name.split(' ')[0].toLowerCase()}@${sc.domains[0]}`))
       setAlumPath(false)
@@ -145,7 +148,10 @@ export default function Onboarding() {
           ? m.degrees.map((d) => (d.schoolId === sc.id && !d.major ? { ...d, major: p.major, gradYear: p.gradYear } : d))
           : [{ schoolId: sc.id, level: 'Bachelor’s', major: p.major, gradYear: p.gradYear }],
         ...(all && !m.title?.trim() ? { title: p.title, company: p.company, industry: p.industry } : {}),
+        // "what you're here for" needs two in each list, so a short list borrows from the other sample member
+        ...(extras ? { asks: [...new Set([...p.asks, ...STUDENT_PERSONA.asks])].slice(0, Math.max(2, p.asks.length)), offers: [...new Set([...p.offers, ...ALUM_PERSONA.offers])].slice(0, Math.max(2, p.offers.length)), interests: p.interests ?? [], prompts: p.prompts } : {}),
       }))
+      if (extras) setPrefs((x) => (x.industries.length ? x : { ...x, industries: [p.industry] }))
       if (all) {
         const ids = suggestKnown({ me: p, schoolId: sc.id, blocked: [], connections: [] }).slice(0, 2).map((x) => x.user.id)
         setKnown((k) => (k.length ? k : ids))
@@ -314,7 +320,7 @@ export default function Onboarding() {
           <div className="divide-y divide-sage-200 rounded-2xl bg-white ring-1 ring-sage-200" data-tour="signup-needed">{needed.map(rowFor)}</div>
 
           <h2 className="mb-1.5 mt-5 text-xs font-semibold uppercase tracking-wide text-ink/50">Optional</h2>
-          <div className="divide-y divide-sage-200 rounded-2xl bg-white ring-1 ring-sage-200">{SECTIONS.filter((x) => !x.needed).map(rowFor)}</div>
+          <div className="divide-y divide-sage-200 rounded-2xl bg-white ring-1 ring-sage-200" data-tour="signup-optional">{SECTIONS.filter((x) => !x.needed).map(rowFor)}</div>
 
           <button onClick={() => setStage('choose')} className="mt-5 flex w-full items-center gap-3 rounded-2xl bg-sage-100 px-3.5 py-3 text-left">
             {view === 'simple' ? <HeartHandshake size={18} className="shrink-0 text-vine-700" /> : <Sprout size={18} className="shrink-0 text-vine-700" />}
