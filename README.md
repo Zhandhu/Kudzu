@@ -12,7 +12,7 @@ This repository is a **clickable demo** of the full product vision. Every screen
 
 ## Run it
 
-You need [Node.js](https://nodejs.org) 20 or newer.
+You need [Node.js](https://nodejs.org) 20 or newer. Nothing else: there is no backend, database or API key. `requirements.txt` lists the packages `npm install` brings in, and what the app loads from the web while running (fonts and map tiles).
 
 ```bash
 npm install
