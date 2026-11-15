@@ -166,8 +166,11 @@ const FILTERS = ['Networking', 'Social', 'Industry', 'Virtual', 'This week'] as 
 export default function Events() {
   const s = useKudzu()
   const now = useNow()
-  const [params] = useSearchParams()
-  const [half, setHalf] = useState<'events' | 'groups'>(params.get('half') === 'groups' ? 'groups' : 'events')
+  const [params, setParams] = useSearchParams()
+  // Which half is showing is kept in the address, so coming back from a group or an event
+  // returns to the half you left, and tapping the tab again starts on Events.
+  const half: 'events' | 'groups' = params.get('half') === 'groups' ? 'groups' : 'events'
+  const setHalf = (v: 'events' | 'groups') => setParams(v === 'groups' ? { half: 'groups' } : {}, { replace: true })
   // events open on the ones that suit you; the chip turns that off to see everything
   const [forYou, setForYou] = useState(true)
   // posts from the school that have not been read: shown on the Groups half, where they live
