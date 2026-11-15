@@ -238,7 +238,7 @@ export default function Find() {
             <Button className="mt-2 w-full !py-2" onClick={() => { s.set({ quietCleared: s.quietCleared + 2 }); s.say('You’re taking requests again') }}>I’m back</Button>
           </div>
         )}
-        {s.paused && <div className="mx-1 mb-3 rounded-2xl bg-sage-100 p-3 text-center text-[13px] font-medium text-ink/70">Your account is paused, so nobody can find you or send you requests, and people who write are told you’re away. Turn it off in your profile when you’re back.</div>}
+        {s.paused && <div className="mx-1 mb-3 rounded-2xl bg-sage-100 p-3 text-center text-[13px] font-medium text-ink/70">Your account is paused, so nobody can find you or send you requests.</div>}
 
         {empty ? (
           <div className="px-1">
