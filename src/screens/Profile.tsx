@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Bell, BookOpen, CalendarCheck, ChevronRight, Eye, HeartHandshake, Hourglass, Lock, LogOut, MapPin, PauseCircle, Pencil, SlidersHorizontal } from 'lucide-react'
+import { Bell, BookOpen, CalendarCheck, ChevronRight, Eye, HeartHandshake, Hourglass, Lock, LogOut, MapPin, PauseCircle, Pencil, SlidersHorizontal, Sprout } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { User } from '../types'
 import { openEvent, useKudzu, useNow } from '../store/useKudzu'
@@ -91,6 +91,28 @@ export default function Profile() {
       {accountStanding(s) === 'warning' && <div className="mx-4 mt-5"><AccountNotice /></div>}
       {s.paused && <div className="mx-4 mt-4 rounded-2xl bg-sage-100 p-3 text-center text-sm font-medium text-ink/70">Your profile is paused. Nobody new can see you.</div>}
 
+      {/* The two apps: one for growing a network, one for keeping it. This decides what the whole
+          app is, so it has its own section straight under the profile, in its own colour. */}
+      <section className="mx-4 mt-5 rounded-2xl bg-vine-100 p-4 ring-1 ring-vine-300" data-tour="app-style">
+        <h2 className="font-display text-lg font-semibold leading-tight text-vine-900">What you want from Kudzu</h2>
+        <p className="mt-0.5 text-xs text-vine-800/80">This changes what the whole app looks like. Switch whenever you like.</p>
+        <div className="mt-3 grid grid-cols-2 gap-2" role="group" aria-label="App style">
+          {([['full', Sprout, 'Grow my network', 'Find, events and the map'], ['simple', HeartHandshake, 'Keep in touch', 'One simple home screen']] as const).map(([id, Icon, label, sub]) => (
+            <button key={id} onClick={() => { if (s.experience !== id) { s.set({ experience: id, tourOffered: true }); s.say(id === 'simple' ? 'Switched to the simple app' : 'Switched to the full app') } }} aria-pressed={s.experience === id} className={`rounded-xl border-2 px-3 py-2.5 text-left ${s.experience === id ? 'border-vine-700 bg-white' : 'border-transparent bg-white/55'}`}>
+              <Icon size={18} className={s.experience === id ? 'text-vine-700' : 'text-ink/45'} />
+              <span className="mt-1 block text-[13px] font-semibold">{label}</span>
+              <span className="block text-xs text-ink/55">{sub}</span>
+            </button>
+          ))}
+        </div>
+        {simple && (
+          <div className="mt-3 flex items-center gap-3 rounded-xl bg-white/70 px-3 py-2.5">
+            <span className="flex-1 text-[13px]"><span className="block font-medium">Show people I could help</span><span className="block text-xs text-ink/50">Students and recent graduates looking for what you offer</span></span>
+            <Toggle on={s.openToHelp} onChange={(openToHelp) => s.set({ openToHelp })} label="Show people I could help" />
+          </div>
+        )}
+      </section>
+
       <section className="mx-4 mt-5 rounded-2xl bg-white p-4 ring-1 ring-sage-200">
         <div className="flex items-center justify-between">
           <div>
@@ -176,24 +198,6 @@ export default function Profile() {
 
       <section className="mx-4 mt-6">
         <h2 className="mb-2 text-sm font-semibold">Settings</h2>
-        {/* the two apps: one for growing a network, one for keeping it */}
-        <div className="mb-3 rounded-2xl bg-white p-3.5 ring-1 ring-sage-200">
-          <div className="text-sm font-semibold">What you want from Kudzu</div>
-          <div className="mt-2 grid grid-cols-2 gap-2" role="group" aria-label="App style">
-            {([['full', 'Grow my network', 'Find, events and the map'], ['simple', 'Keep in touch', 'One simple home screen']] as const).map(([id, label, sub]) => (
-              <button key={id} onClick={() => { if (s.experience !== id) { s.set({ experience: id, tourOffered: true }); s.say(id === 'simple' ? 'Switched to the simple app' : 'Switched to the full app') } }} aria-pressed={s.experience === id} className={`rounded-xl border px-3 py-2.5 text-left ${s.experience === id ? 'border-vine-700 bg-vine-50' : 'border-sage-200'}`}>
-                <span className="block text-[13px] font-semibold">{label}</span>
-                <span className="block text-xs text-ink/55">{sub}</span>
-              </button>
-            ))}
-          </div>
-          {simple && (
-            <div className="mt-3 flex items-center gap-3">
-              <span className="flex-1 text-[13px]"><span className="block font-medium">Show people I could help</span><span className="block text-xs text-ink/50">Students and recent graduates looking for what you offer</span></span>
-              <Toggle on={s.openToHelp} onChange={(openToHelp) => s.set({ openToHelp })} label="Show people I could help" />
-            </div>
-          )}
-        </div>
         <div className="divide-y divide-sage-200 rounded-2xl bg-white text-sm ring-1 ring-sage-200">
           {!simple && <button onClick={() => setPrefsOpen(true)} className={`${row} w-full text-left`}><SlidersHorizontal size={18} className="text-vine-600" /><span className="flex-1 font-medium">Who you want to find</span><ChevronRight size={18} className="text-ink/30" /></button>}
           <div className={row}><CalendarCheck size={18} className="text-vine-600" /><span className="flex-1"><span className="font-medium">Calendar</span><span className="block text-xs text-ink/50">{s.calendarConnected ? 'Linked. Coffee chats suggest times you’re free' : 'Link it to find times that work for both of you'}</span></span><Toggle on={s.calendarConnected} onChange={(calendarConnected) => s.set({ calendarConnected })} label="Calendar" /></div>
