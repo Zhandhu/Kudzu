@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
-import { CalendarDays, Lock, MapPin, Plus, Users, Video } from 'lucide-react'
+import { CalendarDays, Lock, MapPin, MessagesSquare, Plus, Users, Video, X } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import type { EventType, Group, KEvent } from '../types'
 import { openEvent, useKudzu, useNow } from '../store/useKudzu'
-import { eventGuests, getUser, groupMembers, isForYou, schoolEvents } from '../services'
+import { eventChatMessages, eventGuests, getUser, groupMembers, isForYou, openEventChats, schoolEvents } from '../services'
 import { CITIES, CITY_NAMES, DAY, coordsFor, fmtDateTime, uid } from '../lib/util'
 import { Avatar, Button, Chip, EmptyState, Field, SchoolChip, Sheet, Toggle, inputCls } from '../components/ui'
 
@@ -167,6 +168,8 @@ export default function Events() {
   const [active, setActive] = useState<string[]>([])
   const [hosting, setHosting] = useState(false)
   const [creating, setCreating] = useState(false)
+  const [chatsOpen, setChatsOpen] = useState(false)
+  const chats = openEventChats(s, now)
 
   const events = useMemo(
     () => schoolEvents(s, now),
@@ -182,7 +185,7 @@ export default function Events() {
   const groups = s.groups.filter((g) => g.schoolId === s.schoolId)
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="relative flex h-full flex-col">
       <header className="px-4 pt-4">
         <div className="flex items-center justify-between">
           <h1 className="font-display text-2xl font-semibold">Events</h1>
@@ -222,6 +225,45 @@ export default function Events() {
             ) : shown.map((e) => <EventCard key={e.id} e={e} />)}
           </div>
         </>
+      )}
+
+      {/* Event chats: a bubble in the corner that opens to the chats for events you are going to.
+          They belong to their events, so they are gathered here and not among your conversations. */}
+      {chats.length > 0 && (
+        <div className="absolute bottom-3 right-3 z-20 flex flex-col items-end gap-2">
+          <AnimatePresence>
+            {chatsOpen && (
+              <motion.div initial={{ opacity: 0, y: 12, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 12, scale: 0.95 }} transition={{ duration: 0.18 }} className="w-[300px] origin-bottom-right rounded-3xl bg-cream p-3 shadow-2xl ring-1 ring-sage-200" role="dialog" aria-label="Your event chats">
+                <div className="flex items-center justify-between px-1 pb-2">
+                  <h2 className="text-sm font-semibold">Your event chats</h2>
+                  <button onClick={() => setChatsOpen(false)} className="rounded-full p-1 text-ink/45 hover:bg-sage-100" aria-label="Close event chats"><X size={16} /></button>
+                </div>
+                <div className="space-y-2">
+                  {chats.map((e) => {
+                    const msgs = eventChatMessages(s, e, now)
+                    const last = msgs[msgs.length - 1]
+                    const who = last ? (last.from === 'me' ? 'You' : (getUser(last.from)?.name ?? '').split(' ')[0]) : ''
+                    return (
+                      <Link key={e.id} to={`/event-chat/${e.id}`} className="flex items-center gap-3 rounded-2xl bg-vine-50 p-2.5 ring-1 ring-vine-200">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-vine-700 text-cream"><MessagesSquare size={18} /></span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-semibold">{e.title}</span>
+                          <span className="block truncate text-[13px] text-ink/60">{last ? `${who}: ${last.text}` : 'Say hello to everyone going'}</span>
+                          <span className="block text-[11px] text-vine-700">{eventGuests(e, s.me).length} going · {fmtDateTime(e.start)}</span>
+                        </span>
+                      </Link>
+                    )
+                  })}
+                </div>
+                <p className="px-1 pt-2 text-[11px] leading-snug text-ink/45">Each opens three days before its event and closes a week after.</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <button onClick={() => setChatsOpen(!chatsOpen)} data-tour="event-chats" aria-expanded={chatsOpen} aria-label={`Event chats, ${chats.length} open`} className="relative flex h-12 w-12 items-center justify-center rounded-full bg-vine-700 text-cream shadow-lg">
+            <MessagesSquare size={21} />
+            <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-coffee-500 px-1 text-[10px] font-bold text-white ring-2 ring-cream">{chats.length}</span>
+          </button>
+        </div>
       )}
 
       <HostSheet open={hosting} onClose={() => setHosting(false)} />
