@@ -195,7 +195,9 @@ const clusterIcon = (levels: Strength[], count: number, selected: boolean, offse
   L.divIcon({
     className: 'leaflet-div-icon-clear',
     iconSize: [56, 46],
-    iconAnchor: offset ? [4, 50] : [28, 36],
+    // In your own city the bundle grows straight up out of the root that marks you, so it sits
+    // on the city itself and not off to one side.
+    iconAnchor: offset ? [28, 46] : [28, 36],
     html: `<div class="leaf-pin" data-tour="bundle" style="position:relative;width:56px;height:46px;${selected ? 'transform:scale(1.15)' : ''}">
       ${levels.slice(0, 3).map((l, i) => `<div style="position:absolute;left:${[4, 22, 13][i]}px;top:${[10, 10, 0][i]}px;transform:rotate(${[-28, 28, 0][i]}deg)">${renderToStaticMarkup(<LeafIcon level={l} size={30} />)}</div>`).join('')}
       <div style="position:absolute;right:0;bottom:0;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#1f2a1f;color:#faf6ee;font:700 11px Inter,sans-serif;display:flex;align-items:center;justify-content:center;border:2px solid #faf6ee">${count}</div>
@@ -439,7 +441,8 @@ export default function NetworkMap({ me, people, onSelection }: { me: User; peop
               ),
             )}
 
-        <Marker position={origin} icon={rootIcon} zIndexOffset={1000} interactive={false} />
+        {/* drawn beneath the leaves, so the bundle for your own city sits on top of it */}
+        <Marker position={origin} icon={rootIcon} zIndexOffset={-1000} interactive={false} />
 
         {selPeople.length > 0 && (
           <div
