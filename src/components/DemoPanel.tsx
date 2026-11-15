@@ -91,7 +91,7 @@ export default function DemoPanel() {
 
         <div className={item}>
           <AlertTriangle size={19} className="text-amber-600" />
-          <span className="flex-1">Show account-warning notice<span className={sub}>Appears on Find and Profile.</span></span>
+          <span className="flex-1">Show account-warning notice<span className={sub}>Appears on Find (or Home in Keep in touch) and Profile.</span></span>
           <Toggle on={s.showWarning} onChange={(showWarning) => s.set({ showWarning })} label="Show account warning" />
         </div>
 

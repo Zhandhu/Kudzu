@@ -147,7 +147,7 @@ export default function Find() {
   const around = lookAround(s.me, s.prefs)
 
   // nothing asked for and nothing to announce: the page holds still
-  const still = empty && !ask && accountStanding(s) !== 'warning' && !quietPaused(s, now) && !s.paused
+  const still = empty && !ask && accountStanding(s) !== 'warning' && !quietPaused(s, now) && !s.paused && !s.settings.privateMode
 
   const leaf = (f: Found, i: number) => (
     <PersonLeaf key={f.user.id} f={f} index={i} requested={isRequested(f.user.id)} degree={f.connected && !awaitingConfirm(s, f.user.id) ? 1 : mutualConnections(s, f.user).length ? 2 : 3} onPick={() => setPicked(f.user.id)} />
@@ -239,6 +239,7 @@ export default function Find() {
           </div>
         )}
         {s.paused && <div className="mx-1 mb-3 rounded-2xl bg-sage-100 p-3 text-center text-[13px] font-medium text-ink/70">Your account is paused, so nobody can find you or send you requests.</div>}
+        {!s.paused && s.settings.privateMode && <div className="mx-1 mb-3 rounded-2xl bg-sage-100 p-3 text-center text-[13px] font-medium text-ink/70">You’re private. Only your connections can see you.</div>}
 
         {empty ? (
           <div className="px-1">

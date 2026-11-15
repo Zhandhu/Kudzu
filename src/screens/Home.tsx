@@ -4,12 +4,13 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
 import { STRENGTH_META, topicLabel } from '../config/brand'
 import { useKudzu, useNow } from '../store/useKudzu'
-import { EMPTY_QUERY, answerRequest, computeNudges, findPeople, getUser, incomingRequests, strengthOf, webConnections } from '../services'
+import { EMPTY_QUERY, accountStanding, answerRequest, computeNudges, findPeople, getUser, incomingRequests, quietPaused, strengthOf, webConnections } from '../services'
 import { firstName } from '../lib/util'
 import { LeafIcon, Logo } from '../components/brand'
 import { AwaitingTag, KnownAsks } from '../components/KnownAsks'
 import { DefaultGroupCard } from '../components/DefaultGroupCard'
-import { Face, SchoolChip, Toggle, inputCls } from '../components/ui'
+import { Button, Face, SchoolChip, Toggle, inputCls } from '../components/ui'
+import { AccountNotice } from '../components/AccountNotice'
 import { roleLine } from '../components/ProfileView'
 import { ProfilePopup } from '../components/ProfilePopup'
 import { CatchUpSheet } from '../components/CatchUpSheet'
@@ -73,6 +74,18 @@ export default function Home() {
         <p className="mt-0.5 text-[15px] text-ink/60">
           {people.length} {people.length === 1 ? 'person' : 'people'} in your network. <Link to="/network" className="font-semibold text-vine-700 underline underline-offset-4">See them on the map</Link>
         </p>
+
+        {/* The same notices the main app shows on Find: this app has no Find, so they sit here. */}
+        {accountStanding(s) === "warning" && <div className="mt-4"><AccountNotice compact /></div>}
+        {quietPaused(s, now) && (
+          <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-3.5 text-[13px] leading-relaxed text-amber-900" data-tour="home-quiet">
+            <div className="font-semibold">You’re paused for new requests</div>
+            A couple of requests to you went unanswered, so we stopped sending new ones to save people a wait. Nothing else has changed.
+            <Button className="mt-2 w-full !py-2" onClick={() => { s.set({ quietCleared: s.quietCleared + 2 }); s.say("You’re taking requests again") }}>I’m back</Button>
+          </div>
+        )}
+        {s.paused && <div className="mt-4 rounded-2xl bg-sage-100 p-3 text-center text-[13px] font-medium text-ink/70" data-tour="home-paused">Your account is paused, so nobody can find you or send you requests.</div>}
+        {!s.paused && s.settings.privateMode && <div className="mt-4 rounded-2xl bg-sage-100 p-3 text-center text-[13px] font-medium text-ink/70" data-tour="home-private">You’re private. Only your connections can see you.</div>}
 
         {/* Two buttons side by side. Each opens its list below the pair, and closes again,
             so the people you know are on screen as soon as the app opens. */}
