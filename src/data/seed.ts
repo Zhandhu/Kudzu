@@ -173,6 +173,10 @@ export function seedConnections(now: number): Connection[] {
   return [
     // matched but not yet met: these are not in the web until there is a real exchange
     c('g24', '', ix('matched', 3)),
+    // more people who said yes and have not been written to yet, so Say hello has a few faces in it
+    c('g20', '', ix('matched', 1)),
+    c('g9', '', ix('matched', 2)),
+    c('g16', '', ix('matched', 6)),
     c('g11', '', ix('matched', 25), ix('messaged', 22), ix('messaged', 20)),
 
     // strong (the labels here are what the closeness score works out to on day one)
@@ -219,6 +223,9 @@ export function seedConversations(now: number): Conversation[] {
   return [
     // 1. brand-new match, nothing said yet
     conv('g24', false),
+    conv('g20', false),
+    conv('g9', false),
+    conv('g16', false),
     // 2. active chat
     conv('g5', true,
       t('me', 30, 'Hi Devon! I’m an IE junior trying to decide between consulting and product. Would love to hear how you thought about it.'),

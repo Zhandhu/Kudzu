@@ -63,7 +63,8 @@ export const STRENGTH_META: Record<Strength, { label: string; color: string; hin
   fading: { label: 'Fading', color: '#c9a227', hint: 'Could use a hello' },
   // A tie that has been quiet for a long time is resting, not lost: old friends are among
   // the most valuable to hear from again. So it is drawn as a bud, in a calm colour.
-  dormant: { label: 'Resting', color: '#7b8b99', hint: 'Ready to pick up again' },
+  // a warm brown, like a bud in winter: it carries on from the brown flecks of fading, and is lighter than the coffee brown of badges
+  dormant: { label: 'Resting', color: '#a5866b', hint: 'Ready to pick up again' },
 }
 
 export const STRENGTH_ORDER: Strength[] = ['strong', 'steady', 'fading', 'dormant']

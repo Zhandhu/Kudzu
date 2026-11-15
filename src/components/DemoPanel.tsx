@@ -13,7 +13,7 @@ export default function DemoPanel() {
 
   const triggerRequest = () => {
     close()
-    if (receiveRequest(s, nowOf(s))) nav('/find')
+    if (receiveRequest(s, nowOf(s))) nav(s.experience === 'simple' ? '/home' : '/messages')
     else s.say('Nobody left who could send you a request.')
   }
 
@@ -49,7 +49,7 @@ export default function DemoPanel() {
 
         <button className={item} onClick={triggerRequest}>
           <TendrilIcon size={20} color="#8b5e3c" />
-          <span className="flex-1">Receive a request<span className={sub}>Someone asks you for a chat. It appears under the tendril on Find.</span></span>
+          <span className="flex-1">Receive a request<span className={sub}>Someone asks you for a chat. It appears under Requests at the top of Messages.</span></span>
         </button>
 
         <button

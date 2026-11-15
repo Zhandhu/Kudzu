@@ -1,22 +1,21 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronRight, Plus, Search, X } from 'lucide-react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Plus, Search, X } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import type { Level, Request, User } from '../types'
+import type { Level, User } from '../types'
 import { INDUSTRIES, MODE_META, TOPICS, topicLabel } from '../config/brand'
 import { useKudzu, useNow } from '../store/useKudzu'
 import {
-  EMPTY_QUERY, LEVELS, REQUEST_LIMIT, accountStanding, answerRequest, daysLeft, findPeople, getUser, incomingRequests, isEmptyQuery,
-  levelLabel, levelOf, lookAround, mutualConnections, needsFor, outgoingRequests, quietPaused, requestState,
+  EMPTY_QUERY, LEVELS, accountStanding, findPeople, isEmptyQuery,
+  levelLabel, levelOf, lookAround, mutualConnections, needsFor, quietPaused, 
   requestTo, spotsLeft, suggestFor, suggestForText, type Found, type Query,
   awaitingConfirm,
 } from '../services'
-import { CITY_NAMES, ago, firstName } from '../lib/util'
+import { CITY_NAMES } from '../lib/util'
 import { Logo, TendrilIcon } from '../components/brand'
-import { Avatar, Button, Chip, EmptyState, SchoolChip, Sheet, faceFor, inputCls } from '../components/ui'
+import { Button, Chip, EmptyState, SchoolChip, Sheet, faceFor, inputCls } from '../components/ui'
 import { roleLine } from '../components/ProfileView'
 import { AccountNotice } from '../components/AccountNotice'
-import { LeafSprig, type LeafItem } from '../components/NetworkLeaves'
 import { ProfilePopup } from '../components/ProfilePopup'
 
 type GroupBy = 'city' | 'industry' | 'level'
@@ -69,77 +68,6 @@ function PersonLeaf({ f, index, requested, degree, onPick }: { f: Found; index: 
   )
 }
 
-function RequestsSheet({ open, onClose, incoming, outgoing }: { open: boolean; onClose: () => void; incoming: Request[]; outgoing: Request[] }) {
-  const s = useKudzu()
-  const now = useNow()
-  const nav = useNavigate()
-  return (
-    <Sheet open={open} onClose={onClose} title="Requests">
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink/50">Asked of you · {incoming.length}</h3>
-      {incoming.length === 0 && <p className="mb-4 rounded-2xl border border-dashed border-sage-300 p-4 text-center text-sm text-ink/55">Nobody is waiting on you.</p>}
-      <div className="space-y-3">
-        {incoming.map((r) => {
-          const u = getUser(r.fromId)
-          if (!u) return null
-          return (
-            <div key={r.id} className="rounded-2xl bg-white p-3.5 ring-1 ring-sage-200">
-              <Link to={`/u/${u.id}`} className="flex items-center gap-3">
-                <Avatar user={u} size={42} />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-semibold">{u.name}</span>
-                  <span className="block truncate text-xs text-ink/55">{roleLine(u)}</span>
-                </span>
-                <span className="shrink-0 text-[11px] text-ink/45">{requestState(r, now) === "expired" ? `Waiting ${Math.round((now - r.at) / 86400000)} days` : `${daysLeft(r, now)}d left`}</span>
-              </Link>
-              {r.topic && <div className="mt-2.5"><Chip small tone="coffee">{topicLabel(r.topic)}</Chip></div>}
-              <p className="mt-2 text-[14px] leading-snug text-ink/80">“{r.note}”</p>
-              <div className="mt-3 grid grid-cols-3 gap-2">
-                <button onClick={() => { answerRequest(r.id, 'accept'); onClose(); nav(`/messages/${u.id}`) }} className="rounded-full bg-vine-700 py-2 text-xs font-semibold text-cream">Accept</button>
-                <button onClick={() => { answerRequest(r.id, 'later'); onClose(); nav(`/messages/${u.id}`) }} className="rounded-full border border-vine-700 py-2 text-xs font-semibold text-vine-700">Later on</button>
-                <button onClick={() => answerRequest(r.id, 'decline')} className="rounded-full border border-coffee-200 bg-coffee-100 py-2 text-xs font-semibold text-coffee-700">Not right now</button>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-      {incoming.length > 0 && <p className="mt-2 text-center text-[11px] text-ink/45">Every answer is one tap. “Not right now” sends a kind note for you and never needs a reason.</p>}
-
-      <h3 className="mb-2 mt-6 text-xs font-semibold uppercase tracking-wide text-ink/50">Waiting on · {outgoing.filter((r) => requestState(r, now) === 'pending').length} of {REQUEST_LIMIT}</h3>
-      {outgoing.length === 0 && <p className="rounded-2xl border border-dashed border-sage-300 p-4 text-center text-sm text-ink/55">You have no requests out. Find someone and ask.</p>}
-      <div className="space-y-2">
-        {outgoing.map((r) => {
-          const u = getUser(r.toId)
-          if (!u) return null
-          const lapsed = requestState(r, now) === 'expired'
-          return (
-            <div key={r.id} className={`rounded-2xl p-3 ring-1 ${lapsed ? 'bg-coffee-100/60 ring-coffee-200' : 'bg-white ring-sage-200'}`}>
-              <div className="flex items-center gap-3">
-                <TendrilIcon size={22} color={lapsed ? '#8b5e3c' : '#356433'} />
-                <Link to={`/u/${u.id}`} className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-semibold">{u.name}</span>
-                  <span className="block truncate text-xs text-ink/55">
-                    {lapsed ? `${firstName(u.name)} hasn’t answered yet. If they do, it still counts` : `Sent ${ago(r.at, now)} · ${daysLeft(r, now)} days left`}
-                    {r.topic ? ` · ${topicLabel(r.topic)}` : ''}
-                  </span>
-                </Link>
-                <button onClick={() => s.dismissRequest(r.id)} className="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold text-ink/50 hover:bg-sage-100">{lapsed ? 'Clear' : 'Withdraw'}</button>
-              </div>
-              {lapsed && (
-                <button
-                  onClick={() => { onClose(); nav(r.topic ? `/find?topic=${r.topic}` : "/find") }}
-                  className="mt-2.5 flex w-full items-center justify-center gap-1 rounded-full bg-coffee-500 py-2 text-xs font-semibold text-cream"
-                >
-                  See who else can help{r.topic ? ` with ${topicLabel(r.topic).toLowerCase()}` : ''} <ChevronRight size={14} />
-                </button>
-              )}
-            </div>
-          )
-        })}
-      </div>
-    </Sheet>
-  )
-}
-
 export default function Find() {
   const s = useKudzu()
   const now = useNow()
@@ -149,7 +77,6 @@ export default function Find() {
   const [groupChoice, setGroupBy] = useState<GroupBy>('city')
   const [picked, setPicked] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
-  const [sheet, setSheet] = useState<'requests' | null>(null)
   // nothing is shown until you say what you are looking for: a topic, or your own words
   // both live in the link, so coming back from a profile shows the same people again
   const OTHER = 'other'
@@ -172,9 +99,6 @@ export default function Find() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [s.me, s.prefs, s.schoolId, s.connections, s.blocked, s.feedback, s.groups, q],
   )
-  const incoming = incomingRequests(s, now)
-  const outgoing = outgoingRequests(s, now)
-  const lapsed = outgoing.filter((r) => requestState(r, now) === 'expired').length
   const isRequested = (id: string) => !!requestTo(s, id, now)
   const suggested: (Found & { via?: User; matched?: string[] })[] = useMemo(
     () => (!ask ? [] : ask === OTHER ? suggestForText(s, needSent) : suggestFor(s, ask)),
@@ -216,9 +140,6 @@ export default function Find() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [results, groupBy])
 
-  const sprig: LeafItem[] = [
-    { key: 'requests', label: 'Requests', count: incoming.length + lapsed, onClick: () => setSheet('requests') },
-  ]
 
   // The front door fills itself in from what is known about you, so it never opens on
   // one lonely option. What you said you want comes first; the rest suits your stage.
@@ -400,7 +321,6 @@ export default function Find() {
         )}
       </div>
 
-      <LeafSprig items={sprig} />
       {/* one tap on anyone opens their whole profile, floating over the search */}
       <ProfilePopup userId={picked} onClose={() => setPicked(null)} />
 
@@ -426,7 +346,6 @@ export default function Find() {
         </div>
       </Sheet>
 
-      <RequestsSheet open={sheet === 'requests'} onClose={() => setSheet(null)} incoming={incoming} outgoing={outgoing} />
     </div>
   )
 }

@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { CalendarDays, House, Map as MapIcon, MessageCircle, Search, Sprout, UserRound, Wrench } from 'lucide-react'
-import { useKudzu } from './store/useKudzu'
+import { nowOf, useKudzu } from './store/useKudzu'
 import { OverlayContext, Toast } from './components/ui'
 import { APP_NAME, TAGLINE } from './config/brand'
-import { inSchool } from './services'
+import { inSchool, incomingRequests } from './services'
 import Find from './screens/Find'
 import Home from './screens/Home'
 import Messages from './screens/Messages'
@@ -28,27 +28,28 @@ import CheckInSheet from './components/CheckInSheet'
 import DemoPanel from './components/DemoPanel'
 
 const TABS = [
-  { to: '/find', label: 'Find', icon: Search },
-  { to: '/events', label: 'Events', icon: CalendarDays },
-  { to: '/network', label: 'Network', icon: Sprout },
-  { to: '/messages', label: 'Messages', icon: MessageCircle },
-  { to: '/profile', label: 'Profile', icon: UserRound },
+  { to: '/find', label: 'Find', icon: Search, tour: 'find' },
+  { to: '/events', label: 'Events', icon: CalendarDays, tour: 'events' },
+  { to: '/network', label: 'Network', icon: Sprout, tour: 'network' },
+  { to: '/messages', label: 'Messages', icon: MessageCircle, tour: 'messages' },
+  { to: '/profile', label: 'Profile', icon: UserRound, tour: 'profile' },
 ]
 
 /** The simple app keeps four tabs: the people you know, where they are, your messages, and you. */
 const SIMPLE_TABS = [
-  { to: '/home', label: 'Home', icon: House },
-  { to: '/network', label: 'Map', icon: MapIcon },
-  { to: '/messages', label: 'Messages', icon: MessageCircle },
-  { to: '/profile', label: 'Profile', icon: UserRound },
+  { to: '/home', label: 'Home', icon: House, tour: 'home' },
+  { to: '/network', label: 'Map', icon: MapIcon, tour: 'map' },
+  { to: '/messages', label: 'Messages', icon: MessageCircle, tour: 'messages' },
+  { to: '/profile', label: 'Profile', icon: UserRound, tour: 'profile' },
 ]
 
 function TabBar({ tabs }: { tabs: typeof TABS }) {
-  const unread = useKudzu((s) => s.conversations.filter((c) => c.unread && inSchool(c.otherId, s.schoolId) && !s.blocked.includes(c.otherId)).length)
+  // unread conversations, plus requests waiting on you, which now live on this tab in the full app
+  const unread = useKudzu((s) => s.conversations.filter((c) => c.unread && inSchool(c.otherId, s.schoolId) && !s.blocked.includes(c.otherId)).length + (s.experience === 'simple' ? 0 : incomingRequests(s, nowOf(s)).length))
   return (
     <nav className="flex shrink-0 border-t border-sage-200 bg-cream pb-[max(env(safe-area-inset-bottom),6px)] pt-1.5">
-      {tabs.map(({ to, label, icon: Icon }) => (
-        <NavLink key={to} to={to} data-tour={`tab-${label.toLowerCase()}`} className={({ isActive }) => `relative flex flex-1 flex-col items-center gap-0.5 py-1 ${tabs.length < 5 ? 'text-[12.5px]' : 'text-[10.5px]'} font-semibold ${isActive ? 'text-vine-700' : 'text-ink/40'}`}>
+      {tabs.map(({ to, label, icon: Icon, tour }) => (
+        <NavLink key={to} to={to} data-tour={`tab-${tour}`} className={({ isActive }) => `relative flex flex-1 flex-col items-center gap-0.5 py-1 ${tabs.length < 5 ? 'text-[12.5px]' : 'text-[10.5px]'} font-semibold ${isActive ? 'text-vine-700' : 'text-ink/40'}`}>
           {({ isActive }) => (
             <>
               <Icon size={22} strokeWidth={isActive ? 2.4 : 1.9} />

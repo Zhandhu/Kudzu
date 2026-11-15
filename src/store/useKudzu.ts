@@ -510,7 +510,7 @@ export const useKudzu = create<KudzuState>()(
     }),
     {
       // bump this when the saved shape changes, so old browsers start from fresh seed data
-      name: 'kudzu-demo-v11',
+      name: 'kudzu-demo-v12',
       partialize: (s) => {
         const { checkin, toast, demoOpen, typing, eventOpen, push, openNews, tour, ...rest } = s
         void checkin, toast, demoOpen, typing, eventOpen, push, openNews, tour

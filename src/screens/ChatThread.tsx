@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
-import { CalendarCheck, Check, ChevronLeft, Coffee, HeartHandshake, MapPin, Send, Video, X } from 'lucide-react'
+import { CalendarCheck, Check, ChevronLeft, Coffee, HeartHandshake, MapPin, Send, Video } from 'lucide-react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import type { Message, Mode, User } from '../types'
 import { useKudzu, useNow } from '../store/useKudzu'
@@ -108,16 +107,12 @@ export default function ChatThread() {
   const { ensureConversation, markRead } = useKudzu.getState()
   const [text, setText] = useState(params.get('draft') ?? '')
   // A coffee button elsewhere brings you here to talk. Proposing a chat stays your choice:
-  // the sheet never opens by itself. A bubble points at the button the first time,
-  // and again whenever you arrive from a coffee button.
+  // the sheet never opens by itself, and nothing pops up to suggest it.
   const [proposing, setProposing] = useState(false)
   // set while answering their proposal with other times
   const [answering, setAnswering] = useState<string | undefined>()
   const inputRef = useRef<HTMLInputElement>(null)
-  const hintSeen = useKudzu((s) => s.coffeeHintSeen)
-  const [hint, setHint] = useState(!hintSeen || params.get('coffee') === '1')
   const endRef = useRef<HTMLDivElement>(null)
-  const closeHint = () => { setHint(false); useKudzu.getState().set({ coffeeHintSeen: true }) }
 
   useEffect(() => { if (other) ensureConversation(id) }, [id, other, ensureConversation])
   useEffect(() => { if (params.has('draft') || params.has('coffee')) setParams({}, { replace: true }) }, [params, setParams])
@@ -215,20 +210,7 @@ export default function ChatThread() {
       {/* the coffee button sits at the bottom right, just above the message box */}
       <div className={locked ? "hidden" : "relative"}>
         <div className="absolute bottom-3 right-3 z-10 flex items-center gap-2">
-          <AnimatePresence>
-            {hint && (
-              <motion.div
-                initial={{ opacity: 0, x: 10, scale: 0.9 }} animate={{ opacity: 1, x: 0, scale: 1, transition: { delay: 0.4 } }} exit={{ opacity: 0, transition: { duration: 0.12 } }}
-                className="relative flex items-center gap-1.5 rounded-2xl bg-ink py-2 pl-3 pr-1.5 text-[12.5px] font-medium text-cream shadow-lg"
-                role="status"
-              >
-                You can propose a coffee chat
-                <button onClick={closeHint} className="rounded-full p-1 text-cream/70" aria-label="Dismiss tip"><X size={13} /></button>
-                <span className="absolute -right-1 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rotate-45 bg-ink" aria-hidden />
-              </motion.div>
-            )}
-          </AnimatePresence>
-          <button type="button" data-tour="coffee" onClick={() => { closeHint(); setProposing(true) }} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-coffee-500 text-cream shadow-lg" aria-label="Propose a coffee chat"><Coffee size={21} /></button>
+          <button type="button" data-tour="coffee" onClick={() => setProposing(true)} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-coffee-500 text-cream shadow-lg" aria-label="Propose a coffee chat"><Coffee size={21} /></button>
         </div>
       </div>
 
