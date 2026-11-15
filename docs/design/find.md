@@ -275,8 +275,8 @@ A request is drawn as a **tendril**: the curl a vine sends out before it takes h
 
 ### Different from the proposal
 
-- **Requests live on Find,** behind a corner leaf. **Not yet met has moved to Messages,** in the Say hello row at the top: it is the same idea, people you are connected with and have not spoken to or met.
-- **Not yet met is simpler.** Tapping a person opens the chat, where the cup proposes coffee. A brown ring marks someone you have not said anything to yet.
+- **Requests live on Find,** behind a corner leaf. **Not yet met has moved to Messages.** The Say hello row at the top lists only people you are connected with and have not written to. Anyone you have not had a coffee chat with carries a small cup on their picture, in that row and in the conversation list.
+- **Not yet met is simpler.** Tapping a person opens the chat, where the cup proposes coffee. Once anything has been said they leave Say hello and sit in the conversation list.
 - **The Messages tab has no requests section.** An accepted request becomes an ordinary conversation, with the line from the request as its first message.
 
 ### Left out

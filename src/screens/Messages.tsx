@@ -16,6 +16,15 @@ function preview(c: Conversation): string {
   return who + (m.text ?? '')
 }
 
+/** The small cup on someone's picture: you are connected, and have not had a coffee chat yet. */
+function CupMark() {
+  return (
+    <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-coffee-500 text-cream ring-2 ring-cream" title="No coffee chat yet" role="img" aria-label="No coffee chat yet" data-cup>
+      <Coffee size={11} strokeWidth={2.4} />
+    </span>
+  )
+}
+
 export default function Messages() {
   const s = useKudzu()
   const now = useNow()
@@ -27,12 +36,10 @@ export default function Messages() {
   const threads = convs
     .filter((c) => c.messages.length > 0)
     .sort((a, b) => b.messages[b.messages.length - 1].at - a.messages[a.messages.length - 1].at)
-  // Not yet met: everyone connected through a request who has not become part of the network,
-  // whether or not anything has been said. Those with nothing said yet come first.
-  const notMet = [...new Set([...fresh.map((c) => c.otherId), ...pendingConnections(s).map((c) => c.otherId)])]
-    .map((id) => ({ user: getUser(id), quiet: !threads.some((c) => c.otherId === id) }))
-    .filter((x): x is { user: User; quiet: boolean } => !!x.user && !s.blocked.includes(x.user.id))
-    .sort((a, b) => Number(b.quiet) - Number(a.quiet))
+  // Say hello: connected, and nothing said yet. That is all it takes to be listed here.
+  const hello = fresh.map((c) => getUser(c.otherId)).filter((u): u is User => !!u)
+  // A small cup marks anyone you have not had a coffee chat with, here and in the list below.
+  const noCoffee = new Set(pendingConnections(s).map((c) => c.otherId))
   const due = dueCheckins(s)
   const chats = openEventChats(s, now)
 
@@ -81,19 +88,18 @@ export default function Messages() {
         </section>
       )}
 
-      {/* People you are connected with but have not met: the ones to say hello to.
-          A brown ring means nothing has been said yet. They join your network after a first coffee. */}
-      {notMet.length > 0 && (
-        <section className="pb-2" data-tour="not-yet-met">
-          <div className="flex items-baseline gap-2 px-4 pb-0.5">
+      {/* Say hello: people you are connected with and have not written to yet. Once anything
+          has been said they are an ordinary conversation in the list below. */}
+      {hello.length > 0 && (
+        <section className="pb-2" data-tour="say-hello">
+          <div className="flex items-baseline gap-2 px-4 pb-2">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-ink/50">Say hello</h2>
-            <span className="text-xs text-ink/45">{notMet.length} not yet met</span>
+            <span className="text-xs text-ink/45">Connected, and nothing said yet</span>
           </div>
-          <p className="px-4 pb-2 text-xs text-ink/50">Connected, but no coffee yet. They join your network after you first meet.</p>
           <div className="no-scrollbar flex gap-4 overflow-x-auto px-4 pb-2 pt-1">
-            {notMet.map(({ user: u, quiet }) => (
-              <Link key={u.id} to={`/messages/${u.id}`} className="flex w-16 shrink-0 flex-col items-center gap-1" aria-label={`${u.name}, not yet met${quiet ? ', nothing said yet' : ''}`}>
-                <div className={`rounded-full p-0.5 ring-2 ${quiet ? 'ring-coffee-500' : 'ring-sage-300'}`}><Avatar user={u} size={56} /></div>
+            {hello.map((u) => (
+              <Link key={u.id} to={`/messages/${u.id}`} className="flex w-16 shrink-0 flex-col items-center gap-1" aria-label={`Say hello to ${u.name}`}>
+                <span className="relative rounded-full p-0.5 ring-2 ring-coffee-500"><Avatar user={u} size={56} />{noCoffee.has(u.id) && <CupMark />}</span>
                 <span className="w-full truncate text-center text-xs font-medium">{firstName(u.name)}</span>
               </Link>
             ))}
@@ -101,7 +107,7 @@ export default function Messages() {
         </section>
       )}
 
-      {threads.length === 0 && notMet.length === 0 ? (
+      {threads.length === 0 && hello.length === 0 ? (
         <EmptyState title="No conversations yet" body="When someone accepts your request, or you accept theirs, the chat shows up here.">
           <Link to="/find" className="inline-flex items-center gap-2 rounded-full bg-vine-700 px-5 py-3 text-sm font-semibold text-cream"><Coffee size={16} /> Find people</Link>
         </EmptyState>
@@ -114,7 +120,7 @@ export default function Messages() {
             return (
               <li key={c.id}>
                 <Link to={`/messages/${u.id}`} className="flex items-center gap-3 rounded-2xl px-2 py-3 hover:bg-sage-50">
-                  <Avatar user={u} size={52} />
+                  <span className="relative shrink-0"><Avatar user={u} size={52} />{noCoffee.has(u.id) && <CupMark />}</span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline justify-between gap-2">
                       <span className={`truncate ${c.unread ? 'font-bold' : 'font-semibold'}`}>{u.name}</span>
