@@ -150,7 +150,7 @@ const NETWORK: Step[] = [
     body: 'Most of what you do here is with people you already know from school. Tap Network.' },
   { chapter: 'Your network', target: 'map', advance: 'next', route: '/network',
     title: 'Everyone you know, on one map',
-    body: 'Each leaf is someone you know. Green means you’re in close touch. Yellow means it has been a while. A grey bud is resting: not lost, and ready to pick up again.' },
+    body: 'Each leaf is someone you know. Green means you’re in close touch. Yellow means it has been a while. A brown bud is resting: not lost, and ready to pick up again.' },
   { chapter: 'Your network', target: 'bundle', advance: 'tap', route: '/network',
     title: 'Tap a bundle',
     body: 'A bundle is several people in one city. Tap one and the map flies in.' },
@@ -187,20 +187,36 @@ const BACK_TO_NETWORK: Step = { chapter: 'Staying in touch', target: 'back', adv
   title: 'Back to your network',
   body: 'Tap the arrow to go back.' }
 
-const SCHOOL: Step[] = [
-  { chapter: 'From your school', target: 'push', advance: 'tap', before: receiveAnnouncement, route: '/network',
-    title: 'News from alumni services',
-    body: 'A class is thousands of people, which is too many for a group chat. So the school’s alumni services send the occasional announcement instead. One has just arrived. Tap it.' },
-  { chapter: 'From your school', target: 'announcement', advance: 'next', route: '/cohorts/class',
-    title: 'Posted to your class group',
-    body: 'Your class is a group you are in without joining, and this is where the school posts to it. A reunion, a city meet-up, a few times a year. Nobody can reply to everyone. You can say you’re interested, and that is all.' },
-  { chapter: 'From your school', target: 'back', advance: 'tap', route: '/cohorts/class',
-    title: 'Back to your network',
-    body: `Your class and your city are under Groups on the ${TAB_NAME} tab, whenever you want them again. Tap the arrow.` },
+/* Messages: who is waiting on you to write. Two boxes, then the people to say hello to. */
+
+const INBOX: Step[] = [
+  { chapter: 'Who to write to', target: 'tab-messages', advance: 'tap', route: '/network',
+    title: 'Who is waiting on you',
+    body: 'The map shows everyone you know. Messages shows who to write to next. Tap Messages.' },
+  { chapter: 'Who to write to', target: 'msg-boxes', advance: 'next', route: '/messages',
+    title: 'Two short lists',
+    body: 'Requests are people who asked you for a conversation, and the ones you are waiting on. Catch up is people you already know who it is time to write to. Each box names who.' },
 ]
 
+/** The full route opens Catch up to show what a reminder looks like. */
+const INBOX_CATCH_UP: Step[] = [
+  { chapter: 'Who to write to', target: 'catch-up-box', advance: 'tap', route: '/messages',
+    title: 'Open Catch up',
+    body: 'Tap it.' },
+  { chapter: 'Who to write to', target: 'reach-first', advance: 'next', route: '/messages',
+    title: 'A reason, and one button',
+    body: 'Each person comes with why now: a catch-up you planned, some news of theirs, or simply a long silence. One tap opens a message with the first line written for you.' },
+  { chapter: 'Who to write to', target: 'sheet-close', advance: 'tap', route: '/messages',
+    title: 'Close it',
+    body: 'Tap the X.' },
+]
+
+const SAY_HELLO: Step = { chapter: 'Who to write to', target: 'say-hello', advance: 'next', route: '/messages',
+  title: 'People to say hello to',
+  body: 'These people said yes to a request, and nothing has been said yet. The small cup means you have no coffee chat with them so far. It goes once you do.' }
+
 const REACH: Step[] = [
-  { chapter: 'Reaching someone new', target: 'tab-find', advance: 'tap', route: '/network',
+  { chapter: 'Reaching someone new', target: 'tab-find', advance: 'tap', route: '/messages',
     title: 'Now, someone you don’t know yet',
     body: 'Staying in touch comes first. But sometimes you need help from someone you haven’t met. Tap Find.' },
   { chapter: 'Reaching someone new', target: 'need', advance: 'tap', route: '/find',
@@ -238,16 +254,36 @@ const MEET: Step[] = [
     body: 'Two are picked for you. With a calendar linked, the app marks the times you’re both free. Tap Send proposal.' },
   { chapter: 'Meeting up', target: 'confirmed', advance: 'next', route: '/messages/g1',
     title: 'It’s arranged',
-    body: 'Afterwards the app asks you, privately, how it went, and offers a reminder to stay in touch. That is how a first coffee becomes someone you know.' },
+    body: 'The cup button is now only an outline, because you have a coffee chat with her. Afterwards the app asks you, privately, how it went, and offers a reminder to stay in touch.' },
   { chapter: 'Meeting up', target: 'back', advance: 'tap', route: '/messages/g1',
     title: 'Back out of the chat',
     body: 'Tap the arrow.' },
 ]
 
-const EVENTS: Step[] = [
-  { chapter: 'Events', target: 'tab-events', advance: 'tap', route: '/find',
-    title: 'One more place: events',
-    body: `Meet-ups and reunions are a reason to see people you know again. Tap ${TAB_NAME}.` },
+/* Community: the groups you belong to, where the school reaches you, and then the events. */
+
+const COMMUNITY: Step[] = [
+  { chapter: 'Community', target: 'tab-events', advance: 'tap', route: '/find',
+    title: `One more place: ${TAB_NAME}`,
+    body: `Events to go to, and the groups you belong to. Tap ${TAB_NAME}.` },
+  { chapter: 'Community', target: 'half-groups', advance: 'tap', route: '/events',
+    title: 'Groups first',
+    body: 'The tab has two halves. Tap Groups.' },
+  { chapter: 'Community', target: 'cohorts', advance: 'next', route: '/events',
+    title: 'Two groups are yours already',
+    body: 'Your class, and your school in your city. Nobody joins these: every member is in them, and they are where the school reaches you. Groups you choose to join are below.' },
+  { chapter: 'From your school', target: 'push', advance: 'tap', before: receiveAnnouncement, route: '/events',
+    title: 'News from alumni services',
+    body: 'A class is thousands of people, which is too many for a group chat. So the school’s alumni services post the occasional announcement to the group. One has just arrived. Tap it.' },
+  { chapter: 'From your school', target: 'announcement', advance: 'next', route: '/cohorts/class',
+    title: 'Posted to your class group',
+    body: 'A reunion, a city meet-up, a few times a year. Nobody can reply to everyone. You can say you’re interested, and that is all.' },
+  { chapter: 'From your school', target: 'back', advance: 'tap', route: '/cohorts/class',
+    title: 'Back to Groups',
+    body: 'The count on the tab clears once a post has been read. Tap the arrow.' },
+  { chapter: 'Community', target: 'half-events', advance: 'tap', route: '/events',
+    title: 'Now the other half',
+    body: 'Meet-ups and reunions are a reason to see people you know again. Tap Events.' },
   { chapter: 'Events', target: 'event', advance: 'tap', route: '/events',
     title: 'Open one',
     body: 'You’re already going to this one. Its page starts with the people you know who are going too. Tap it.' },
@@ -256,7 +292,7 @@ const EVENTS: Step[] = [
     body: 'Small, and tied to the event. Tap to open it.' },
   { chapter: 'Events', target: 'event-chat-note', advance: 'next',
     title: 'It closes a week after',
-    body: 'So it never turns into a noisy standing group. To keep talking with someone, you tap their picture and message them directly.' },
+    body: `So it never turns into a noisy standing group. To keep talking with someone, you tap their picture and message them directly. All your event chats are also behind the bubble in the corner of the ${TAB_NAME} tab.` },
 ]
 
 /* ---- the keep-in-touch app: one home screen, the map, and nothing about meeting strangers ---- */
@@ -267,7 +303,7 @@ const SIMPLE: Step[] = [
     body: `This version of ${APP_NAME} is for people who are not looking for new connections. It does one thing: it helps you stay in touch with the people you already know from school. You do the tapping.` },
   { chapter: 'Your people', target: 'home-person', advance: 'next', route: '/home',
     title: 'Everyone you know, in one list',
-    body: 'The people you have gone longest without talking to come first. A grey bud means resting: not lost, and ready to pick up again.' },
+    body: 'The people you have gone longest without talking to come first. A brown bud means resting: not lost, and ready to pick up again.' },
   { chapter: 'Catching up', target: 'home-catch', advance: 'tap', route: '/home',
     title: 'Who to write to',
     body: 'The app picks a few people and gives you a reason for each. Tap Catch up.' },
@@ -292,6 +328,9 @@ const SIMPLE: Step[] = [
   { chapter: 'Helping, if you want to', target: 'home-help', advance: 'next', route: '/home',
     title: 'Off, until you want it',
     body: 'The tile is now a switch. Tap it at any time to turn helping back on. Nothing else about the app changes.' },
+  { chapter: 'People who added you', target: 'known-asks', advance: 'next', route: '/home',
+    title: 'Someone says they know you',
+    body: 'When another member adds you as someone they know, they appear here in a grey box, at the top of your list. Yes puts them on your list. “Not really” drops it, and they are never told.' },
   { chapter: 'One person', target: 'home-person', advance: 'tap', route: '/home',
     title: 'Open someone',
     body: 'Tap the first person on your list.' },
@@ -313,12 +352,15 @@ const SIMPLE: Step[] = [
   { chapter: 'Adding people', target: 'back', advance: 'tap', route: '/known',
     title: 'On your list, waiting to confirm',
     body: 'They are on your list straight away, so reminders work now. They are asked to confirm with one tap before you can message them here, so nobody can add a stranger to reach them. Tap the arrow to go back.' },
+  { chapter: 'From your school', target: 'home-school', advance: 'next', route: '/home',
+    title: 'Your class and your city',
+    body: 'Two groups every member is in without joining. The school’s alumni services post to them a few times a year: a reunion, a city meet-up. A count shows when there is something new.' },
   { chapter: 'Where everyone is', target: 'tab-map', advance: 'tap', route: '/home',
     title: 'One more thing: the map',
     body: 'The same people, by where they live. Tap Map.' },
   { chapter: 'Where everyone is', target: 'map', advance: 'next', route: '/network',
     title: 'Your network, on a map',
-    body: 'Each leaf is someone you know. Green means you’re in close touch, yellow means it has been a while, and a grey bud is resting.' },
+    body: 'Each leaf is someone you know. Green means you’re in close touch, yellow means it has been a while, and a brown bud is resting.' },
   { chapter: 'Where everyone is', target: 'bundle', advance: 'tap', route: '/network',
     title: 'Tap a bundle',
     body: 'A bundle is several people in one city. Useful before a trip.' },
@@ -329,10 +371,10 @@ const SIMPLE: Step[] = [
 
 type AppTour = Exclude<TourId, 'signup'>
 export const TOURS: Record<AppTour, Step[]> = {
-  // the short route: the network, one person, then how you reach someone new and who is allowed in
-  quick: [WELCOME, ...NETWORK, ...STAYING, BACK_TO_NETWORK, ...REACH],
+  // the short route: the network, one person, who to write to, then how you reach someone new and who is allowed in
+  quick: [WELCOME, ...NETWORK, ...STAYING, BACK_TO_NETWORK, ...INBOX, SAY_HELLO, ...REACH],
   // every part, in the order a member would come across them
-  full: [WELCOME, ...NETWORK, ...STAYING, ...CATCH_UP, BACK_TO_NETWORK, ...SCHOOL, ...REACH, ...ASK, ...MEET, ...EVENTS],
+  full: [WELCOME, ...NETWORK, ...STAYING, ...CATCH_UP, BACK_TO_NETWORK, ...INBOX, ...INBOX_CATCH_UP, SAY_HELLO, ...REACH, ...ASK, ...MEET, ...COMMUNITY],
   // the keep-in-touch app
   simple: SIMPLE,
 }

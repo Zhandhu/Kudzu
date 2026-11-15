@@ -19,8 +19,8 @@ export function TourOffer() {
   const nav = useNavigate()
   const begin = (tourDepth: 'quick' | 'full') => { set({ tourDepth }); startTour('signup'); nav('/') }
   const options = [
-    { depth: 'quick' as const, icon: Rocket, title: 'Quick walkthrough', sub: 'About three minutes: signing up and the main ideas. Then explore on your own.' },
-    { depth: 'full' as const, icon: Footprints, title: 'Full tutorial', sub: 'About eight minutes. You try every part yourself, starting with sign-up.' },
+    { depth: 'quick' as const, icon: Rocket, title: 'Quick walkthrough', sub: 'About four minutes: signing up and the main ideas. Then explore on your own.' },
+    { depth: 'full' as const, icon: Footprints, title: 'Full tutorial', sub: 'About ten minutes. You try every part yourself, starting with sign-up.' },
   ]
   return (
     <Portal>

@@ -100,7 +100,7 @@ export default function Messages() {
           write, so they sit together at the top of this tab. Each opens its own sheet, and a
           box with nothing in it is left out. */}
       {boxes.length > 0 && (
-        <section className={`grid gap-2.5 px-4 pb-3 ${boxes.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+        <section data-tour="msg-boxes" className={`grid gap-2.5 px-4 pb-3 ${boxes.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
           {boxes.map((b) => (
             <button key={b.id} onClick={b.open} data-tour={b.id} className="rounded-2xl bg-vine-50 p-3 text-left ring-1 ring-vine-200" aria-label={`${b.title}: ${b.line}`}>
               <span className="flex items-center justify-between">

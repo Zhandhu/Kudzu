@@ -50,7 +50,7 @@ export function ReachOutSheet({ open, onClose }: { open: boolean; onClose: () =>
       ) : (
         <div className="space-y-2">
           <p className="mb-1 text-[13px] text-ink/60">Catch-ups you planned come first, then timely reasons to say hello, then ties that have gone quiet.</p>
-          <AnimatePresence initial={false}>{nudges.map((n) => <NudgeCard key={n.id} n={n} onGo={onClose} />)}</AnimatePresence>
+          <AnimatePresence initial={false}>{nudges.map((n, i) => <div key={n.id} data-tour={i === 0 ? 'reach-first' : undefined}><NudgeCard n={n} onGo={onClose} /></div>)}</AnimatePresence>
         </div>
       )}
     </Sheet>

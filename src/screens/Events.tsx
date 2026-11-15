@@ -222,8 +222,10 @@ export default function Events() {
           {/* Your class and your city are groups too: the two everyone is in without joining.
               The school's alumni services post to them, so they come first. */}
           <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-ink/50">Yours already</h2>
+          <div className="space-y-2.5" data-tour="cohorts">
           <DefaultGroupCard kind="class" />
           <DefaultGroupCard kind="city" />
+          </div>
           <h2 className="px-1 pt-3 text-xs font-semibold uppercase tracking-wide text-ink/50">Groups to join</h2>
           <p className="px-1 text-[13px] text-ink/55">Communities inside your school. Join one to see its members and events.</p>
           {groups.map((g) => <GroupCard key={g.id} g={g} />)}
