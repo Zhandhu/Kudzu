@@ -3,7 +3,7 @@ import { ClipboardCheck, Coffee, MessagesSquare } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { Connection, Conversation, User } from '../types'
 import { useKudzu, useNow } from '../store/useKudzu'
-import { computeNudges, strengthOf, dueCheckins, eventChatMessages, eventGuests, getUser, inSchool, incomingRequests, openEventChats, outgoingRequests, requestState } from '../services'
+import { computeNudges, hasCoffeeChat, strengthOf, dueCheckins, eventChatMessages, eventGuests, getUser, inSchool, incomingRequests, openEventChats, outgoingRequests, requestState } from '../services'
 import { ago, firstName, fmtDateTime } from '../lib/util'
 import { Avatar, EmptyState, SchoolChip } from '../components/ui'
 import { LeafIcon, TendrilIcon } from '../components/brand'
@@ -19,16 +19,11 @@ function preview(c: Conversation): string {
   if (m.proposal) return m.proposal.acceptedSlot ? '☕ Coffee chat confirmed' : `${who}☕ Proposed a coffee chat`
   return who + (m.text ?? '')
 }
-
-/** The small cup on someone's picture: you are connected, and have not had a coffee chat yet. */
-function CupMark({ done }: { done: boolean }) {
-  const label = done ? 'You’ve had a coffee chat' : 'No coffee chat yet'
+/** The small cup on someone’s picture: you have no coffee chat with them, done or arranged. Nothing shows once you do. */
+function CupMark() {
   return (
-    <span
-      className={`absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full ring-2 ring-cream ${done ? 'border border-ink/30 bg-cream text-ink/40' : 'bg-coffee-500 text-cream'}`}
-      title={label} role="img" aria-label={label} data-cup={done ? 'done' : 'todo'}
-    >
-      <Coffee size={11} strokeWidth={done ? 2 : 2.4} />
+    <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-coffee-500 text-cream ring-2 ring-cream" title="No coffee chat yet" role="img" aria-label="No coffee chat yet" data-cup>
+      <Coffee size={11} strokeWidth={2.4} />
     </span>
   )
 }
@@ -46,9 +41,6 @@ export default function Messages() {
     .sort((a, b) => b.messages[b.messages.length - 1].at - a.messages[a.messages.length - 1].at)
   // Say hello: connected, and nothing said yet. That is all it takes to be listed here.
   const hello = fresh.map((c) => getUser(c.otherId)).filter((u): u is User => !!u)
-  // A small cup marks anyone you have not had a coffee chat with, here and in the list below.
-  // The cup on each picture: filled while you have not had a coffee chat with them, a grey outline once you have.
-  const hadCoffee = new Set(s.connections.filter((c) => c.interactions.some((i) => i.type === 'coffee')).map((c) => c.otherId))
   const simple = s.experience === 'simple'
   // requests in both directions take the place event chats used to have here
   const incoming = simple ? [] : incomingRequests(s, now)
@@ -159,7 +151,7 @@ export default function Messages() {
           <div className="no-scrollbar flex gap-4 overflow-x-auto px-4 pb-2 pt-1">
             {hello.map((u) => (
               <Link key={u.id} to={`/messages/${u.id}`} className="flex w-16 shrink-0 flex-col items-center gap-1" aria-label={`Say hello to ${u.name}`}>
-                <span className="relative rounded-full p-0.5 ring-2 ring-coffee-500"><Avatar user={u} size={56} /><CupMark done={hadCoffee.has(u.id)} /></span>
+                <span className="relative rounded-full p-0.5 ring-2 ring-coffee-500"><Avatar user={u} size={56} />{!hasCoffeeChat(s, u.id) && <CupMark />}</span>
                 <span className="w-full truncate text-center text-xs font-medium">{firstName(u.name)}</span>
               </Link>
             ))}
@@ -180,7 +172,7 @@ export default function Messages() {
             return (
               <li key={c.id}>
                 <Link to={`/messages/${u.id}`} className="flex items-center gap-3 rounded-2xl px-2 py-3 hover:bg-sage-50">
-                  <span className="relative shrink-0"><Avatar user={u} size={52} /><CupMark done={hadCoffee.has(u.id)} /></span>
+                  <span className="relative shrink-0"><Avatar user={u} size={52} />{!hasCoffeeChat(s, u.id) && <CupMark />}</span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline justify-between gap-2">
                       <span className={`truncate ${c.unread ? 'font-bold' : 'font-semibold'}`}>{u.name}</span>

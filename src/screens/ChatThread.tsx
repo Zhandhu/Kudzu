@@ -3,7 +3,7 @@ import { CalendarCheck, Check, ChevronLeft, Coffee, HeartHandshake, MapPin, Send
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import type { Message, Mode, User } from '../types'
 import { useKudzu, useNow } from '../store/useKudzu'
-import { acceptTheirProposal, getUser, isBusy, matchInfo, promptText, sendText, strengthOf } from '../services'
+import { acceptTheirProposal, getUser, hasCoffeeChat, isBusy, matchInfo, promptText, sendText, strengthOf } from '../services'
 import { firstName, fmtDateTime } from '../lib/util'
 import { LeafIcon, Tendril } from '../components/brand'
 import { Avatar, Button, Chip, inputCls } from '../components/ui'
@@ -102,6 +102,8 @@ export default function ChatThread() {
   const connection = useKudzu((s) => s.connections.find((c) => c.otherId === id))
   // someone the user added who has not confirmed yet cannot be messaged from here
   const locked = !!connection?.unconfirmed
+  // the cup button is filled until a coffee chat has happened or is arranged, then only an outline
+  const hadCoffee = useKudzu((s) => hasCoffeeChat(s, id))
   const typing = useKudzu((s) => !!s.typing[id])
   const me = useKudzu((s) => s.me)
   const { ensureConversation, markRead } = useKudzu.getState()
@@ -210,7 +212,7 @@ export default function ChatThread() {
       {/* the coffee button sits at the bottom right, just above the message box */}
       <div className={locked ? "hidden" : "relative"}>
         <div className="absolute bottom-3 right-3 z-10 flex items-center gap-2">
-          <button type="button" data-tour="coffee" onClick={() => setProposing(true)} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-coffee-500 text-cream shadow-lg" aria-label="Propose a coffee chat"><Coffee size={21} /></button>
+          <button type="button" data-tour="coffee" onClick={() => setProposing(true)} data-had={hadCoffee ? "yes" : "no"} className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full shadow-lg ${hadCoffee ? "border-2 border-ink/25 bg-cream text-ink/45" : "bg-coffee-500 text-cream"}`} aria-label={hadCoffee ? "Propose another coffee chat" : "Propose a coffee chat"}><Coffee size={21} /></button>
         </div>
       </div>
 

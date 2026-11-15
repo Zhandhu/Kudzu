@@ -512,6 +512,14 @@ export function webConnections(s: Pick<KudzuState, 'connections' | 'schoolId' | 
 }
 
 /** Whether the user added this person as someone they know and is still waiting for them to confirm. */
+/**
+ * Whether the user has a coffee chat with this person: one that has happened, or one that is
+ * arranged. A confirmed time counts, so the cup does not ask for a chat that is already in the diary.
+ */
+export const hasCoffeeChat = (s: Pick<KudzuState, 'connections' | 'conversations'>, otherId: string) =>
+  s.connections.some((c) => c.otherId === otherId && c.interactions.some((i) => i.type === 'coffee')) ||
+  s.conversations.some((c) => c.otherId === otherId && c.messages.some((m) => !!m.proposal?.acceptedSlot))
+
 export const awaitingConfirm = (s: Pick<KudzuState, 'connections'>, otherId: string) => s.connections.some((c) => c.otherId === otherId && c.unconfirmed)
 
 /** People who say they know the user and are waiting for an answer, in the school being viewed. */
