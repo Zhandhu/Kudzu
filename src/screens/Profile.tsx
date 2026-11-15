@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { Bell, BookOpen, CalendarCheck, ChevronRight, Eye, HeartHandshake, Hourglass, Lock, LogOut, MapPin, PauseCircle, Pencil, SlidersHorizontal, Sprout } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { User } from '../types'
@@ -60,6 +60,17 @@ export default function Profile() {
   const [editing, setEditing] = useState(false)
   const [prefsOpen, setPrefsOpen] = useState(false)
   const simple = s.experience === 'simple'
+  // Switching app adds or removes the sections above this choice (groups and events), which
+  // would move it under the user's finger. So the page is scrolled by the same amount, in the
+  // same frame, and the choice stays exactly where it was on screen.
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const styleRef = useRef<HTMLElement>(null)
+  const holdAt = useRef<number | null>(null)
+  useLayoutEffect(() => {
+    if (holdAt.current === null || !styleRef.current || !scrollRef.current) return
+    scrollRef.current.scrollTop += styleRef.current.getBoundingClientRect().top - holdAt.current
+    holdAt.current = null
+  }, [simple])
   const school = getSchool(s.schoolId)
   const myGroups = s.groups.filter((g) => g.schoolId === s.schoolId && me.groupIds.includes(g.id))
   const myEvents = schoolEvents(s, now).filter((e) => e.myRsvp || e.hostId === 'me')
@@ -67,7 +78,7 @@ export default function Profile() {
   const row = 'flex items-center gap-3 px-4 py-3.5'
 
   return (
-    <div className="app-scroll h-full overflow-y-auto pb-8">
+    <div ref={scrollRef} className="app-scroll h-full overflow-y-auto pb-8">
       <header className="flex items-center justify-between px-4 pb-2 pt-4">
         <Logo />
         <SchoolChip />
@@ -179,12 +190,12 @@ export default function Profile() {
       {/* The two apps: one for growing a network, one for keeping it. This decides what the whole
           app is, so it has its own section above Settings, set off by a leaf line on each side. */}
       <VineDivider />
-      <section className="mx-4 rounded-2xl bg-vine-100 p-4 ring-1 ring-vine-300" data-tour="app-style">
+      <section className="mx-4 rounded-2xl bg-vine-100 p-4 ring-1 ring-vine-300" data-tour="app-style" ref={styleRef}>
         <h2 className="font-display text-lg font-semibold leading-tight text-vine-900">What you want from Kudzu</h2>
         <p className="mt-0.5 text-xs text-vine-800/80">This changes what the whole app looks like. Switch whenever you like.</p>
         <div className="mt-3 grid grid-cols-2 gap-2" role="group" aria-label="App style">
           {([['full', Sprout, 'Grow my network', 'Find, events and the map'], ['simple', HeartHandshake, 'Keep in touch', 'One simple home screen']] as const).map(([id, Icon, label, sub]) => (
-            <button key={id} onClick={() => { if (s.experience !== id) { s.set({ experience: id, tourOffered: true }); s.say(id === 'simple' ? 'Switched to the simple app' : 'Switched to the full app') } }} aria-pressed={s.experience === id} className={`rounded-xl border-2 px-3 py-2.5 text-left ${s.experience === id ? 'border-vine-700 bg-white' : 'border-transparent bg-white/55'}`}>
+            <button key={id} onClick={() => { if (s.experience !== id) { holdAt.current = styleRef.current?.getBoundingClientRect().top ?? null; s.set({ experience: id, tourOffered: true }); s.say(id === 'simple' ? 'Switched to the simple app' : 'Switched to the full app') } }} aria-pressed={s.experience === id} className={`rounded-xl border-2 px-3 py-2.5 text-left ${s.experience === id ? 'border-vine-700 bg-white' : 'border-transparent bg-white/55'}`}>
               <Icon size={18} className={s.experience === id ? 'text-vine-700' : 'text-ink/45'} />
               <span className="mt-1 block text-[13px] font-semibold">{label}</span>
               <span className="block text-xs text-ink/55">{sub}</span>
