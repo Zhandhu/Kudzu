@@ -176,7 +176,8 @@ export function seedConnections(now: number): Connection[] {
     // more people who said yes and have not been written to yet, so Say hello has a few faces in it
     c('g20', '', ix('matched', 1)),
     c('g9', '', ix('matched', 2)),
-    c('g16', '', ix('matched', 6)),
+    c('g16', '', ix('matched', 6), ix('messaged', 5), ix('messaged', 4)),
+    c('g44', '', ix('matched', 2)),
     c('g11', '', ix('matched', 25), ix('messaged', 22), ix('messaged', 20)),
 
     // strong (the labels here are what the closeness score works out to on day one)
@@ -200,6 +201,18 @@ export function seedConnections(now: number): Connection[] {
     c('g17', '', ix('matched', 660), ix('coffee', 620), ix('messaged', 560)),
     c('g13', 'Introduced by Marcus.', ix('matched', 680), ix('coffee', 640)),
     c('g21', '', ix('matched', 840), ix('coffee', 800), ix('messaged', 760)),
+
+    // A wider network, so the map has more cities on it and the list more to look through.
+    { ...c('g50', 'Runs supply-chain work for big retailers. Offered to look over my resume.', ix('matched', 50), good(22), ix('messaged', 9)), rhythmDays: 120 },
+    c('g57', 'Two years into consulting. Sent me her case prep notes.', ix('matched', 250), ix('coffee', 210), ix('messaged', 170)),
+    c('g38', '', ix('matched', 230), ix('event', 180, 'Consulting info session'), ix('messaged', 150)),
+    c('g42', 'Met at homecoming. Leads a large engineering team.', ix('matched', 290), ix('coffee', 250), ix('messaged', 210)),
+    c('g47', '', ix('matched', 260), ix('coffee', 220), ix('messaged', 200)),
+    c('g61', '', ix('matched', 280), ix('coffee', 240), ix('messaged', 215)),
+    c('g46', 'Banking, then left it. Said to write when I am choosing between offers.', ix('matched', 450), ix('coffee', 410), ix('messaged', 370)),
+    c('g53', '', ix('matched', 740), ix('event', 700, 'Chicago alumni dinner')),
+    c('g62', 'Introduced by Devon.', ix('matched', 760), ix('coffee', 700), ix('messaged', 640)),
+    c('g37', '', ix('matched', 700), ix('coffee', 650)),
 
     // other schools (visible after switching school in the demo panel)
     c('e1', '', ix('matched', 70), ix('coffee', 60), ix('messaged', 40)),
@@ -225,7 +238,13 @@ export function seedConversations(now: number): Conversation[] {
     conv('g24', false),
     conv('g20', false),
     conv('g9', false),
-    conv('g16', false),
+    conv('g44', false),
+    // talked, but no coffee chat arranged: the one conversation in the list that carries the cup
+    conv('g16', false,
+      t('me', 5, 'Hi Lily! I saw you work on battery cells. I’m an IE student and curious how manufacturing roles differ from design ones.'),
+      t('g16', 4.8, 'Happy to talk about it. Short version: you live on the factory floor, and I love it. What made you curious?'),
+      t('me', 4.5, 'A plant tour last semester. I’d like to understand what the first year is like.'),
+      t('g16', 4.2, 'Then you’re asking the right questions. Send me a few and I’ll answer what I can.')),
     // 2. active chat
     conv('g5', true,
       t('me', 30, 'Hi Devon! I’m an IE junior trying to decide between consulting and product. Would love to hear how you thought about it.'),

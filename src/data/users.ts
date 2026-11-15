@@ -72,6 +72,32 @@ function mk(
 
 const gt = (...a: Parameters<typeof mk> extends [string, ...infer R] ? R : never) => mk('gt', ...a)
 
+/* Short answers shared by the extra alumni below, picked by position so they stay the same on every run. */
+const ADVICE = [
+  'Go to office hours. The professors you meet there write the letters that matter.',
+  'Pick the internship where you will be given real work, not the bigger name.',
+  'Say yes to the co-op. A year of work changes how the classes land.',
+  'Learn to write clearly. It has done more for me than any technical skill.',
+  'Stay close to three people from school. The rest follows from them.',
+  'Do not optimise for your first salary. Optimise for who you learn from.',
+]
+const OUTSIDE = [
+  'Cycling the BeltLine, slowly.',
+  'Coaching a youth robotics team.',
+  'Trying to keep a sourdough starter alive.',
+  'At a climbing gym, mostly falling.',
+  'On a long run before anyone else is up.',
+  'Rebuilding a motorcycle that may never run.',
+]
+type More = [name: string, gradYear: number, major: string, title: string, company: string, industry: string, city: string, intents: string, canHelp: string, groups: string[]]
+/** Builds alumni from one line each. Ids carry on from the hand-written people above. */
+function moreAlumni(rows: More[]): User[] {
+  return rows.map(([name, gradYear, major, title, company, industry, city, intents, canHelp, groups], i) =>
+    gt(`g${36 + i}`, name, 'alum', gradYear, major, title, company, industry, city, intents,
+      [['p5', canHelp], ['p2', ADVICE[i % ADVICE.length]], ['p10', OUTSIDE[(i * 5 + 2) % OUTSIDE.length]]],
+      groups, 3 + (i % 3), i % 3))
+}
+
 export const USERS: User[] = [
   /* ---------------- Georgia Tech ---------------- */
   gt('g1', 'Maya Okafor', 'alum', 2019, 'Industrial Design', 'Senior UX Designer', 'Mailchimp', 'Design', 'Atlanta', 'CMA',
@@ -249,6 +275,43 @@ export const USERS: User[] = [
      ['p7', 'Transport Phenomena. Ask me again when the bruises fade.'],
      ['p9', 'You are on a co-op rotation somewhere and also a little homesick.']],
     ['grp-wie'], 5, 0),
+
+  /* More Georgia Tech alumni, so the school has the density a real network has: more cities,
+     fields and class years to search, and more people in common. All fictional. */
+  ...moreAlumni([
+    ['Rohan Kapoor', 2015, 'Computer Science', 'Staff Engineer', 'Airbnb', 'Tech', 'San Francisco', 'CMA', 'Going from a big company to a smaller one, and what changes.', ['grp-startup']],
+    ['Emily Larsen', 2012, 'Mechanical Engineering', 'Program Manager', 'Boeing', 'Aerospace', 'Seattle', 'MAL', 'Moving from design engineering into running a programme.', ['grp-wie']],
+    ['Darius Hall', 2009, 'Industrial Engineering', 'Partner', 'Bain & Company', 'Consulting', 'Chicago', 'MAJ', 'What partners look for in a first-year associate.', ['grp-fin']],
+    ['Mei Lin Wu', 2018, 'Computer Science', 'Data Scientist', 'Spotify', 'Tech', 'New York', 'CAL', 'Getting a first data role without a graduate degree.', ['grp-nyc', 'grp-wie']],
+    ['Carlos Mendoza', 2016, 'Civil Engineering', 'Transmission Project Manager', 'Georgia Power', 'Energy', 'Atlanta', 'CA', 'How big infrastructure projects actually get approved.', ['grp-fg']],
+    ['Hannah Fischer', 2020, 'Biomedical Engineering', 'Clinical Engineer', 'Emory Healthcare', 'Healthcare', 'Atlanta', 'CAL', 'Working inside a hospital as an engineer.', ['grp-wie']],
+    ['Owen Gallagher', 2007, 'Electrical Engineering', 'VP of Engineering', 'Honeywell', 'Aerospace', 'Charlotte', 'MA', 'Leading a team for the first time, and the mistakes I made.', []],
+    ['Nadia Hussain', 2014, 'Public Policy', 'Policy Director', 'Department of Energy', 'Government', 'Washington, DC', 'MAL', 'Getting into federal policy with an engineering background.', ['grp-wie']],
+    ['Victor Almeida', 2019, 'Computer Science', 'Founder', 'Tidewell', 'Startups', 'Austin', 'CL', 'Raising a first round, and whether you should.', ['grp-startup']],
+    ['Grace Kim', 2021, 'Industrial Design', 'Product Designer', 'Adobe', 'Design', 'San Francisco', 'CJA', 'Building a design portfolio that gets interviews.', ['grp-wie']],
+    ['Terrence Boyd', 2010, 'Business Administration', 'Managing Director', 'JPMorgan Chase', 'Finance', 'New York', 'MAJ', 'Banking careers, and when to leave them.', ['grp-fin', 'grp-nyc']],
+    ['Ines Castillo', 2017, 'Chemical Engineering', 'Process Engineer', 'ExxonMobil', 'Energy', 'Austin', 'CA', 'Plant life, and moving from operations to design.', ['grp-wie', 'grp-fg']],
+    ['Peter Novak', 2013, 'Aerospace Engineering', 'Flight Controls Lead', 'Lockheed Martin', 'Aerospace', 'Atlanta', 'CMA', 'Getting a clearance, and what the work is really like.', []],
+    ['Ayesha Siddiqui', 2022, 'Computer Science', 'Software Engineer', 'Microsoft', 'Tech', 'Seattle', 'CJL', 'The first year as a new graduate at a large company.', ['grp-wie']],
+    ['Jonah Reed', 2006, 'Industrial Engineering', 'Operations Partner', 'Accenture', 'Consulting', 'Atlanta', 'MA', 'Supply chains, and consulting after fifteen years in industry.', ['grp-fin']],
+    ['Lucia Romano', 2015, 'Architecture', 'Design Director', 'Gensler', 'Design', 'Chicago', 'MAL', 'Leading design for clients who do not speak design.', []],
+    ['Kofi Asante', 2018, 'Mechanical Engineering', 'Robotics Engineer', 'Amazon Robotics', 'Tech', 'Seattle', 'CA', 'Getting into robotics from a mechanical degree.', ['grp-fg']],
+    ['Rebecca Stein', 2011, 'Biomedical Engineering', 'Director of Product', 'Abbott', 'Healthcare', 'Chicago', 'MAJ', 'Medical devices: from the lab bench to product.', ['grp-wie']],
+    ['Minh Tran', 2020, 'Computer Science', 'Machine Learning Engineer', 'Nvidia', 'Tech', 'San Francisco', 'CJA', 'Breaking into machine learning work after a general degree.', []],
+    ['Chloe Dubois', 2016, 'Economics', 'Vice President', 'Goldman Sachs', 'Finance', 'New York', 'CAJ', 'Recruiting for finance from an engineering school.', ['grp-fin', 'grp-nyc']],
+    ['Andre Jefferson', 2008, 'Civil Engineering', 'City Engineer', 'City of Charlotte', 'Government', 'Charlotte', 'MA', 'Public-sector engineering, and why I stayed.', ['grp-fg']],
+    ['Sana Qureshi', 2019, 'Industrial Engineering', 'Senior Consultant', 'McKinsey & Company', 'Consulting', 'Washington, DC', 'CJA', 'Case prep, and the first two years in consulting.', ['grp-fin', 'grp-wie']],
+    ['Tomás Herrera', 2014, 'Computer Science', 'Co-founder & CEO', 'Lanternly', 'Startups', 'Atlanta', 'CML', 'Starting a company in Atlanta and finding the first ten customers.', ['grp-startup']],
+    ['Bridget O’Neill', 2012, 'Nuclear Engineering', 'Reactor Engineer', 'Southern Nuclear', 'Energy', 'Atlanta', 'MA', 'Nuclear careers, which are quietly hiring again.', ['grp-wie']],
+    ['Yusuf Demir', 2021, 'Aerospace Engineering', 'Systems Engineer', 'SpaceX', 'Aerospace', 'Austin', 'CJ', 'What launch-company hours are really like.', []],
+    ['Layla Haddad', 2017, 'Computer Science', 'Security Engineer', 'Cloudflare', 'Tech', 'Austin', 'CAL', 'Getting into security without a security degree.', ['grp-wie']],
+    ['Desmond Clarke', 2005, 'Electrical Engineering', 'Chief Technology Officer', 'NCR Voyix', 'Tech', 'Atlanta', 'MA', 'Twenty years from engineer to executive, in one city.', ['grp-fg']],
+    ['Anika Bose', 2023, 'Mathematics', 'Quantitative Analyst', 'Citadel', 'Finance', 'Chicago', 'CJ', 'Quant interviews, fresh from having done them.', ['grp-fin']],
+    ['Felix Wagner', 2010, 'Mechanical Engineering', 'Director of Battery Operations', 'SK On', 'Energy', 'Atlanta', 'MAJ', 'Manufacturing leadership, and the battery plants opening in Georgia.', []],
+    ['Imani Foster', 2016, 'Public Policy', 'Chief of Staff', 'Georgia Department of Transportation', 'Government', 'Atlanta', 'CAL', 'State government work, and how decisions get made.', ['grp-fg']],
+    ['Sebastian Cruz', 2019, 'Industrial Design', 'UX Researcher', 'Meta', 'Design', 'New York', 'CJL', 'Research as a career, and how it differs from design.', ['grp-nyc']],
+    ['Haruto Mori', 2013, 'Computer Science', 'Engineering Director', 'Salesforce', 'Tech', 'San Francisco', 'MAL', 'Managing managers, and hiring well.', []],
+  ]),
 
   /* ---------------- Emory ---------------- */
   mk('emory', 'e1', 'Olivia Bennett', 'alum', 2017, 'Neuroscience', 'Clinical Research Manager', 'Children’s Healthcare of Atlanta', 'Healthcare', 'Atlanta', 'CMA',
