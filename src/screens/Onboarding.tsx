@@ -1,10 +1,12 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { BadgeCheck, Check, ChevronLeft, ChevronRight, Clock, GraduationCap, HeartHandshake, Mail, Phone, Search, Sprout, Star, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import type { Degree, Prefs, School, User } from '../types'
 import { CURRENT_CLASS_YEAR, DEGREE_LEVELS, TAGLINE } from '../config/brand'
 import { useKudzu } from '../store/useKudzu'
 import { getSchool, listSchools, schoolForEmail, schoolUsers, suggestKnown } from '../services'
+import { ALUM_PERSONA, STUDENT_PERSONA } from '../data/seed'
+import { TOUR_START } from '../components/Tour'
 import { CITIES } from '../lib/util'
 import { Logo, Tendril } from '../components/brand'
 import { Avatar, Button, Field, Sheet, inputCls } from '../components/ui'
@@ -124,8 +126,53 @@ export default function Onboarding() {
   const phoneOk = phone.replace(/\D/g, '').length >= 7
   const invite = () => { if (!phoneOk) return; setInvites((v) => (v.includes(phone.trim()) ? v : [...v, phone.trim()])); setPhone(''); setNobody(false) }
 
+  // The sign-up walkthrough does the typing: it asks for whatever is still missing to be
+  // filled in as the demo person for the chosen app, so the viewer only has to tap.
+  const viewNow = useRef(view)
+  viewNow.current = view
+  useEffect(() => {
+    const onFill = (e: Event) => {
+      const all = (e as CustomEvent<string>).detail === 'all'
+      const p = viewNow.current === 'simple' ? ALUM_PERSONA : STUDENT_PERSONA
+      const sc = getSchool(p.schoolIds[0])
+      setEmail((v) => (schoolForEmail(v) ? v : `${p.name.split(' ')[0].toLowerCase()}@${sc.domains[0]}`))
+      setAlumPath(false)
+      setMe((m) => ({
+        ...m,
+        name: m.name.trim() || p.name,
+        city: p.city,
+        degrees: m.degrees?.length
+          ? m.degrees.map((d) => (d.schoolId === sc.id && !d.major ? { ...d, major: p.major, gradYear: p.gradYear } : d))
+          : [{ schoolId: sc.id, level: 'Bachelor’s', major: p.major, gradYear: p.gradYear }],
+        ...(all && !m.title?.trim() ? { title: p.title, company: p.company, industry: p.industry } : {}),
+      }))
+      if (all) {
+        const ids = suggestKnown({ me: p, schoolId: sc.id, blocked: [], connections: [] }).slice(0, 2).map((x) => x.user.id)
+        setKnown((k) => (k.length ? k : ids))
+        if (!ids.length) setNobody(true)
+      }
+    }
+    window.addEventListener('kudzu:fill', onFill)
+    return () => window.removeEventListener('kudzu:fill', onFill)
+  }, [])
+
+  // the sign-up walkthrough always begins on the first screen, with nothing filled in
+  const tourBegins = s.tour?.id === 'signup' && s.tour.step === 0
+  useEffect(() => {
+    if (!tourBegins) return
+    setStage('welcome'); setOpen(null); setPicked(false); setMe(blank); setEmail(''); setKnown([]); setInvites([]); setNobody(false)
+  }, [tourBegins])
+
   const skip = () => { s.skipOnboarding(view, help); nav('/') }
   const finish = () => {
+    // During the walkthrough, signing up leads into the tour of the chosen app, which
+    // runs on its own prepared data so that every stop finds what it points at.
+    if (s.tour?.id === 'signup') {
+      const id = view === 'simple' ? 'simple' : s.tourDepth
+      s.startTour(id, 'signup')
+      nav(TOUR_START[id])
+      return
+    }
     s.finishOnboarding(
       {
         ...me,
@@ -142,7 +189,7 @@ export default function Onboarding() {
       prefs,
     )
     for (const id of known) s.addKnown(id, 'unsure', true)
-    s.set({ invites, experience: view, openToHelp: help, tourOffered: view === 'simple' })
+    s.set({ invites, experience: view, openToHelp: help })
     s.say(`Welcome to ${homeSchool!.name} on Kudzu`)
     nav('/')
   }
@@ -159,7 +206,7 @@ export default function Onboarding() {
             <button onClick={() => setStage('choose')} className="flex w-full items-center justify-center gap-2.5 rounded-full bg-cream py-3.5 text-sm font-semibold text-ink">
               <span className="flex h-5 w-5 items-center justify-center rounded bg-[#0a66c2] text-[11px] font-bold text-white">in</span> Continue with LinkedIn
             </button>
-            <button onClick={() => setStage('choose')} className="flex w-full items-center justify-center gap-2.5 rounded-full border border-cream/40 py-3.5 text-sm font-semibold">
+            <button onClick={() => setStage('choose')} data-tour="signin" className="flex w-full items-center justify-center gap-2.5 rounded-full border border-cream/40 py-3.5 text-sm font-semibold">
               <Mail size={17} /> Verify with your .edu email
             </button>
           </div>
@@ -196,6 +243,7 @@ export default function Onboarding() {
         </header>
 
         <div className="app-scroll min-h-0 flex-1 space-y-3 overflow-y-auto px-5 pb-4 pt-4" role="group" aria-label="Which app">
+          <div className="space-y-3" data-tour="app-choice">
           {CHOICES.map(({ id, icon: Icon, title, line, points, who }) => {
             const on = picked && view === id
             return (
@@ -215,6 +263,7 @@ export default function Onboarding() {
               </button>
             )
           })}
+          </div>
           {picked && view === 'simple' && (
             <button onClick={() => setHelp(!help)} aria-pressed={help} className="flex w-full items-center gap-3 rounded-2xl border border-sage-200 bg-white p-3 text-left">
               <DoneBox done={help} />
@@ -224,7 +273,7 @@ export default function Onboarding() {
         </div>
 
         <div className="border-t border-sage-200 bg-cream px-5 pb-[max(env(safe-area-inset-bottom),14px)] pt-3">
-          <Button className="w-full" disabled={!picked} onClick={() => setStage('menu')}>Continue</Button>
+          <Button className="w-full" disabled={!picked} onClick={() => setStage('menu')} tour="choose-continue">Continue</Button>
           <button onClick={skip} disabled={!picked} className="mt-2.5 w-full text-center text-[13px] font-medium text-ink/55 underline underline-offset-4 disabled:opacity-40">
             {picked ? `Skip the rest and look around (demo)` : 'Pick one to continue'}
           </button>
@@ -237,7 +286,7 @@ export default function Onboarding() {
 
   if (!open) {
     const rowFor = (x: (typeof SECTIONS)[number]) => (
-      <button key={x.id} onClick={() => setOpen(x.id)} className="flex w-full items-center gap-3 px-3.5 py-3 text-left" aria-label={`${x.title}, ${done[x.id] ? 'done' : 'not done'}`}>
+      <button key={x.id} onClick={() => setOpen(x.id)} data-tour={`section-${x.id}`} className="flex w-full items-center gap-3 px-3.5 py-3 text-left" aria-label={`${x.title}, ${done[x.id] ? 'done' : 'not done'}`}>
         <DoneBox done={done[x.id]} />
         <span className="min-w-0 flex-1">
           <span className="block text-[15px] font-semibold">{x.title}</span>
@@ -262,7 +311,7 @@ export default function Onboarding() {
             <h2 className="text-xs font-semibold uppercase tracking-wide text-ink/50">Needed</h2>
             <span className="text-xs font-semibold text-vine-700">{neededDone} of {needed.length} done</span>
           </div>
-          <div className="divide-y divide-sage-200 rounded-2xl bg-white ring-1 ring-sage-200">{needed.map(rowFor)}</div>
+          <div className="divide-y divide-sage-200 rounded-2xl bg-white ring-1 ring-sage-200" data-tour="signup-needed">{needed.map(rowFor)}</div>
 
           <h2 className="mb-1.5 mt-5 text-xs font-semibold uppercase tracking-wide text-ink/50">Optional</h2>
           <div className="divide-y divide-sage-200 rounded-2xl bg-white ring-1 ring-sage-200">{SECTIONS.filter((x) => !x.needed).map(rowFor)}</div>
@@ -280,7 +329,7 @@ export default function Onboarding() {
               {neededDone < needed.length ? `Still needed: ${needed.filter((x) => !done[x.id]).map((x) => x.title.toLowerCase()).join(', ')}` : 'Finish “What you’re here for”, or clear it to do later'}
             </p>
           )}
-          <Button className="w-full" disabled={!canFinish} onClick={finish}>Get started</Button>
+          <Button className="w-full" disabled={!canFinish} onClick={finish} tour="signup-finish">Get started</Button>
         </div>
       </div>
     )
@@ -295,12 +344,12 @@ export default function Onboarding() {
         <Field label="Your name"><input className={inputCls} value={me.name} onChange={(e) => up({ name: e.target.value })} placeholder="First and last name" /></Field>
         <Field label="School email">
           <input
-            type="email" className={inputCls} placeholder="you@gatech.edu" value={email}
+            type="email" className={inputCls} placeholder="you@gatech.edu" value={email} data-tour="signup-email"
             onChange={(e) => { setEmail(e.target.value); const sc = schoolForEmail(e.target.value); if (sc && !degrees.some((d) => d.schoolId === sc.id)) { toggleSchool(sc); setAlumPath(false) } }}
           />
         </Field>
         {suggested && (
-          <div className="flex items-center gap-2 rounded-xl bg-vine-100 px-3 py-2.5 text-[13px] font-medium text-vine-800">
+          <div data-tour="signup-verified" className="flex items-center gap-2 rounded-xl bg-vine-100 px-3 py-2.5 text-[13px] font-medium text-vine-800">
             <BadgeCheck size={17} /> That’s a {suggested.name} address. We’ve selected it for you.
           </div>
         )}
@@ -379,10 +428,10 @@ export default function Onboarding() {
           <p className="rounded-2xl border border-dashed border-sage-300 p-4 text-center text-sm text-ink/50">{term ? `Nobody at ${homeSchool!.shortName} matches “${who.trim()}”. Invite them by phone below.` : 'No suggestions yet. Search above, or invite someone by phone.'}</p>
         ) : (
           <div className="divide-y divide-sage-200 rounded-2xl bg-white ring-1 ring-sage-200">
-            {people.map(({ user: u, line }) => {
+            {people.map(({ user: u, line }, i) => {
               const on = known.includes(u.id)
               return (
-                <button key={u.id} onClick={() => { setKnown(on ? known.filter((x) => x !== u.id) : [...known, u.id]); setNobody(false) }} className="flex w-full items-center gap-3 px-3 py-2.5 text-left" aria-pressed={on}>
+                <button key={u.id} data-tour={i === 0 ? 'signup-known' : undefined} onClick={() => { setKnown(on ? known.filter((x) => x !== u.id) : [...known, u.id]); setNobody(false) }} className="flex w-full items-center gap-3 px-3 py-2.5 text-left" aria-pressed={on}>
                   <Avatar user={u} size={40} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold">{u.name}</span>
@@ -478,7 +527,7 @@ export default function Onboarding() {
       </header>
       <div className="app-scroll min-h-0 flex-1 overflow-y-auto px-5 pb-6 pt-4">{body[open]}</div>
       <div className="border-t border-sage-200 bg-cream px-5 pb-[max(env(safe-area-inset-bottom),14px)] pt-3">
-        <Button className="w-full" disabled={!canClose} onClick={() => setOpen(null)}>
+        <Button className="w-full" disabled={!canClose} onClick={() => setOpen(null)} tour="section-done">
           {done[open] ? 'Done' : section.needed ? 'Back to the menu' : 'Save for later'}
         </Button>
       </div>

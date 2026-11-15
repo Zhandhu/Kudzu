@@ -5,8 +5,10 @@ import { ALUM_PERSONA, DEFAULT_PREFS, SEED_GROUPS, STUDENT_PERSONA, seedAnnounce
 import { SCHOOLS } from '../data/schools'
 import { CITIES, DAY, uid } from '../lib/util'
 
-/** The walkthroughs: two for the full app, one for the keep-in-touch app. */
-export type TourId = 'quick' | 'full' | 'simple'
+/** The walkthroughs: one for signing up, two for the full app, one for the keep-in-touch app. */
+export type TourId = 'signup' | 'quick' | 'full' | 'simple'
+/** How a walkthrough of an app opens: straight after the sign-up walkthrough, or as "the other app". */
+export type TourIntro = 'signup' | 'other'
 
 interface Data {
   onboarded: boolean
@@ -55,6 +57,10 @@ interface Data {
   coffeeHintSeen: boolean
   /** Set once the choice between a walkthrough and exploring alone has been offered. */
   tourOffered: boolean
+  /** What the visitor asked for on the first screen: the short route or every part. */
+  tourDepth: 'quick' | 'full'
+  /** Which of the two apps a walkthrough has been finished in, so the other can be offered once. */
+  tourSeen: ('full' | 'simple')[]
   /** Mocked: whether the user has linked a calendar, so free times can be suggested. */
   calendarConnected: boolean
   /** nudgeTimely and nudgeQuiet turn off the two kinds of reminder the user does not time themselves. Unset means on. */
@@ -71,12 +77,12 @@ interface Data {
   /** Set to open the announcements as soon as the Network screen shows. */
   openNews: boolean
   /** The walkthrough in progress, if any, and which stop it is on. */
-  tour: { id: TourId; step: number } | null
+  tour: { id: TourId; step: number; intro?: TourIntro } | null
 }
 
 interface Actions {
   reset: () => void
-  startTour: (id: TourId) => void
+  startTour: (id: TourId, intro?: TourIntro) => void
   finishOnboarding: (me: User, prefs: Prefs) => void
   skipOnboarding: (experience?: 'full' | 'simple', openToHelp?: boolean) => void
   signOut: () => void
@@ -152,6 +158,8 @@ const fresh = (): Data => {
     openToHelp: true,
     coffeeHintSeen: false,
     tourOffered: false,
+    tourDepth: 'quick',
+    tourSeen: [],
     calendarConnected: false,
     settings: { notifications: true, privateMode: false },
     checkin: null,
@@ -198,12 +206,17 @@ export const useKudzu = create<KudzuState>()(
       ...fresh(),
 
       reset: () => set({ ...fresh() }),
-      // A walkthrough always starts from the same fresh data, as the student in the full app,
-      // so every step finds what it expects.
-      startTour: (id) =>
-        set(id === 'simple'
-          ? { ...fresh(), onboarded: true, experience: 'simple', me: ALUM_PERSONA, persona: 'alum', tourOffered: true, tour: { id, step: 0 } }
-          : { ...fresh(), onboarded: true, experience: 'full', tourOffered: true, tour: { id, step: 0 } }),
+      // A walkthrough always starts from the same fresh data, so every step finds what it
+      // expects: the student in the full app, the alum in the keep-in-touch app, and the
+      // first screen of sign-up for the sign-up walkthrough.
+      startTour: (id, intro) => {
+        const keep = { tourOffered: true, tourDepth: get().tourDepth, tourSeen: get().tourSeen, tour: { id, step: 0, intro } }
+        set(id === 'signup'
+          ? { ...fresh(), ...keep }
+          : id === 'simple'
+            ? { ...fresh(), ...keep, onboarded: true, experience: 'simple', me: ALUM_PERSONA, persona: 'alum' }
+            : { ...fresh(), ...keep, onboarded: true, experience: 'full' })
+      },
       // the default school comes first in `schoolIds`
       finishOnboarding: (me, prefs) => set({ me, prefs, schoolId: me.schoolIds[0], homeSchoolId: me.schoolIds[0], persona: 'custom', onboarded: true }),
       // The demo shortcut. Each app loads the person it suits: the student for growing
@@ -453,7 +466,7 @@ export const useKudzu = create<KudzuState>()(
     }),
     {
       // bump this when the saved shape changes, so old browsers start from fresh seed data
-      name: 'kudzu-demo-v9',
+      name: 'kudzu-demo-v10',
       partialize: (s) => {
         const { checkin, toast, demoOpen, typing, eventOpen, push, openNews, tour, ...rest } = s
         void checkin, toast, demoOpen, typing, eventOpen, push, openNews, tour

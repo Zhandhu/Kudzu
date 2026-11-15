@@ -80,20 +80,20 @@ export default function DemoPanel() {
           <Toggle on={s.showWarning} onChange={(showWarning) => s.set({ showWarning })} label="Show account warning" />
         </div>
 
-        {/* either walkthrough starts from fresh data, as the student in the full app */}
-        <div className={item}>
-          <Footprints size={19} className="text-vine-600" />
-          <span className="flex-1">Start the walkthrough<span className={sub}>Resets the demo data and shows you round. Quick and Full are for the main app, Simple for Keep in touch.</span></span>
-          <span className="flex shrink-0 gap-1.5">
-            <button onClick={() => { close(); s.startTour('quick'); nav('/find') }} className="rounded-full bg-vine-700 px-3 py-1.5 text-xs font-semibold text-cream">Quick</button>
+        {/* every walkthrough starts from fresh data, so each stop finds what it expects */}
+        <div className={`${item} flex-col !items-start`}>
+          <div className="flex items-center gap-3"><Footprints size={19} className="shrink-0 text-vine-600" /><span>Start the walkthrough<span className={sub}>Resets the demo data. “From the start” goes back to the first screen and sign-up. The others jump straight into an app: Quick and Full for Grow my network, Simple for Keep in touch.</span></span></div>
+          <div className="flex flex-wrap gap-1.5">
+            <button onClick={() => { close(); s.reset(); nav('/') }} className="rounded-full bg-vine-700 px-3 py-1.5 text-xs font-semibold text-cream">From the start</button>
+            <button onClick={() => { close(); s.startTour('quick'); nav('/find') }} className="rounded-full border border-vine-700 px-3 py-1.5 text-xs font-semibold text-vine-700">Quick</button>
             <button onClick={() => { close(); s.startTour('full'); nav('/find') }} className="rounded-full border border-vine-700 px-3 py-1.5 text-xs font-semibold text-vine-700">Full</button>
             <button onClick={() => { close(); s.startTour('simple'); nav('/home') }} className="rounded-full border border-vine-700 px-3 py-1.5 text-xs font-semibold text-vine-700">Simple</button>
-          </span>
+          </div>
         </div>
 
         <button className={`${item} !border-red-200 text-red-700`} onClick={() => { s.reset(); nav('/') }}>
           <RotateCcw size={19} />
-          <span className="flex-1">Reset all demo data<span className={sub}>Clears everything and returns to onboarding.</span></span>
+          <span className="flex-1">Reset all demo data<span className={sub}>Clears everything and returns to the first screen, where the walkthrough is offered.</span></span>
         </button>
       </div>
     </Sheet>

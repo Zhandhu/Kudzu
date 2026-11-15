@@ -1,10 +1,11 @@
 import { useContext, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { BadgeCheck, Compass, Footprints, Rocket, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { APP_NAME } from '../config/brand'
-import { useKudzu, type TourId } from '../store/useKudzu'
-import { receiveAnnouncement } from '../services'
+import { useKudzu, type TourId, type TourIntro } from '../store/useKudzu'
+import { listSchools, receiveAnnouncement } from '../services'
+import { ALUM_PERSONA, STUDENT_PERSONA } from '../data/seed'
 import { Logo } from './brand'
 import { OverlayContext, Portal } from './ui'
 
@@ -40,11 +41,101 @@ interface Step {
   fallback?: string
   /** What Skip types into a `type` stop. */
   sample?: string
+  /** Puts the caption at the top of the screen, for a stop whose lit area needs the room below. */
+  place?: 'top'
 }
 
 const WELCOME: Step = { chapter: 'Welcome', advance: 'next',
   title: `What ${APP_NAME} is`,
   body: `${APP_NAME} helps alumni of the same school stay in touch with each other, and lets students reach them. Everyone on it is verified by the school. This guide shows what it does and how you use it. You do the tapping.` }
+
+/* ---- signing up: where the guide begins, and where it splits by the app the viewer picks ---- */
+
+/** Asks the sign-up screen to fill in whatever is still missing, so the viewer only taps. */
+const fill = (what: 'school' | 'all') => () => window.dispatchEvent(new CustomEvent('kudzu:fill', { detail: what }))
+/** The demo personas study at the first school in the data, so its email domain is the one to type. */
+const DOMAIN = listSchools()[0].domains[0]
+const STUDENT = STUDENT_PERSONA.name.split(' ')[0]
+const ALUM = ALUM_PERSONA.name.split(' ')[0]
+
+const SIGNUP_START: Step[] = [
+  { chapter: 'Welcome', advance: 'next',
+    title: `What ${APP_NAME} is`,
+    body: `${APP_NAME} helps alumni of the same school stay in touch with each other, and lets students reach them. Everyone on it is verified by the school. This guide starts where a new member does, at sign-up. You do the tapping.` },
+  { chapter: 'Signing up', target: 'signin', advance: 'tap',
+    title: 'It starts with your school',
+    body: 'Nobody looks around first. You sign in with a school email address or LinkedIn, and that is where checking that you are a real student or graduate begins. Tap the school email button.' },
+  { chapter: 'Signing up', target: 'app-choice', advance: 'tap', place: 'top',
+    title: 'Two ways to use it. Pick one',
+    body: 'One is for meeting people from your school, the other only for staying close to those you know. The guide follows your choice.' },
+  { chapter: 'Signing up', target: 'choose-continue', advance: 'tap',
+    title: 'Continue',
+    body: 'A member can change this later in their settings. Tap Continue.' },
+]
+
+const FINISH_SIGNUP: Step = { chapter: 'Signing up', target: 'signup-finish', advance: 'tap', before: fill('all'),
+  title: 'That’s sign-up',
+  body: 'Everything else is optional and can wait. Tap Get started.' }
+
+/** The short route: the list is shown, filled in. */
+const SIGNUP_QUICK: Step[] = [
+  { chapter: 'Signing up', target: 'signup-needed', advance: 'next', before: fill('all'),
+    title: 'A short list, not a long form',
+    body: 'Three things are needed: who you are and where you studied, what you do now, and the people you already know. For this quick guide they are filled in for you, as a sample member with a verified school email.' },
+  FINISH_SIGNUP,
+]
+
+/** The full route: the viewer verifies with a school email and adds someone they know. */
+const SIGNUP_FULL: Step[] = [
+  { chapter: 'Signing up', target: 'signup-needed', advance: 'next',
+    title: 'A short list, not a long form',
+    body: 'Three things are needed, in any order. The optional ones below can wait until later.' },
+  { chapter: 'Signing up', target: 'section-school', advance: 'tap',
+    title: 'First, your school',
+    body: 'Tap “You and your school”.' },
+  { chapter: 'Verified members only', target: 'signup-email', advance: 'type', sample: `you@${DOMAIN}`,
+    title: 'Your school email',
+    body: `Type a school email address. For this demo, anything ending in @${DOMAIN} will do.` },
+  { chapter: 'Verified members only', target: 'signup-verified', fallback: 'signup-email', advance: 'next', before: fill('school'),
+    title: 'This is how an account is verified',
+    body: 'The address belongs to the school, so the school is selected and the account is verified. A name and class year are filled in for you. A graduate with no school email picks their school instead, and is marked “pending” until the alumni office confirms the degree.' },
+  { chapter: 'Signing up', target: 'section-done', advance: 'tap',
+    title: 'Back to the list',
+    body: 'Tap Done.' },
+  { chapter: 'Signing up', target: 'section-known', advance: 'tap',
+    title: 'Next, people you already know',
+    body: 'Staying in touch with them is what the app is for, so it asks at the start. Tap it.' },
+  { chapter: 'Signing up', target: 'signup-known', advance: 'tap',
+    title: 'Add someone you know',
+    body: 'The app suggests classmates, and you can search by name. Tap this person to add them. Your list of people is not empty on the first day.' },
+  { chapter: 'Signing up', target: 'section-done', advance: 'tap',
+    title: 'Back to the list',
+    body: 'A member could add more people here, or invite someone by phone. Tap the button to go back.' },
+  { chapter: 'Signing up', target: 'signup-needed', advance: 'next', before: fill('all'),
+    title: 'All three done',
+    body: 'The last one, your current role, is filled in for you to save typing.' },
+  FINISH_SIGNUP,
+]
+
+/** The first stop of an app's walkthrough when it follows sign-up, or is shown as the other app. */
+const BRIDGE: Record<'full' | 'simple', Record<TourIntro, Step>> = {
+  full: {
+    signup: { chapter: 'You’re in', advance: 'next',
+      title: 'Signed up, and verified',
+      body: `This is Grow my network. For the rest of the guide you are ${STUDENT}, a student whose account already has some history, so there is something to look at.` },
+    other: { chapter: 'The other app', advance: 'next',
+      title: 'Grow my network',
+      body: `This version adds a way to reach people from your school you have not met. You are now ${STUDENT}, a student. It starts in the same place: the people you know.` },
+  },
+  simple: {
+    signup: { chapter: 'You’re in', advance: 'next',
+      title: 'Signed up, and verified',
+      body: `This is Keep in touch, the simpler app. For the rest of the guide you are ${ALUM}, who graduated some years ago and has people to stay in touch with.` },
+    other: { chapter: 'The other app', advance: 'next',
+      title: 'Keep in touch',
+      body: `This version is for people who are not looking for new connections. It does one thing: it helps you stay in touch with the people you already know from school. You are now ${ALUM}, a graduate.` },
+  },
+}
 
 const NETWORK: Step[] = [
   { chapter: 'Your network', target: 'tab-network', advance: 'tap', route: '/find',
@@ -229,7 +320,8 @@ const SIMPLE: Step[] = [
     body: 'Message any of them, or suggest a coffee. Tap the X when you’ve looked.' },
 ]
 
-export const TOURS: Record<TourId, Step[]> = {
+type AppTour = Exclude<TourId, 'signup'>
+export const TOURS: Record<AppTour, Step[]> = {
   // the short route: the network, one person, then how you reach someone new and who is allowed in
   quick: [WELCOME, ...NETWORK, ...STAYING, BACK_TO_NETWORK, ...REACH],
   // every part, in the order a member would come across them
@@ -238,7 +330,16 @@ export const TOURS: Record<TourId, Step[]> = {
   simple: SIMPLE,
 }
 /** Where each walkthrough begins. */
-export const TOUR_START: Record<TourId, string> = { quick: '/find', full: '/find', simple: '/home' }
+export const TOUR_START: Record<TourId, string> = { signup: '/', quick: '/find', full: '/find', simple: '/home' }
+
+/** The stops of a walkthrough as it is being run. */
+export function stepsOf(tour: { id: TourId; intro?: TourIntro }, depth: 'quick' | 'full'): Step[] {
+  if (tour.id === 'signup') return [...SIGNUP_START, ...(depth === 'full' ? SIGNUP_FULL : SIGNUP_QUICK)]
+  const steps = TOURS[tour.id]
+  // after sign-up, or as the second app, the opening stop says where the viewer now is
+  return tour.intro ? [BRIDGE[tour.id === 'simple' ? 'simple' : 'full'][tour.intro], ...steps.slice(1)] : steps
+}
+const APP_NAMES = { full: 'Grow my network', simple: 'Keep in touch' } as const
 
 type Box = { x: number; y: number; w: number; h: number }
 const PAD = 6
@@ -268,12 +369,25 @@ export function Tour() {
   const path = useRef(pathname)
   path.current = pathname
 
-  const steps = tour ? TOURS[tour.id] : []
+  const depth = useKudzu((s) => s.tourDepth)
+  const seen = useKudzu((s) => s.tourSeen)
+  const steps = tour ? stepsOf(tour, depth) : []
   const step = tour ? steps[tour.step] : undefined
   const ended = !!tour && tour.step >= steps.length
   const stepKey = tour ? `${tour.id}-${tour.step}` : ''
   const next = () => { const t = useKudzu.getState().tour; if (t) set({ tour: { ...t, step: t.step + 1 } }) }
   const exit = () => set({ tour: null })
+  /** Which of the two apps this walkthrough is in. */
+  const app = tour?.id === 'simple' ? 'simple' : 'full'
+
+  // Reaching the end of an app's walkthrough is remembered, so the other app is offered once.
+  // The sign-up walkthrough has no end of its own: finishing sign-up starts the app's.
+  useEffect(() => {
+    if (!ended || !tour) return
+    if (tour.id === 'signup') set({ tour: null })
+    else if (!seen.includes(app)) set({ tourSeen: [...seen, app] })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ended])
 
   // a stop begins: do its set-up, once
   const ran = useRef('')
@@ -366,7 +480,11 @@ export function Tour() {
   const frameH = root.clientHeight
   const frameW = root.clientWidth
 
+  if (ended && tour.id === 'signup') return null
   if (ended) {
+    const other = app === 'simple' ? 'full' : 'simple'
+    const offerOther = !seen.includes(other)
+    const seeOther = () => { const id = other === 'simple' ? 'simple' : depth; startTour(id, 'other'); nav(TOUR_START[id]) }
     return (
       <Portal>
         <div className="pointer-events-auto absolute inset-0 z-[60] flex items-center bg-black/55 px-5">
@@ -378,10 +496,17 @@ export function Tour() {
               <li className="flex gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-vine-600" /> Every member is verified by the school.</li>
               <li className="flex gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-vine-600" /> When you want to meet someone new, you ask them, with a reason.</li>
             </ul>
-            <div className="mt-5 space-y-2">
-              <button onClick={exit} className="w-full rounded-full bg-vine-700 py-3 text-sm font-semibold text-cream">Explore on my own</button>
-              {tour.id !== 'full' && <button onClick={() => { startTour('full'); nav('/find') }} className="w-full rounded-full border border-vine-700 py-3 text-sm font-semibold text-vine-700">{tour.id === 'simple' ? 'See the full app' : 'Take the full walkthrough'}</button>}
-              <button onClick={() => { startTour(tour.id); nav(TOUR_START[tour.id]) }} className="w-full py-1.5 text-[13px] font-semibold text-ink/55 underline underline-offset-4">Run it again</button>
+            {offerOther && (
+              <p className="mx-auto mt-4 max-w-[290px] rounded-2xl bg-sage-100 px-3.5 py-2.5 text-left text-[13.5px] leading-snug text-ink/80" data-tour-other>
+                You saw <b className="font-semibold">{APP_NAMES[app]}</b>. There is a second version, <b className="font-semibold">{APP_NAMES[other]}</b>, {other === 'simple' ? 'for people who only want to stay close to those they already know' : 'which adds a way to reach people you have not met'}. Would you like to see it too?
+              </p>
+            )}
+            <div className="mt-4 space-y-2">
+              {offerOther && <button onClick={seeOther} className="w-full rounded-full bg-vine-700 py-3 text-sm font-semibold text-cream">Show me {APP_NAMES[other]}</button>}
+              <button onClick={exit} className={`w-full rounded-full py-3 text-sm font-semibold ${offerOther ? 'border border-vine-700 text-vine-700' : 'bg-vine-700 text-cream'}`}>Explore on my own</button>
+              {tour.id === 'quick'
+                ? <button onClick={() => { startTour('full'); nav('/find') }} className="w-full py-1.5 text-[13px] font-semibold text-ink/55 underline underline-offset-4">Take the full walkthrough of this app</button>
+                : <button onClick={() => { startTour(tour.id, tour.intro); nav(TOUR_START[tour.id]) }} className="w-full py-1.5 text-[13px] font-semibold text-ink/55 underline underline-offset-4">Run it again</button>}
             </div>
           </motion.div>
         </div>
@@ -397,7 +522,7 @@ export function Tour() {
   const roomAbove = lit ? lit.y : 0
   const roomBelow = lit ? frameH - lit.y - lit.h : 0
   const above = !!lit && roomAbove > roomBelow
-  const captionStyle = !lit ? { top: '50%', transform: 'translateY(-50%)' } : big ? { bottom: 96 } : above ? { bottom: Math.min(frameH - 150, frameH - lit.y + 10) } : { top: Math.min(frameH - 210, lit.y + lit.h + 10) }
+  const captionStyle = !lit ? { top: '50%', transform: 'translateY(-50%)' } : step.place === 'top' ? { top: 6 } : big ? { bottom: 96 } : above ? { bottom: Math.min(frameH - 150, frameH - lit.y + 10) } : { top: Math.min(frameH - 210, lit.y + lit.h + 10) }
   const shade = 'pointer-events-auto absolute bg-black/55'
   const block = 'pointer-events-auto absolute'
   const canNext = step.advance === 'next' || (step.advance === 'type' && typed)
@@ -466,51 +591,3 @@ export function Tour() {
   )
 }
 
-/**
- * The first thing a visitor sees in the app: a choice between being shown round
- * and looking for themselves. Offered once. The demo controls can start a tour later.
- */
-export function TourOffer() {
-  const show = useKudzu((s) => s.onboarded && !s.tourOffered && !s.tour)
-  const simple = useKudzu((s) => s.experience === 'simple')
-  const set = useKudzu((s) => s.set)
-  const startTour = useKudzu((s) => s.startTour)
-  const nav = useNavigate()
-  const begin = (id: TourId) => { startTour(id); nav(TOUR_START[id]) }
-  // each app is shown round in its own way
-  const options: { id: TourId; icon: typeof Rocket; title: string; sub: string }[] = simple
-    ? [{ id: 'simple', icon: Footprints, title: 'Show me round', sub: `About two minutes. ${TOURS.simple.length} short stops, and you do the tapping.` }]
-    : [
-        { id: 'quick', icon: Rocket, title: 'Quick guide', sub: `About two minutes. ${TOURS.quick.length} short stops.` },
-        { id: 'full', icon: Footprints, title: 'Full walkthrough', sub: `About five minutes. You try every part yourself.` },
-      ]
-  return (
-    <Portal>
-      <AnimatePresence>
-        {show && (
-          <motion.div className="pointer-events-auto absolute inset-0 z-[55] flex items-center bg-black/50 px-5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <motion.div initial={{ scale: 0.9, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0 }} className="w-full rounded-3xl bg-cream p-5 shadow-2xl" role="dialog" aria-label={`Welcome to ${APP_NAME}`}>
-              <Logo size={28} />
-              <h2 className="mt-3 font-display text-[24px] font-semibold leading-tight">Welcome to {APP_NAME}</h2>
-              <p className="mt-1.5 text-[14px] leading-snug text-ink/70">{simple ? 'A way to stay in touch with the people you know from school. This is the simpler version of the app.' : 'A way for alumni to stay in touch with each other, and for students to reach them.'}</p>
-              <p className="mt-2 flex items-start gap-1.5 text-[13px] leading-snug text-vine-800"><BadgeCheck size={16} className="mt-0.5 shrink-0" /> Every member is a verified student or graduate of the school.</p>
-              <div className="mt-4 space-y-2">
-                {options.map(({ id, icon: Icon, title, sub }) => (
-                  <button key={id} onClick={() => begin(id)} className="flex w-full items-center gap-3 rounded-2xl bg-vine-700 p-3.5 text-left text-cream">
-                    <Icon size={20} className="shrink-0" />
-                    <span><span className="block text-[15px] font-semibold leading-tight">{title}</span><span className="block text-xs text-vine-100">{sub}</span></span>
-                  </button>
-                ))}
-                <button onClick={() => set({ tourOffered: true })} className="flex w-full items-center gap-3 rounded-2xl border border-sage-200 bg-white p-3.5 text-left">
-                  <Compass size={20} className="shrink-0 text-vine-700" />
-                  <span><span className="block text-[15px] font-semibold leading-tight">Explore on my own</span><span className="block text-xs text-ink/55">Everything works. Tap anything.</span></span>
-                </button>
-              </div>
-              <p className="mt-3 text-center text-[11px] text-ink/45">This is a demo. The people are fictional and nothing is sent anywhere.</p>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </Portal>
-  )
-}
