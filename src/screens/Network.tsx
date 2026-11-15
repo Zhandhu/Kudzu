@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronRight, Coffee, GraduationCap, List, Map as MapIcon, MapPin, MessageCircle, Repeat, Search, UserPlus, X } from 'lucide-react'
+import { ChevronRight, Coffee, List, Map as MapIcon, MessageCircle, Repeat, Search, UserPlus, X } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
-import type { Mode, Nudge, Strength, User } from '../types'
+import type { Mode, Nudge, Strength } from '../types'
 import { MODES, MODE_META, STRENGTH_META, STRENGTH_ORDER } from '../config/brand'
 import { useKudzu, useNow } from '../store/useKudzu'
-import { cityCohort, classCohort, classLabel, computeNudges, getSchool, getUser, matchInfo, rhythmLabel, strengthOf, suggestKnown, unreadAnnouncements, webConnections } from '../services'
+import { classLabel, computeNudges, getSchool, getUser, matchInfo, rhythmLabel, strengthOf, suggestKnown, unreadAnnouncements, webConnections } from '../services'
 import { AnnouncementList } from '../components/Announcements'
 import { LeafIcon } from '../components/brand'
 import { AwaitingTag, KnownAsks } from '../components/KnownAsks'
@@ -44,18 +44,6 @@ type Person = MapPerson & { rhythmDays?: number; unconfirmed?: boolean }
 /** The keep-in-touch app has no search of the school, so links to it are left out. */
 const simpleApp = () => useKudzu.getState().experience === 'simple'
 
-/** One of the automatic slices of your school: your class, or your city. */
-function CohortCard({ to, icon: Icon, title, people, connected }: { to: string; icon: typeof MapPin; title: string; people: User[]; connected: Set<string> }) {
-  const known = people.filter((u) => connected.has(u.id)).length
-  return (
-    <Link to={to} className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-sage-200">
-      <div className="flex items-center gap-1.5 text-[13px] font-semibold leading-tight"><Icon size={15} className="shrink-0 text-coffee-500" /> <span className="truncate">{title}</span></div>
-      <div className="mt-2 flex -space-x-2">{people.slice(0, 5).map((u) => <Avatar key={u.id} user={u} size={26} ring />)}</div>
-      <div className="mt-1.5 text-[11px] text-ink/55">{people.length} {people.length === 1 ? 'person' : 'people'} · {known} in your network</div>
-    </Link>
-  )
-}
-
 export default function Network() {
   const s = useKudzu()
   const now = useNow()
@@ -78,9 +66,6 @@ export default function Network() {
     [s.connections, s.schoolId, s.blocked, s.timeOffsetDays],
   )
   const nudges = computeNudges(s, now)
-  const connectedIds = new Set(people.map((p) => p.user.id))
-  const classmates = classCohort(s)
-  const neighbours = cityCohort(s, s.me.city)
   const suggestionCount = suggestKnown(s).length
   const news = unreadAnnouncements(s, now)
   const counts = STRENGTH_ORDER.map((l) => [l, people.filter((p) => p.level === l).length] as [Strength, number])
@@ -223,10 +208,11 @@ export default function Network() {
       <Sheet open={open === 'grow'} onClose={closeGrow} title="Your class and city">
         <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink/50">Announcements</div>
         <AnnouncementList onLeave={closeGrow} />
-        <div className="mb-2 mt-5 text-xs font-semibold uppercase tracking-wide text-ink/50">Your cohorts</div>
-        <div className="grid grid-cols-2 gap-2">
-          <CohortCard to="/cohorts/class" icon={GraduationCap} title={classLabel(s.me)} people={classmates} connected={connectedIds} />
-          <CohortCard to="/cohorts/city" icon={MapPin} title={`${getSchool(s.schoolId).shortName} in ${s.me.city}`} people={neighbours} connected={connectedIds} />
+        {/* Your class and your city are groups now. They are on the Events tab, under Groups,
+            and the keep-in-touch app, which has no Events tab, reaches them from here. */}
+        <div className={simpleApp() ? 'mt-4 grid grid-cols-2 gap-2' : 'hidden'}>
+          <Link to="/cohorts/class" className="rounded-2xl bg-white p-3 text-[13px] font-semibold ring-1 ring-sage-200">{classLabel(s.me)}<span className="block text-[11px] font-normal text-ink/55">Your class group</span></Link>
+          <Link to="/cohorts/city" className="rounded-2xl bg-white p-3 text-[13px] font-semibold ring-1 ring-sage-200">{getSchool(s.schoolId).shortName} in {s.me.city}<span className="block text-[11px] font-normal text-ink/55">Your city group</span></Link>
         </div>
         <Link to="/known" className="mt-3 flex items-center gap-3 rounded-2xl border border-dashed border-vine-300 bg-vine-50 px-3.5 py-3">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-vine-700 text-cream"><UserPlus size={17} /></span>

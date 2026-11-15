@@ -13,10 +13,10 @@ import { Portal } from './ui'
  * year. They are sent by the school's alumni services, not by other members.
  * There is no reply: the most you do is say you are interested.
  */
-export function AnnouncementList({ onLeave }: { onLeave?: () => void }) {
+export function AnnouncementList({ onLeave, only }: { onLeave?: () => void; /** Show only the posts to the class, or only those to the city. */ only?: 'class' | 'city' }) {
   const s = useKudzu()
   const now = useNow()
-  const list = myAnnouncements(s, now)
+  const list = myAnnouncements(s, now).filter((a) => !only || !!a.years === (only === 'class'))
   const school = getSchool(s.schoolId)
   if (list.length === 0) {
     return <p className="rounded-2xl border border-dashed border-sage-300 p-4 text-center text-sm text-ink/55">Nothing from {alumniServices(s.schoolId)} yet. Announcements are rare: a reunion, a city meet-up.</p>
